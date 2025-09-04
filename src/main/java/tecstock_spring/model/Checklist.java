@@ -20,5 +20,5 @@ public class Checklist {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String numero_checklist;
+    private String numeroChecklist;
 }

@@ -1,0 +1,351 @@
+2025-09-04 15:05:04,325 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ServicoController - Listando serviços no controller.
+2025-09-04 15:05:04,560 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ServicoController - 1 serviços encontrados.
+2025-09-04 15:05:13,619 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.ServicoController - Salvando serviço: Servico(id=null, nome=Troca de vela, precoPasseio=120.0, precoCaminhonete=150.0) no controller.
+2025-09-04 15:05:13,673 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.ServicoController - Serviço salvo com sucesso: Servico(id=5, nome=Troca de vela, precoPasseio=120.0, precoCaminhonete=150.0)
+2025-09-04 15:05:13,699 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ServicoController - Listando serviços no controller.
+2025-09-04 15:05:13,703 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ServicoController - 2 serviços encontrados.
+2025-09-04 15:05:17,785 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.FuncionarioController - Listando funcionarios no controller.
+2025-09-04 15:05:17,796 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.FuncionarioController - 1 funcionarios encontrados.
+2025-09-04 15:05:20,446 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.MarcaController - Listando marcas no controller.
+2025-09-04 15:05:20,446 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 15:05:20,454 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.MarcaController - 1 marcas encontrados.
+2025-09-04 15:05:20,505 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 15:05:38,816 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 15:05:38,841 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 15:05:45,031 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.FornecedorController - Listando fornecedores no controller.
+2025-09-04 15:05:45,056 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.FornecedorController - 1 fornecedores encontrados.
+2025-09-04 15:05:50,273 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.MarcaController - Listando marcas no controller.
+2025-09-04 15:05:50,273 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 15:05:50,278 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.MarcaController - 1 marcas encontrados.
+2025-09-04 15:05:50,282 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 15:05:55,507 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.FornecedorController - Listando fornecedores no controller.
+2025-09-04 15:05:55,509 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.PecaController - Listando todas as peças.
+2025-09-04 15:05:55,513 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.FornecedorController - 1 fornecedores encontrados.
+2025-09-04 15:05:55,522 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.PecaController - 1 peças encontradas.
+2025-09-04 15:05:55,539 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.FabricanteController - Listando fabricantes no controller.
+2025-09-04 15:05:55,549 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.FabricanteController - 1 fabricantes encontrados.
+2025-09-04 15:06:04,404 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.ServicoController - Listando serviços no controller.
+2025-09-04 15:06:04,410 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.ServicoController - 2 serviços encontrados.
+2025-09-04 15:06:15,862 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.FornecedorController - Listando fornecedores no controller.
+2025-09-04 15:06:15,862 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.PecaController - Listando todas as peças.
+2025-09-04 15:06:15,868 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.FornecedorController - 1 fornecedores encontrados.
+2025-09-04 15:06:15,870 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.PecaController - 1 peças encontradas.
+2025-09-04 15:06:15,882 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.FabricanteController - Listando fabricantes no controller.
+2025-09-04 15:06:15,888 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.FabricanteController - 1 fabricantes encontrados.
+2025-09-04 15:10:37,338 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ServicoController - Listando serviços no controller.
+2025-09-04 15:10:37,348 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ServicoController - 2 serviços encontrados.
+2025-09-04 15:10:42,178 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.FuncionarioController - Listando funcionarios no controller.
+2025-09-04 15:10:42,185 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.FuncionarioController - 1 funcionarios encontrados.
+2025-09-04 15:11:17,108 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.FornecedorController - Listando fornecedores no controller.
+2025-09-04 15:11:17,108 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.PecaController - Listando todas as peças.
+2025-09-04 15:11:17,111 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.FornecedorController - 1 fornecedores encontrados.
+2025-09-04 15:11:17,113 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.PecaController - 1 peças encontradas.
+2025-09-04 15:11:17,138 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.FabricanteController - Listando fabricantes no controller.
+2025-09-04 15:11:17,143 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.FabricanteController - 1 fabricantes encontrados.
+2025-09-04 15:22:56,753 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 15:22:56,753 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.AgendamentoController - Listando agendamentos no controller.
+2025-09-04 15:22:56,758 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 15:22:56,760 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.AgendamentoController - Nenhum agendamento cadastrado.
+2025-09-04 15:24:50,851 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 15:24:50,851 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.AgendamentoController - Listando agendamentos no controller.
+2025-09-04 15:24:50,857 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.AgendamentoController - Nenhum agendamento cadastrado.
+2025-09-04 15:24:50,857 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 15:26:03,539 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.FornecedorController - Listando fornecedores no controller.
+2025-09-04 15:26:03,544 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.FornecedorController - 1 fornecedores encontrados.
+2025-09-04 15:29:22,482 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.FornecedorController - Listando fornecedores no controller.
+2025-09-04 15:29:22,488 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.FornecedorController - 1 fornecedores encontrados.
+2025-09-04 15:36:43,618 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.FuncionarioController - Listando funcionarios no controller.
+2025-09-04 15:36:43,627 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.FuncionarioController - 1 funcionarios encontrados.
+2025-09-04 15:36:54,018 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 15:36:54,027 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 15:37:32,383 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.FabricanteController - Listando fabricantes no controller.
+2025-09-04 15:37:32,392 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.FabricanteController - 1 fabricantes encontrados.
+2025-09-04 15:57:05,412 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.FuncionarioController - Listando funcionarios no controller.
+2025-09-04 15:57:05,416 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.FuncionarioController - 1 funcionarios encontrados.
+2025-09-04 15:57:11,003 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 15:57:11,009 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 15:57:15,443 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.MarcaController - Listando marcas no controller.
+2025-09-04 15:57:15,443 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 15:57:15,449 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.MarcaController - 1 marcas encontrados.
+2025-09-04 15:57:15,453 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 15:57:26,279 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.FornecedorController - Listando fornecedores no controller.
+2025-09-04 15:57:26,287 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.FornecedorController - 1 fornecedores encontrados.
+2025-09-04 15:58:39,962 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 15:58:39,962 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.MarcaController - Listando marcas no controller.
+2025-09-04 15:58:39,967 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.MarcaController - 1 marcas encontrados.
+2025-09-04 15:58:39,971 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 15:59:35,200 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.FuncionarioController - Listando funcionarios no controller.
+2025-09-04 15:59:35,210 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.FuncionarioController - 1 funcionarios encontrados.
+2025-09-04 15:59:39,425 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 15:59:39,433 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 16:03:47,651 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.MarcaController - Listando marcas no controller.
+2025-09-04 16:03:47,651 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 16:03:47,658 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.MarcaController - 1 marcas encontrados.
+2025-09-04 16:03:47,665 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 16:04:07,880 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 16:04:07,888 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 16:04:14,159 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.FuncionarioController - Listando funcionarios no controller.
+2025-09-04 16:04:14,165 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.FuncionarioController - 1 funcionarios encontrados.
+2025-09-04 16:05:10,155 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.FornecedorController - Listando fornecedores no controller.
+2025-09-04 16:05:10,155 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.PecaController - Listando todas as peças.
+2025-09-04 16:05:10,169 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.FornecedorController - 1 fornecedores encontrados.
+2025-09-04 16:05:10,186 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.PecaController - 1 peças encontradas.
+2025-09-04 16:05:10,247 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.FabricanteController - Listando fabricantes no controller.
+2025-09-04 16:05:10,256 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.FabricanteController - 1 fabricantes encontrados.
+2025-09-04 16:05:49,390 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.FuncionarioController - Listando funcionarios no controller.
+2025-09-04 16:05:49,395 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.FuncionarioController - 1 funcionarios encontrados.
+2025-09-04 16:08:49,186 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.PecaController - Listando todas as peças.
+2025-09-04 16:08:49,186 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.FornecedorController - Listando fornecedores no controller.
+2025-09-04 16:08:49,194 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.FornecedorController - 1 fornecedores encontrados.
+2025-09-04 16:08:49,197 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.PecaController - 1 peças encontradas.
+2025-09-04 16:08:49,227 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.FabricanteController - Listando fabricantes no controller.
+2025-09-04 16:08:49,236 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.FabricanteController - 1 fabricantes encontrados.
+2025-09-04 16:09:19,828 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.PecaController - Salvando peça: tecstock_spring.model.Peca@47e53ec5
+2025-09-04 16:09:19,895 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.PecaController - Peça salva com sucesso: tecstock_spring.model.Peca@47e53ec5
+2025-09-04 16:09:19,925 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.PecaController - Listando todas as peças.
+2025-09-04 16:09:19,934 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.PecaController - 2 peças encontradas.
+2025-09-04 16:09:24,538 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.PecaController - Deletando peça com ID: 2
+2025-09-04 16:09:24,627 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.PecaController - Listando todas as peças.
+2025-09-04 16:09:24,634 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.PecaController - 1 peças encontradas.
+2025-09-04 16:09:38,873 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.PecaController - Atualizando peça com ID: 3
+2025-09-04 16:09:38,915 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.PecaController - Listando todas as peças.
+2025-09-04 16:09:38,921 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.PecaController - 1 peças encontradas.
+2025-09-04 16:09:45,201 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.MarcaController - Listando marcas no controller.
+2025-09-04 16:09:45,206 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.MarcaController - 1 marcas encontrados.
+2025-09-04 16:09:53,734 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.FornecedorController - Listando fornecedores no controller.
+2025-09-04 16:09:53,740 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.FornecedorController - 1 fornecedores encontrados.
+2025-09-04 16:10:04,184 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.ServicoController - Listando serviços no controller.
+2025-09-04 16:10:04,189 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.ServicoController - 2 serviços encontrados.
+2025-09-04 16:32:22,771 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 16:32:22,784 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 16:32:22,873 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 16:32:22,883 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 16:34:16,138 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 16:34:16,143 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 16:34:16,159 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 16:34:16,165 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 16:34:35,414 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 16:34:35,414 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.MarcaController - Listando marcas no controller.
+2025-09-04 16:34:35,419 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.MarcaController - 1 marcas encontrados.
+2025-09-04 16:34:35,425 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 16:34:39,912 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 16:34:39,918 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 16:34:43,004 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 16:34:43,011 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 16:34:43,078 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 16:34:43,083 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 16:35:30,851 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 16:35:30,860 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 16:35:30,959 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 16:35:30,965 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 16:36:07,564 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 16:36:07,572 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 16:36:07,646 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 16:36:07,652 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 16:36:47,027 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 16:36:47,035 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 16:36:47,113 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 16:36:47,120 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 16:52:56,722 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 16:52:56,917 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 16:52:56,971 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 16:52:56,996 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:01:02,769 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:01:02,987 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:01:03,072 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:01:03,111 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:01:25,622 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:01:25,623 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:01:25,635 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:01:25,638 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:01:25,734 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:01:25,752 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:03:39,244 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:03:39,246 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.AgendamentoController - Listando agendamentos no controller.
+2025-09-04 17:03:39,261 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.AgendamentoController - Nenhum agendamento cadastrado.
+2025-09-04 17:03:39,263 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:03:42,429 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:03:42,429 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:03:42,446 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:03:42,447 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:03:42,538 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:03:42,552 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:03:55,960 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:03:55,960 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:03:55,969 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:03:55,970 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:03:56,027 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:03:56,043 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:04:30,774 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:04:30,774 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:04:30,784 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:04:30,785 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:04:30,851 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:04:30,865 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:05:25,264 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:05:25,272 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:05:25,325 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:05:25,331 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:15:55,916 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:15:55,916 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:15:55,921 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:15:55,921 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:15:56,023 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:15:56,027 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:17:25,008 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:17:25,008 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:17:25,013 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:17:25,013 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:17:25,027 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:17:25,030 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:18:49,520 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:18:49,520 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:18:49,527 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:18:49,527 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:18:49,544 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:18:49,550 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:19:14,666 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:19:14,666 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:19:14,673 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:19:14,673 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:19:14,707 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:19:14,727 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:19:33,052 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.FuncionarioController - Listando funcionarios no controller.
+2025-09-04 17:19:33,059 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.FuncionarioController - 1 funcionarios encontrados.
+2025-09-04 17:19:37,244 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:19:37,244 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:19:37,250 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:19:37,250 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:19:37,263 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:19:37,270 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:23:08,861 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:23:08,861 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:23:08,867 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:23:08,868 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:23:08,895 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:23:08,907 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:23:32,848 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:23:32,851 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:23:36,483 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:23:36,486 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:24:15,029 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:24:15,029 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:24:15,033 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:24:15,033 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:24:15,053 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:24:15,058 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:24:16,329 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:24:16,334 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:24:20,877 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.FuncionarioController - Listando funcionarios no controller.
+2025-09-04 17:24:20,885 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.FuncionarioController - 1 funcionarios encontrados.
+2025-09-04 17:24:33,529 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:24:33,529 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:24:33,536 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:24:33,536 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:24:33,555 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:24:33,561 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:24:43,998 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.FuncionarioController - Listando funcionarios no controller.
+2025-09-04 17:24:44,004 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.FuncionarioController - 1 funcionarios encontrados.
+2025-09-04 17:28:37,253 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:28:37,253 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:28:37,267 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:28:37,270 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:28:37,306 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:28:37,326 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:28:46,130 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:28:46,130 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:28:46,139 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:28:46,139 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:28:46,161 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:28:46,174 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:29:10,153 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.FuncionarioController - Listando funcionarios no controller.
+2025-09-04 17:29:10,158 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.FuncionarioController - 1 funcionarios encontrados.
+2025-09-04 17:31:17,047 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:31:17,047 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:31:17,051 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:31:17,051 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:31:17,065 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:31:17,075 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:31:54,231 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.FuncionarioController - Listando funcionarios no controller.
+2025-09-04 17:31:54,235 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.FuncionarioController - 1 funcionarios encontrados.
+2025-09-04 17:32:05,891 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:32:05,891 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:32:05,896 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:32:05,897 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:32:05,907 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:32:05,912 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:32:14,796 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:32:14,796 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:32:14,802 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:32:14,802 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:32:14,819 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:32:14,826 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:32:44,902 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:32:44,902 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:32:44,908 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:32:44,908 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:32:44,932 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:32:44,941 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:33:21,114 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:33:21,114 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:33:21,120 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:33:21,120 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:33:21,141 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:33:21,148 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:33:35,485 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.FuncionarioController - Listando funcionarios no controller.
+2025-09-04 17:33:35,492 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.FuncionarioController - 1 funcionarios encontrados.
+2025-09-04 17:35:57,851 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:35:57,851 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:35:57,856 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:35:57,857 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:35:57,868 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:35:57,873 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:36:01,537 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.FuncionarioController - Listando funcionarios no controller.
+2025-09-04 17:36:01,543 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.FuncionarioController - 1 funcionarios encontrados.
+2025-09-04 17:36:04,141 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:36:04,141 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:36:04,147 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:36:04,147 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:36:04,159 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:36:04,167 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:36:09,895 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.MarcaController - Listando marcas no controller.
+2025-09-04 17:36:09,901 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.MarcaController - 1 marcas encontrados.
+2025-09-04 17:36:12,033 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.MarcaController - Deletando marca no controller. ID: 1
+2025-09-04 17:36:16,938 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ServicoController - Listando serviços no controller.
+2025-09-04 17:36:16,946 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ServicoController - 2 serviços encontrados.
+2025-09-04 17:36:19,196 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ServicoController - Deletando serviço no controller. ID: 5
+2025-09-04 17:36:19,216 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ServicoController - Listando serviços no controller.
+2025-09-04 17:36:19,224 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ServicoController - 1 serviços encontrados.
+2025-09-04 17:36:20,500 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ServicoController - Deletando serviço no controller. ID: 4
+2025-09-04 17:36:20,518 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ServicoController - Listando serviços no controller.
+2025-09-04 17:36:20,521 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ServicoController - Nenhum serviço cadastrado.
+2025-09-04 17:36:28,463 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:36:28,463 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:36:28,467 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:36:28,467 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:36:28,480 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:36:28,485 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:38:33,901 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:38:33,901 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:38:33,909 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:38:33,910 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:38:33,932 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:38:33,945 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:41:28,024 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:41:28,024 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:41:28,028 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:41:28,028 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:41:28,040 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:41:28,046 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:43:32,581 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:43:32,581 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:43:32,585 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:43:32,585 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:43:32,596 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:43:32,600 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
+2025-09-04 17:44:17,060 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-09-04 17:44:17,060 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-09-04 17:44:17,064 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ChecklistController - Nenhuma checklist cadastrada: []
+2025-09-04 17:44:17,065 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.ClienteController - 1 clientes encontrados.
+2025-09-04 17:44:17,078 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-09-04 17:44:17,083 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.VeiculoController - 2 veículos encontrados.
