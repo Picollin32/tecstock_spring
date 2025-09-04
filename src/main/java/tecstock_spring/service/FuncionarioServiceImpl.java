@@ -19,11 +19,7 @@ public class FuncionarioServiceImpl implements FuncionarioService {
     @Override
     public Funcionario salvar(Funcionario funcionario) {
         Funcionario funcionariosalvo = repository.save(funcionario);
-        if (funcionariosalvo != null) {
-            logger.info("Funcionario salvo com sucesso: " + funcionariosalvo);
-        } else {
-            logger.error("Erro ao salvar funcionario: " + funcionario);
-        }
+        logger.info("Funcionario salvo com sucesso: " + funcionariosalvo);
         return funcionariosalvo;
     }
 

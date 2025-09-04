@@ -20,11 +20,7 @@ public class AgendamentoServiceImpl implements AgendamentoService {
     @Override
     public Agendamento salvar(Agendamento agendamento) {
         Agendamento agendamentoSalvo = repository.save(agendamento);
-        if (agendamentoSalvo != null) {
-            logger.info("Agendamento salvo com sucesso: " + agendamentoSalvo);
-        } else {
-            logger.error("Erro ao salvar agendamento: " + agendamento);
-        }
+        logger.info("Agendamento salvo com sucesso: " + agendamentoSalvo);
         return agendamentoSalvo;
     }
 

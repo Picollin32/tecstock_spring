@@ -34,11 +34,7 @@ public class PecaServiceImpl implements PecaService {
 
         Peca pecaSalva = pecaRepository.save(peca);
         
-        if (pecaSalva != null) {
-            logger.info("Peça salva com sucesso: " + pecaSalva);
-        } else {
-            logger.error("Erro ao salvar peça: " + peca);
-        }
+        logger.info("Peça salva com sucesso: " + pecaSalva);
         return pecaSalva;
     }
 

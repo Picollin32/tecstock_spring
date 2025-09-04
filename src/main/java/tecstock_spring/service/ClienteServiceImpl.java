@@ -20,11 +20,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     public Cliente salvar(Cliente cliente) {
         Cliente clienteSalvo = repository.save(cliente);
-        if (clienteSalvo != null) {
-            logger.info("Cliente salvo com sucesso: " + clienteSalvo);
-        } else {
-            logger.error("Erro ao salvar cliente: " + cliente);
-        }
+        logger.info("Cliente salvo com sucesso: " + clienteSalvo);
         return clienteSalvo;
     }
 

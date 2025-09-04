@@ -20,11 +20,7 @@ public class ServicoServiceImpl implements ServicoService {
     @Override
     public Servico salvar(Servico servico) {
         Servico servicoSalvo = repository.save(servico);
-        if (servicoSalvo != null) {
-            logger.info("Serviço salvo com sucesso: " + servicoSalvo);
-        } else {
-            logger.error("Erro ao salvar serviço: " + servico);
-        }
+        logger.info("Serviço salvo com sucesso: " + servicoSalvo);
         return servicoSalvo;
     }
 

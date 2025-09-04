@@ -20,11 +20,7 @@ public class FornecedorPecaServiceImpl implements FornecedorPecaService {
     @Override
     public FornecedorPeca salvar(FornecedorPeca fornecedorPeca) {
         FornecedorPeca fornecedorPecaSalvo = repository.save(fornecedorPeca);
-        if (fornecedorPecaSalvo != null) {
-            logger.info("Fornecedor de peças salvo com sucesso: " + fornecedorPecaSalvo);
-        } else {
-            logger.error("Erro ao salvar fornecedor de peça: " + fornecedorPeca);
-        }
+        logger.info("Fornecedor de peças salvo com sucesso: " + fornecedorPecaSalvo);
         return fornecedorPecaSalvo;
     }
 

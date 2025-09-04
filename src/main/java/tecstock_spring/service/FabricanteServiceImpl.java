@@ -20,11 +20,7 @@ public class FabricanteServiceImpl implements FabricanteService {
     @Override
     public Fabricante salvar(Fabricante fabricante) {
         Fabricante fabricanteSalvo = repository.save(fabricante);
-        if (fabricanteSalvo != null) {
-            logger.info("Fabricante salvo com sucesso: " + fabricanteSalvo);
-        } else {
-            logger.error("Erro ao salvar fabricante: " + fabricante);
-        }
+        logger.info("Fabricante salvo com sucesso: " + fabricanteSalvo);
         return fabricanteSalvo;
     }
 

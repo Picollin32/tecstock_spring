@@ -19,11 +19,7 @@ public class VeiculoServiceImpl implements VeiculoService {
     @Override
     public Veiculo salvar(Veiculo veiculo) {
         Veiculo veiculoSalvo = repository.save(veiculo);
-        if (veiculoSalvo != null) {
-            logger.info("Veículo salvo com sucesso: " + veiculoSalvo);
-        } else {
-            logger.error("Erro ao salvar veículo: " + veiculo);
-        }
+        logger.info("Veículo salvo com sucesso: " + veiculoSalvo);
         return veiculoSalvo;
     }
 

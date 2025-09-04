@@ -19,11 +19,7 @@ public class MarcaServiceImpl implements MarcaService {
     @Override
     public Marca salvar(Marca marca) {
         Marca marcaSalva = repository.save(marca);
-        if (marcaSalva != null) {
-            logger.info("Marca salva com sucesso: " + marcaSalva);
-        } else {
-            logger.error("Erro ao salvar marca: " + marca);
-        }
+        logger.info("Marca salva com sucesso: " + marcaSalva);
         return marcaSalva;
     }
 

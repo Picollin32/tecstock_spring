@@ -1,0 +1,56 @@
+package tecstock_spring.service;
+
+import java.util.List;
+import org.apache.log4j.Logger;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
+import tecstock_spring.controller.ChecklistController;
+import tecstock_spring.model.Checklist;
+import tecstock_spring.repository.ChecklistRepository;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class ChecklistServiceImpl implements ChecklistService {
+
+    private final ChecklistRepository repository;
+    Logger logger = Logger.getLogger(ChecklistController.class);
+
+    @Override
+    public Checklist salvar(Checklist checklist) {
+        Checklist checklistSalva = repository.save(checklist);
+        logger.info("Checklist salva com sucesso: " + checklistSalva);
+        return checklistSalva;
+    }
+
+    @Override
+    public Checklist buscarPorId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Checklist não encontrado"));
+    }
+
+    @Override
+    public List<Checklist> listarTodos() {
+        List<Checklist> checklists = repository.findAll();
+        if (checklists != null && checklists.isEmpty()) {
+            logger.info("Nenhuma checklist cadastrada: " + checklists);
+            System.out.println("Nenhuma checklist cadastrada: " + checklists);
+        } else if (checklists != null && !checklists.isEmpty()) {
+            logger.info(checklists.size() + " checklists encontrados.");
+            System.out.println(checklists.size() + " checklists encontrados.");
+        }
+        return checklists;
+    }
+
+    @Override
+    public Checklist atualizar(Long id, Checklist novoChecklist) {
+        Checklist categoriaExistente = buscarPorId(id);
+        BeanUtils.copyProperties(novoChecklist, categoriaExistente, "id");
+        return repository.save(categoriaExistente);
+    }
+
+    @Override
+    public void deletar(Long id) {
+        repository.deleteById(id);
+    }
+}
