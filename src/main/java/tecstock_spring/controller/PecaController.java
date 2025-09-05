@@ -18,7 +18,7 @@ import tecstock_spring.service.PecaService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/pecas") // Define um prefixo para todas as rotas de peças
+@RequestMapping("/api/pecas")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class PecaController {

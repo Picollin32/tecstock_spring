@@ -18,6 +18,14 @@ public class ChecklistServiceImpl implements ChecklistService {
 
     @Override
     public Checklist salvar(Checklist checklist) {
+        if (checklist.getId() == null && checklist.getNumeroChecklist() == 0) {
+            Integer max = repository.findAll().stream()
+                .mapToInt(Checklist::getNumeroChecklist)
+                .max()
+                .orElse(0);
+            checklist.setNumeroChecklist(max + 1);
+            logger.info("Gerando novo numeroChecklist: " + checklist.getNumeroChecklist());
+        }
         Checklist checklistSalva = repository.save(checklist);
         logger.info("Checklist salva com sucesso: " + checklistSalva);
         return checklistSalva;
@@ -44,9 +52,10 @@ public class ChecklistServiceImpl implements ChecklistService {
 
     @Override
     public Checklist atualizar(Long id, Checklist novoChecklist) {
-        Checklist categoriaExistente = buscarPorId(id);
-        BeanUtils.copyProperties(novoChecklist, categoriaExistente, "id");
-        return repository.save(categoriaExistente);
+        Checklist checklistExistente = buscarPorId(id);
+        BeanUtils.copyProperties(novoChecklist, checklistExistente, "id", "numeroChecklist");
+        logger.info("Atualizando checklist ID: " + id + " - Preservando numeroChecklist: " + checklistExistente.getNumeroChecklist());
+        return repository.save(checklistExistente);
     }
 
     @Override
