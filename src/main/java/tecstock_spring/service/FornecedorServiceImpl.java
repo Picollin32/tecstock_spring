@@ -18,6 +18,11 @@ public class FornecedorServiceImpl implements FornecedorService {
 
     @Override
     public Fornecedor salvar(Fornecedor fornecedor) {
+        // Validar se CNPJ já existe
+        if (repository.existsByCnpj(fornecedor.getCnpj())) {
+            throw new RuntimeException("CNPJ já cadastrado: " + fornecedor.getCnpj());
+        }
+        
         Fornecedor fornecedorSalvo = repository.save(fornecedor);
         logger.info("Fornecedor salvo com sucesso: " + fornecedorSalvo);
         return fornecedorSalvo;
@@ -45,6 +50,12 @@ public class FornecedorServiceImpl implements FornecedorService {
     @Override
     public Fornecedor atualizar(Long id, Fornecedor novoFornecedor) {
         Fornecedor fornecedorExistente = buscarPorId(id);
+        
+        // Validar se CNPJ já existe em outro fornecedor
+        if (repository.existsByCnpjAndIdNot(novoFornecedor.getCnpj(), id)) {
+            throw new RuntimeException("CNPJ já cadastrado em outro fornecedor: " + novoFornecedor.getCnpj());
+        }
+        
         BeanUtils.copyProperties(novoFornecedor, fornecedorExistente, "id", "pecasComDesconto");
         return repository.save(fornecedorExistente);
     }

@@ -18,6 +18,11 @@ public class VeiculoServiceImpl implements VeiculoService {
 
     @Override
     public Veiculo salvar(Veiculo veiculo) {
+        // Validar se placa já existe
+        if (repository.existsByPlaca(veiculo.getPlaca())) {
+            throw new RuntimeException("Placa já cadastrada: " + veiculo.getPlaca());
+        }
+        
         Veiculo veiculoSalvo = repository.save(veiculo);
         logger.info("Veículo salvo com sucesso: " + veiculoSalvo);
         return veiculoSalvo;
@@ -43,6 +48,12 @@ public class VeiculoServiceImpl implements VeiculoService {
     @Override
     public Veiculo atualizar(Long id, Veiculo novoVeiculo) {
         Veiculo veiculoExistente = buscarPorId(id);
+        
+        // Validar se placa já existe em outro veículo
+        if (repository.existsByPlacaAndIdNot(novoVeiculo.getPlaca(), id)) {
+            throw new RuntimeException("Placa já cadastrada em outro veículo: " + novoVeiculo.getPlaca());
+        }
+        
         BeanUtils.copyProperties(novoVeiculo, veiculoExistente, "id");
         return repository.save(veiculoExistente);
     }

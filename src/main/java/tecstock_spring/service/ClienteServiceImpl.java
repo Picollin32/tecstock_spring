@@ -19,6 +19,11 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public Cliente salvar(Cliente cliente) {
+        // Validar se CPF já existe
+        if (repository.existsByCpf(cliente.getCpf())) {
+            throw new RuntimeException("CPF já cadastrado: " + cliente.getCpf());
+        }
+        
         Cliente clienteSalvo = repository.save(cliente);
         logger.info("Cliente salvo com sucesso: " + clienteSalvo);
         return clienteSalvo;
@@ -44,6 +49,12 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     public Cliente atualizar(Long id, Cliente novoCliente) {
         Cliente clienteExistente = buscarPorId(id);
+        
+        // Validar se CPF já existe em outro cliente
+        if (repository.existsByCpfAndIdNot(novoCliente.getCpf(), id)) {
+            throw new RuntimeException("CPF já cadastrado em outro cliente: " + novoCliente.getCpf());
+        }
+        
         BeanUtils.copyProperties(novoCliente, clienteExistente, "id");
         return repository.save(clienteExistente);
     }
