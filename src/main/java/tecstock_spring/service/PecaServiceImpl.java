@@ -58,7 +58,7 @@ public class PecaServiceImpl implements PecaService {
     @Override
     public Peca atualizar(Long id, Peca novaPeca) {
         Peca pecaExistente = buscarPorId(id);
-        BeanUtils.copyProperties(novaPeca, pecaExistente, "id");
+        BeanUtils.copyProperties(novaPeca, pecaExistente, "id", "createdAt", "updatedAt");
         return pecaRepository.save(pecaExistente);
     }
 

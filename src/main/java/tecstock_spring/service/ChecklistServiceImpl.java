@@ -53,7 +53,7 @@ public class ChecklistServiceImpl implements ChecklistService {
     @Override
     public Checklist atualizar(Long id, Checklist novoChecklist) {
         Checklist checklistExistente = buscarPorId(id);
-        BeanUtils.copyProperties(novoChecklist, checklistExistente, "id", "numeroChecklist");
+        BeanUtils.copyProperties(novoChecklist, checklistExistente, "id", "numeroChecklist", "createdAt", "updatedAt");
         logger.info("Atualizando checklist ID: " + id + " - Preservando numeroChecklist: " + checklistExistente.getNumeroChecklist());
         return repository.save(checklistExistente);
     }

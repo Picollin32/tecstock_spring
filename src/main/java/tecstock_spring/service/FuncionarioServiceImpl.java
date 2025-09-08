@@ -45,7 +45,7 @@ public class FuncionarioServiceImpl implements FuncionarioService {
     @Override
     public Funcionario atualizar(Long id, Funcionario novoFuncionario) {
         Funcionario funcionarioExistente = buscarPorId(id);
-        BeanUtils.copyProperties(novoFuncionario, funcionarioExistente, "id", "pecasComDesconto");
+        BeanUtils.copyProperties(novoFuncionario, funcionarioExistente, "id", "pecasComDesconto", "createdAt", "updatedAt");
         return repository.save(funcionarioExistente);
     }
 

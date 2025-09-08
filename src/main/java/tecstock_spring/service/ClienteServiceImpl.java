@@ -55,7 +55,8 @@ public class ClienteServiceImpl implements ClienteService {
             throw new RuntimeException("CPF já cadastrado em outro cliente: " + novoCliente.getCpf());
         }
         
-        BeanUtils.copyProperties(novoCliente, clienteExistente, "id");
+        // Preservar o createdAt original e não copiar updatedAt para manter a lógica de auditoria
+        BeanUtils.copyProperties(novoCliente, clienteExistente, "id", "createdAt", "updatedAt");
         return repository.save(clienteExistente);
     }
 

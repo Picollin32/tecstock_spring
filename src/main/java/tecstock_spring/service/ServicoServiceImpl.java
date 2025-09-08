@@ -44,7 +44,7 @@ public class ServicoServiceImpl implements ServicoService {
     @Override
     public Servico atualizar(Long id, Servico novoServico) {
         Servico servicoExistente = buscarPorId(id);
-        BeanUtils.copyProperties(novoServico, servicoExistente, "id");
+        BeanUtils.copyProperties(novoServico, servicoExistente, "id", "createdAt", "updatedAt");
         return repository.save(servicoExistente);
     }
 

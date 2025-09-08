@@ -54,7 +54,8 @@ public class VeiculoServiceImpl implements VeiculoService {
             throw new RuntimeException("Placa já cadastrada em outro veículo: " + novoVeiculo.getPlaca());
         }
         
-        BeanUtils.copyProperties(novoVeiculo, veiculoExistente, "id");
+        // Preservar o createdAt original e não copiar updatedAt para manter a lógica de auditoria
+        BeanUtils.copyProperties(novoVeiculo, veiculoExistente, "id", "createdAt", "updatedAt");
         return repository.save(veiculoExistente);
     }
 

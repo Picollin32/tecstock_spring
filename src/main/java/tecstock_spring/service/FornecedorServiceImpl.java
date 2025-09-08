@@ -56,7 +56,7 @@ public class FornecedorServiceImpl implements FornecedorService {
             throw new RuntimeException("CNPJ já cadastrado em outro fornecedor: " + novoFornecedor.getCnpj());
         }
         
-        BeanUtils.copyProperties(novoFornecedor, fornecedorExistente, "id", "pecasComDesconto");
+        BeanUtils.copyProperties(novoFornecedor, fornecedorExistente, "id", "pecasComDesconto", "createdAt", "updatedAt");
         return repository.save(fornecedorExistente);
     }
 

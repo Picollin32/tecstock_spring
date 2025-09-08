@@ -48,6 +48,7 @@ public class AgendamentoServiceImpl implements AgendamentoService {
         existente.setHoraFim(agendamento.getHoraFim());
         existente.setPlacaVeiculo(agendamento.getPlacaVeiculo());
         existente.setNomeMecanico(agendamento.getNomeMecanico());
+        existente.setNomeConsultor(agendamento.getNomeConsultor());
         existente.setCor(agendamento.getCor());
 
         Agendamento atualizado = repository.save(existente);

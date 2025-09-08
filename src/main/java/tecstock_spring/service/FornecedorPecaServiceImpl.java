@@ -44,7 +44,7 @@ public class FornecedorPecaServiceImpl implements FornecedorPecaService {
     @Override
     public FornecedorPeca atualizar(FornecedorPecaId id, FornecedorPeca novoFornecedorPeca) {
         FornecedorPeca fornecedorPecaExistente = buscarPorId(id);
-        BeanUtils.copyProperties(novoFornecedorPeca, fornecedorPecaExistente, "id");
+        BeanUtils.copyProperties(novoFornecedorPeca, fornecedorPecaExistente, "id", "createdAt", "updatedAt");
         return repository.save(fornecedorPecaExistente);
     }
 

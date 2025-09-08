@@ -44,7 +44,7 @@ public class FabricanteServiceImpl implements FabricanteService {
     @Override
     public Fabricante atualizar(Long id, Fabricante novoFabricante) {
         Fabricante fabricanteExistente = buscarPorId(id);
-        BeanUtils.copyProperties(novoFabricante, fabricanteExistente, "id");
+        BeanUtils.copyProperties(novoFabricante, fabricanteExistente, "id", "createdAt", "updatedAt");
         return repository.save(fabricanteExistente);
     }
 

@@ -45,7 +45,8 @@ public class MarcaServiceImpl implements MarcaService {
     @Override
     public Marca atualizar(Long id, Marca novoMarca) {
         Marca categoriaExistente = buscarPorId(id);
-        BeanUtils.copyProperties(novoMarca, categoriaExistente, "id");
+        // Preservar o createdAt original e não copiar updatedAt para manter a lógica de auditoria
+        BeanUtils.copyProperties(novoMarca, categoriaExistente, "id", "createdAt", "updatedAt");
         return repository.save(categoriaExistente);
     }
 
