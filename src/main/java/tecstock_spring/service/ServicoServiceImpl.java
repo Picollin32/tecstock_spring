@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.ServicoController;
+import tecstock_spring.exception.NomeDuplicadoException;
 import tecstock_spring.model.Servico;
 import tecstock_spring.repository.ServicoRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ public class ServicoServiceImpl implements ServicoService {
 
     @Override
     public Servico salvar(Servico servico) {
+        validarNomeDuplicado(servico.getNome(), null);
         Servico servicoSalvo = repository.save(servico);
         logger.info("Serviço salvo com sucesso: " + servicoSalvo);
         return servicoSalvo;
@@ -44,6 +46,7 @@ public class ServicoServiceImpl implements ServicoService {
     @Override
     public Servico atualizar(Long id, Servico novoServico) {
         Servico servicoExistente = buscarPorId(id);
+        validarNomeDuplicado(novoServico.getNome(), id);
         BeanUtils.copyProperties(novoServico, servicoExistente, "id", "createdAt", "updatedAt");
         return repository.save(servicoExistente);
     }
@@ -51,5 +54,34 @@ public class ServicoServiceImpl implements ServicoService {
     @Override
     public void deletar(Long id) {
         repository.deleteById(id);
+    }
+    
+    private void validarNomeDuplicado(String nome, Long idExcluir) {
+        logger.info("Validando nome duplicado para serviço: " + nome + " (excluindo ID: " + idExcluir + ")");
+        
+        if (nome == null || nome.trim().isEmpty()) {
+            logger.warn("Nome do serviço é nulo ou vazio");
+            return;
+        }
+        
+        String nomeLimpo = nome.trim();
+        logger.info("Nome limpo para validação: " + nomeLimpo);
+        
+        boolean exists;
+        if (idExcluir != null) {
+            exists = repository.existsByNomeIgnoreCaseAndIdNot(nomeLimpo, idExcluir);
+            logger.info("Verificação para atualização - Existe outro serviço com nome " + nomeLimpo + " (excluindo ID " + idExcluir + "): " + exists);
+        } else {
+            exists = repository.existsByNomeIgnoreCase(nomeLimpo);
+            logger.info("Verificação para criação - Existe serviço com nome " + nomeLimpo + ": " + exists);
+        }
+        
+        if (exists) {
+            String mensagem = "Nome do serviço já está cadastrado";
+            logger.error(mensagem + ": " + nomeLimpo);
+            throw new NomeDuplicadoException(mensagem);
+        }
+        
+        logger.info("Validação de nome concluída com sucesso para serviço: " + nomeLimpo);
     }
 }

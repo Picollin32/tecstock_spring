@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.ClienteController;
+import tecstock_spring.exception.CpfDuplicadoException;
 import tecstock_spring.model.Cliente;
 import tecstock_spring.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +20,8 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public Cliente salvar(Cliente cliente) {
-        // Validar se CPF já existe
         if (repository.existsByCpf(cliente.getCpf())) {
-            throw new RuntimeException("CPF já cadastrado: " + cliente.getCpf());
+            throw new CpfDuplicadoException("CPF já cadastrado");
         }
         
         Cliente clienteSalvo = repository.save(cliente);
@@ -50,12 +50,10 @@ public class ClienteServiceImpl implements ClienteService {
     public Cliente atualizar(Long id, Cliente novoCliente) {
         Cliente clienteExistente = buscarPorId(id);
         
-        // Validar se CPF já existe em outro cliente
         if (repository.existsByCpfAndIdNot(novoCliente.getCpf(), id)) {
-            throw new RuntimeException("CPF já cadastrado em outro cliente: " + novoCliente.getCpf());
+            throw new CpfDuplicadoException("CPF já cadastrado");
         }
         
-        // Preservar o createdAt original e não copiar updatedAt para manter a lógica de auditoria
         BeanUtils.copyProperties(novoCliente, clienteExistente, "id", "createdAt", "updatedAt");
         return repository.save(clienteExistente);
     }

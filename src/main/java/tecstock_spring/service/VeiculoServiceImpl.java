@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.VeiculoController;
+import tecstock_spring.exception.PlacaDuplicadaException;
 import tecstock_spring.model.Veiculo;
 import tecstock_spring.repository.VeiculoRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,9 +19,8 @@ public class VeiculoServiceImpl implements VeiculoService {
 
     @Override
     public Veiculo salvar(Veiculo veiculo) {
-        // Validar se placa já existe
         if (repository.existsByPlaca(veiculo.getPlaca())) {
-            throw new RuntimeException("Placa já cadastrada: " + veiculo.getPlaca());
+            throw new PlacaDuplicadaException("Placa já cadastrada");
         }
         
         Veiculo veiculoSalvo = repository.save(veiculo);
@@ -48,13 +48,11 @@ public class VeiculoServiceImpl implements VeiculoService {
     @Override
     public Veiculo atualizar(Long id, Veiculo novoVeiculo) {
         Veiculo veiculoExistente = buscarPorId(id);
-        
-        // Validar se placa já existe em outro veículo
+
         if (repository.existsByPlacaAndIdNot(novoVeiculo.getPlaca(), id)) {
-            throw new RuntimeException("Placa já cadastrada em outro veículo: " + novoVeiculo.getPlaca());
+            throw new PlacaDuplicadaException("Placa já cadastrada");
         }
-        
-        // Preservar o createdAt original e não copiar updatedAt para manter a lógica de auditoria
+
         BeanUtils.copyProperties(novoVeiculo, veiculoExistente, "id", "createdAt", "updatedAt");
         return repository.save(veiculoExistente);
     }

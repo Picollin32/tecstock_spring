@@ -13,6 +13,58 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(CodigoPecaDuplicadoException.class)
+    public ResponseEntity<Map<String, Object>> handleCodigoPecaDuplicadoException(
+            CodigoPecaDuplicadoException ex, WebRequest request) {
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        body.put("error", "Código de Peça Duplicado");
+        
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(CpfDuplicadoException.class)
+    public ResponseEntity<Map<String, Object>> handleCpfDuplicadoException(
+            CpfDuplicadoException ex, WebRequest request) {
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        body.put("error", "CPF Duplicado");
+        
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(NomeDuplicadoException.class)
+    public ResponseEntity<Map<String, Object>> handleNomeDuplicadoException(
+            NomeDuplicadoException ex, WebRequest request) {
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        body.put("error", "Nome Duplicado");
+        
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(PlacaDuplicadaException.class)
+    public ResponseEntity<Map<String, Object>> handlePlacaDuplicadaException(
+            PlacaDuplicadaException ex, WebRequest request) {
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        body.put("error", "Placa Duplicada");
+        
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(
             RuntimeException ex, WebRequest request) {
@@ -22,7 +74,6 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
         body.put("path", request.getDescription(false));
         
-        // Determinar o status code baseado na mensagem
         HttpStatus status = HttpStatus.BAD_REQUEST;
         if (ex.getMessage().contains("não encontrado")) {
             status = HttpStatus.NOT_FOUND;

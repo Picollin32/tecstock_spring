@@ -4,13 +4,17 @@ import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.BeanUtils;
 import tecstock_spring.controller.PecaController;
+import tecstock_spring.exception.CodigoPecaDuplicadoException;
 import tecstock_spring.model.Fabricante;
+import tecstock_spring.model.Fornecedor;
 import tecstock_spring.model.Peca;
 import tecstock_spring.repository.FabricanteRepository;
+import tecstock_spring.repository.FornecedorRepository;
 import tecstock_spring.repository.PecaRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +22,7 @@ public class PecaServiceImpl implements PecaService {
 
     private final PecaRepository pecaRepository;
     private final FabricanteRepository fabricanteRepository; 
+    private final FornecedorRepository fornecedorRepository;
     
     Logger logger = Logger.getLogger(PecaController.class);
 
@@ -26,16 +31,63 @@ public class PecaServiceImpl implements PecaService {
         if (peca.getFabricante() == null || peca.getFabricante().getId() == null) {
             throw new IllegalArgumentException("O ID do Fabricante não pode ser nulo ao salvar uma Peça.");
         }
-
         Fabricante fabricanteGerenciado = fabricanteRepository.findById(peca.getFabricante().getId())
                 .orElseThrow(() -> new RuntimeException("Fabricante com ID " + peca.getFabricante().getId() + " não encontrado."));
-
         peca.setFabricante(fabricanteGerenciado);
+
+        if (peca.getFornecedor() != null && peca.getFornecedor().getId() != null) {
+            Fornecedor fornecedorGerenciado = fornecedorRepository.findById(peca.getFornecedor().getId())
+                    .orElseThrow(() -> new RuntimeException("Fornecedor com ID " + peca.getFornecedor().getId() + " não encontrado."));
+            peca.setFornecedor(fornecedorGerenciado);
+        }
+
+        validarCodigoDuplicado(peca);
 
         Peca pecaSalva = pecaRepository.save(peca);
         
         logger.info("Peça salva com sucesso: " + pecaSalva);
         return pecaSalva;
+    }
+
+    private void validarCodigoDuplicado(Peca peca) {
+        logger.info("Validando código duplicado para peça: " + peca.getCodigoFabricante());
+        logger.info("Fornecedor da peça: " + (peca.getFornecedor() != null ? peca.getFornecedor().getId() + " - " + peca.getFornecedor().getNome() : "null"));
+        
+        List<Peca> pecasComMesmoCodigo = pecaRepository.findByCodigoFabricante(peca.getCodigoFabricante());
+        logger.info("Encontradas " + pecasComMesmoCodigo.size() + " peças com código " + peca.getCodigoFabricante());
+        for (Peca p : pecasComMesmoCodigo) {
+            logger.info("  Peça ID " + p.getId() + ", fornecedor: " + (p.getFornecedor() != null ? p.getFornecedor().getId() + " - " + p.getFornecedor().getNome() : "null"));
+        }
+        
+        Optional<Peca> pecaExistente;
+        
+        if (peca.getFornecedor() != null && peca.getFornecedor().getId() != null) {
+            logger.info("Buscando peça com código " + peca.getCodigoFabricante() + " e fornecedor ID " + peca.getFornecedor().getId());
+            pecaExistente = pecaRepository.findByCodigoFabricanteAndFornecedorId(
+                peca.getCodigoFabricante(), peca.getFornecedor().getId());
+        } else {
+            logger.info("Buscando peça com código " + peca.getCodigoFabricante() + " e sem fornecedor");
+            pecaExistente = pecaRepository.findByCodigoFabricanteAndFornecedorIsNull(
+                peca.getCodigoFabricante());
+        }
+
+        logger.info("Peça existente encontrada: " + pecaExistente.isPresent());
+        if (pecaExistente.isPresent()) {
+            logger.info("Peça existente ID: " + pecaExistente.get().getId() + ", Peça atual ID: " + peca.getId());
+        }
+
+        if (pecaExistente.isPresent() && !pecaExistente.get().getId().equals(peca.getId())) {
+            String fornecedorInfo = peca.getFornecedor() != null ? 
+                "fornecedor " + peca.getFornecedor().getNome() : "sem fornecedor";
+            logger.error("ERRO: Código duplicado detectado!");
+            throw new CodigoPecaDuplicadoException(
+                "Já existe uma peça cadastrada com o código '" + peca.getCodigoFabricante() + 
+                "' para o " + fornecedorInfo + ". Não é possível cadastrar o mesmo código de peça " +
+                "para o mesmo fornecedor."
+            );
+        }
+        
+        logger.info("Validação de código duplicado concluída com sucesso");
     }
 
     @Override
@@ -58,6 +110,22 @@ public class PecaServiceImpl implements PecaService {
     @Override
     public Peca atualizar(Long id, Peca novaPeca) {
         Peca pecaExistente = buscarPorId(id);
+        
+        novaPeca.setId(id);
+        if (novaPeca.getFabricante() != null && novaPeca.getFabricante().getId() != null) {
+            Fabricante fabricanteGerenciado = fabricanteRepository.findById(novaPeca.getFabricante().getId())
+                    .orElseThrow(() -> new RuntimeException("Fabricante com ID " + novaPeca.getFabricante().getId() + " não encontrado."));
+            novaPeca.setFabricante(fabricanteGerenciado);
+        }
+
+        if (novaPeca.getFornecedor() != null && novaPeca.getFornecedor().getId() != null) {
+            Fornecedor fornecedorGerenciado = fornecedorRepository.findById(novaPeca.getFornecedor().getId())
+                    .orElseThrow(() -> new RuntimeException("Fornecedor com ID " + novaPeca.getFornecedor().getId() + " não encontrado."));
+            novaPeca.setFornecedor(fornecedorGerenciado);
+        }
+        
+        validarCodigoDuplicado(novaPeca);
+        
         BeanUtils.copyProperties(novaPeca, pecaExistente, "id", "createdAt", "updatedAt");
         return pecaRepository.save(pecaExistente);
     }
