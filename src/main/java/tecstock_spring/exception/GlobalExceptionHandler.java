@@ -65,6 +65,71 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(VeiculoEmUsoException.class)
+    public ResponseEntity<Map<String, Object>> handleVeiculoEmUsoException(
+            VeiculoEmUsoException ex, WebRequest request) {
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        body.put("error", "Veículo em Uso");
+        
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(MarcaEmUsoException.class)
+    public ResponseEntity<Map<String, Object>> handleMarcaEmUsoException(
+            MarcaEmUsoException ex, WebRequest request) {
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        body.put("error", "Marca em Uso");
+        
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(FornecedorEmUsoException.class)
+    public ResponseEntity<Map<String, Object>> handleFornecedorEmUsoException(
+            FornecedorEmUsoException ex, WebRequest request) {
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        body.put("error", "Fornecedor em Uso");
+        
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(FabricanteEmUsoException.class)
+    public ResponseEntity<Map<String, Object>> handleFabricanteEmUsoException(
+            FabricanteEmUsoException ex, WebRequest request) {
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        body.put("error", "Fabricante em Uso");
+        
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(PecaComEstoqueException.class)
+    public ResponseEntity<Map<String, Object>> handlePecaComEstoqueException(
+            PecaComEstoqueException ex, WebRequest request) {
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        body.put("error", "Peça com Estoque");
+        
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(
             RuntimeException ex, WebRequest request) {

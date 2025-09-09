@@ -6,8 +6,11 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.VeiculoController;
 import tecstock_spring.exception.PlacaDuplicadaException;
+import tecstock_spring.exception.VeiculoEmUsoException;
 import tecstock_spring.model.Veiculo;
 import tecstock_spring.repository.VeiculoRepository;
+import tecstock_spring.repository.ChecklistRepository;
+import tecstock_spring.repository.AgendamentoRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -15,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 public class VeiculoServiceImpl implements VeiculoService {
 
     private final VeiculoRepository repository;
+    private final ChecklistRepository checklistRepository;
+    private final AgendamentoRepository agendamentoRepository;
     Logger logger = Logger.getLogger(VeiculoController.class);
 
     @Override
@@ -59,6 +64,17 @@ public class VeiculoServiceImpl implements VeiculoService {
 
     @Override
     public void deletar(Long id) {
+        Veiculo veiculo = buscarPorId(id);
+        
+        if (checklistRepository.existsByVeiculoPlaca(veiculo.getPlaca())) {
+            throw new VeiculoEmUsoException("Veículo não pode ser excluído pois está vinculado a um checklist");
+        }
+        
+        if (agendamentoRepository.existsByPlacaVeiculo(veiculo.getPlaca())) {
+            throw new VeiculoEmUsoException("Veículo não pode ser excluído pois está vinculado a um agendamento");
+        }
+        
         repository.deleteById(id);
+        logger.info("Veículo excluído com sucesso: " + veiculo.getPlaca());
     }
 }

@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import tecstock_spring.model.Peca;
+import tecstock_spring.model.Fabricante;
+import tecstock_spring.model.Fornecedor;
 
 public interface PecaRepository extends JpaRepository<Peca, Long> {
     
@@ -17,4 +19,7 @@ public interface PecaRepository extends JpaRepository<Peca, Long> {
     
     @Query("SELECT p FROM Peca p WHERE p.codigoFabricante = :codigo")
     List<Peca> findByCodigoFabricante(@Param("codigo") String codigoFabricante);
+    
+    boolean existsByFabricante(Fabricante fabricante);
+    boolean existsByFornecedor(Fornecedor fornecedor);
 }

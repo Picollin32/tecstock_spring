@@ -7,8 +7,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.FabricanteController;
 import tecstock_spring.exception.NomeDuplicadoException;
+import tecstock_spring.exception.FabricanteEmUsoException;
 import tecstock_spring.model.Fabricante;
 import tecstock_spring.repository.FabricanteRepository;
+import tecstock_spring.repository.PecaRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -16,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 public class FabricanteServiceImpl implements FabricanteService {
 
     private final FabricanteRepository repository;
+    private final PecaRepository pecaRepository;
     Logger logger = Logger.getLogger(FabricanteController.class);
 
     @Override
@@ -53,7 +56,14 @@ public class FabricanteServiceImpl implements FabricanteService {
 
     @Override
     public void deletar(Long id) {
+        Fabricante fabricante = buscarPorId(id);
+        
+        if (pecaRepository.existsByFabricante(fabricante)) {
+            throw new FabricanteEmUsoException("Fabricante não pode ser excluído pois está vinculado a uma peça");
+        }
+        
         repository.deleteById(id);
+        logger.info("Fabricante excluído com sucesso: " + fabricante.getNome());
     }
     
     private void validarNomeDuplicado(String nome, Long idExcluir) {

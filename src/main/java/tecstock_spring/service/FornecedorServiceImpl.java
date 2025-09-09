@@ -5,8 +5,10 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.FornecedorController;
+import tecstock_spring.exception.FornecedorEmUsoException;
 import tecstock_spring.model.Fornecedor;
 import tecstock_spring.repository.FornecedorRepository;
+import tecstock_spring.repository.PecaRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -14,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 public class FornecedorServiceImpl implements FornecedorService {
 
     private final FornecedorRepository repository;
+    private final PecaRepository pecaRepository;
     Logger logger = Logger.getLogger(FornecedorController.class);
 
     @Override
@@ -60,6 +63,12 @@ public class FornecedorServiceImpl implements FornecedorService {
 
     @Override
     public void deletar(Long id) {
+        Fornecedor fornecedor = buscarPorId(id);
+            if (pecaRepository.existsByFornecedor(fornecedor)) {
+            throw new FornecedorEmUsoException("Fornecedor não pode ser excluído pois está vinculado a uma peça");
+        }
+        
         repository.deleteById(id);
+        logger.info("Fornecedor excluído com sucesso: " + fornecedor.getNome());
     }
 }

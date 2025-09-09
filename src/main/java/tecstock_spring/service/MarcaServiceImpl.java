@@ -6,8 +6,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.MarcaController;
 import tecstock_spring.exception.NomeDuplicadoException;
+import tecstock_spring.exception.MarcaEmUsoException;
 import tecstock_spring.model.Marca;
 import tecstock_spring.repository.MarcaRepository;
+import tecstock_spring.repository.VeiculoRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -15,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class MarcaServiceImpl implements MarcaService {
 
     private final MarcaRepository repository;
+    private final VeiculoRepository veiculoRepository;
     Logger logger = Logger.getLogger(MarcaController.class);
 
     @Override
@@ -54,7 +57,14 @@ public class MarcaServiceImpl implements MarcaService {
 
     @Override
     public void deletar(Long id) {
+        Marca marca = buscarPorId(id);
+        
+        if (veiculoRepository.existsByMarca(marca)) {
+            throw new MarcaEmUsoException("Marca não pode ser excluída pois está vinculada a um veículo");
+        }
+        
         repository.deleteById(id);
+        logger.info("Marca excluída com sucesso: " + marca.getMarca());
     }
     
     private void validarNomeDuplicado(String nome, Long idExcluir) {

@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.beans.BeanUtils;
 import tecstock_spring.controller.PecaController;
 import tecstock_spring.exception.CodigoPecaDuplicadoException;
+import tecstock_spring.exception.PecaComEstoqueException;
 import tecstock_spring.model.Fabricante;
 import tecstock_spring.model.Fornecedor;
 import tecstock_spring.model.Peca;
@@ -132,6 +133,15 @@ public class PecaServiceImpl implements PecaService {
 
     @Override
     public void deletar(Long id) {
+        Peca peca = buscarPorId(id);
+        
+        if (peca.getQuantidadeEstoque() > 0) {
+            throw new PecaComEstoqueException("Não é possível excluir a peça '" + peca.getNome() + 
+                "' pois ela ainda possui " + peca.getQuantidadeEstoque() + 
+                " unidades em estoque. Para excluir uma peça, é necessário que seu estoque seja zero.");
+        }
+        
+        logger.info("Excluindo peça com estoque zero: " + peca.getNome());
         pecaRepository.deleteById(id);
     }
 }
