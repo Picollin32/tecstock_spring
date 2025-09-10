@@ -26,7 +26,6 @@ public class OrdemServico {
     @Column(name = "data_hora")
     private LocalDateTime dataHora;
 
-    // Dados do Cliente
     @Column(nullable = false)
     private String clienteNome;
     
@@ -36,7 +35,6 @@ public class OrdemServico {
     private String clienteTelefone;
     private String clienteEmail;
 
-    // Dados do Veículo
     @Column(nullable = false)
     private String veiculoNome;
     
@@ -50,14 +48,12 @@ public class OrdemServico {
     private String veiculoQuilometragem;
     private String veiculoCategoria;
 
-    // Checklist vinculado (opcional)
+
     private Long checklistId;
 
-    // Queixa principal
     @Column(length = 1000)
     private String queixaPrincipal;
 
-    // Serviços realizados - relacionamento com Servico
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "ordem_servico_servicos",
@@ -66,30 +62,24 @@ public class OrdemServico {
     )
     private List<Servico> servicosRealizados;
 
-    // Peças utilizadas - relacionamento com PecaOrdemServico
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @JoinColumn(name = "ordem_servico_id")
     private List<PecaOrdemServico> pecasUtilizadas;
 
-    // Preço total
     @Column(name = "preco_total")
     private Double precoTotal;
 
-    // Garantia em meses
     @Column(nullable = false)
     @Builder.Default
-    private Integer garantiaMeses = 3; // Padrão de 3 meses por lei
+    private Integer garantiaMeses = 3;
 
-    // Tipo de pagamento
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "tipo_pagamento_id")
     private TipoPagamento tipoPagamento;
 
-    // Observações adicionais
     @Column(length = 2000)
     private String observacoes;
 
-    // Status da OS
     @Column(nullable = false)
     @Builder.Default
     private String status = "Pendente";

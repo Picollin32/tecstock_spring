@@ -24,11 +24,11 @@ public class PecaOrdemServico {
     private Integer quantidade;
     
     @Column(name = "valor_unitario")
-    private Double valorUnitario; // Preço da peça no momento da venda
+    private Double valorUnitario;
     
     @Column(name = "valor_total")
-    private Double valorTotal; // quantidade * valorUnitario
-    
+    private Double valorTotal;
+
     @PrePersist
     @PreUpdate
     protected void calculateValues() {

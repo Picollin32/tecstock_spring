@@ -25,8 +25,6 @@ public class OrdemServicoResumoDTO {
     private Integer quantidadeServicos;
     private String tipoPagamento;
     private Integer garantiaMeses;
-    
-    // Campos para relatórios
     private LocalDateTime createdAt;
     private String observacoes;
 }

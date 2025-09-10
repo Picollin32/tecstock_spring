@@ -20,7 +20,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
     @Override
     public OrdemServico salvar(OrdemServico ordemServico) {
-        // Gerar número da OS se não fornecido - seguindo padrão do checklist
         if (ordemServico.getId() == null && (ordemServico.getNumeroOS() == null || ordemServico.getNumeroOS().isEmpty())) {
             Integer max = repository.findAll().stream()
                 .filter(os -> os.getNumeroOS() != null && os.getNumeroOS().matches("\\d+"))
@@ -31,7 +30,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             logger.info("Gerando novo número de OS: " + ordemServico.getNumeroOS());
         }
         
-        // Calcular preço total baseado nos serviços selecionados e categoria do veículo
         if (ordemServico.getServicosRealizados() != null && !ordemServico.getServicosRealizados().isEmpty()) {
             String categoriaVeiculo = ordemServico.getVeiculoCategoria();
             double total = ordemServico.getServicosRealizados().stream()
@@ -96,17 +94,14 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     public OrdemServico atualizar(Long id, OrdemServico novaOrdemServico) {
         OrdemServico ordemServicoExistente = buscarPorId(id);
         
-        // Preservar campos que não devem ser alterados
         String numeroOSOriginal = ordemServicoExistente.getNumeroOS();
         LocalDateTime createdAtOriginal = ordemServicoExistente.getCreatedAt();
         
         BeanUtils.copyProperties(novaOrdemServico, ordemServicoExistente, "id", "numeroOS", "createdAt", "updatedAt");
         
-        // Garantir que campos críticos são preservados
         ordemServicoExistente.setNumeroOS(numeroOSOriginal);
         ordemServicoExistente.setCreatedAt(createdAtOriginal);
         
-        // Recalcular preço total se os serviços foram alterados
         if (ordemServicoExistente.getServicosRealizados() != null && !ordemServicoExistente.getServicosRealizados().isEmpty()) {
             String categoriaVeiculo = ordemServicoExistente.getVeiculoCategoria();
             double total = ordemServicoExistente.getServicosRealizados().stream()

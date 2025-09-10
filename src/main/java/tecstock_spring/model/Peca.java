@@ -58,15 +58,11 @@ public class Peca {
         updatedAt = LocalDateTime.now();
         calcularPrecoFinal();
     }
-    
-    /**
-     * Calcula e atualiza o preço final aplicando a margem de lucro do fornecedor
-     */
+
     public void calcularPrecoFinal() {
         if (fornecedor != null && fornecedor.getMargemLucro() != null) {
             double margemLucro = fornecedor.getMargemLucro();
-            // Se a margem for maior que 1, assumir que está em percentual (ex: 20 para 20%)
-            // Se for menor ou igual a 1, assumir que está em decimal (ex: 0.20 para 20%)
+
             double margemDecimal = margemLucro > 1 ? margemLucro / 100 : margemLucro;
             this.precoFinal = precoUnitario * (1 + margemDecimal);
         } else {
@@ -74,12 +70,7 @@ public class Peca {
         }
     }
     
-    /**
-     * Retorna o preço final da peça (já calculado e persistido)
-     * @return preço final com margem de lucro aplicada
-     */
     public double getPrecoFinal() {
-        // Se o preço final não foi calculado ainda, calcula
         if (precoFinal == 0 && precoUnitario > 0) {
             calcularPrecoFinal();
         }

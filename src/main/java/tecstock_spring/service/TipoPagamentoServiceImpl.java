@@ -23,7 +23,6 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
             throw new NomeDuplicadoException("Nome de tipo de pagamento já cadastrado");
         }
         
-        // Gera o próximo código automaticamente
         Integer proximoCodigo = repository.findMaxCodigo() + 1;
         tipoPagamento.setCodigo(proximoCodigo);
         
@@ -57,7 +56,6 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
             throw new NomeDuplicadoException("Nome de tipo de pagamento já cadastrado");
         }
         
-        // Preserva o código original na atualização
         BeanUtils.copyProperties(novoTipoPagamento, tipoPagamentoExistente, "id", "codigo", "createdAt", "updatedAt");
         return repository.save(tipoPagamentoExistente);
     }
