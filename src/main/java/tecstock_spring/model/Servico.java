@@ -37,11 +37,15 @@ public class Servico {
     public static final String CATEGORIA_PASSEIO = "passeio";
 
     public Double precoParaCategoria(String categoria) {
-        if (categoria == null) return precoPasseio;
+        if (categoria == null) return 0.0;
+        
         if (CATEGORIA_CAMINHONETE.equalsIgnoreCase(categoria)) {
-            return precoCaminhonete != null ? precoCaminhonete : precoPasseio;
+            return precoCaminhonete != null ? precoCaminhonete : 0.0;
+        } else if (CATEGORIA_PASSEIO.equalsIgnoreCase(categoria)) {
+            return precoPasseio != null ? precoPasseio : 0.0;
         }
-        return precoPasseio;
+        
+        return 0.0;
     }
     
     @PrePersist

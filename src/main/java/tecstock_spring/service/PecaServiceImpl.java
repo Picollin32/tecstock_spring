@@ -98,6 +98,13 @@ public class PecaServiceImpl implements PecaService {
     }
 
     @Override
+    public Peca buscarPorCodigo(String codigo) {
+        return pecaRepository.findByCodigoFabricante(codigo).stream()
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Peça com código " + codigo + " não encontrada"));
+    }
+
+    @Override
     public List<Peca> listarTodas() {
         List<Peca> pecas = pecaRepository.findAll();
         if (pecas.isEmpty()) {

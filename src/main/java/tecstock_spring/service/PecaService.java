@@ -8,6 +8,8 @@ public interface PecaService {
 
     Peca buscarPorId(Long id);
 
+    Peca buscarPorCodigo(String codigo);
+
     List<Peca> listarTodas();
 
     Peca atualizar(Long id, Peca peca);

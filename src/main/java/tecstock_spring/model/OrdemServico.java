@@ -1,0 +1,123 @@
+package tecstock_spring.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class OrdemServico {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true, nullable = false)
+    private String numeroOS;
+
+    @Column(name = "data_hora")
+    private LocalDateTime dataHora;
+
+    // Dados do Cliente
+    @Column(nullable = false)
+    private String clienteNome;
+    
+    @Column(nullable = false)
+    private String clienteCpf;
+    
+    private String clienteTelefone;
+    private String clienteEmail;
+
+    // Dados do Veículo
+    @Column(nullable = false)
+    private String veiculoNome;
+    
+    private String veiculoMarca;
+    private String veiculoAno;
+    private String veiculoCor;
+    
+    @Column(nullable = false)
+    private String veiculoPlaca;
+    
+    private String veiculoQuilometragem;
+    private String veiculoCategoria;
+
+    // Checklist vinculado (opcional)
+    private Long checklistId;
+
+    // Queixa principal
+    @Column(length = 1000)
+    private String queixaPrincipal;
+
+    // Serviços realizados - relacionamento com Servico
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "ordem_servico_servicos",
+        joinColumns = @JoinColumn(name = "ordem_servico_id"),
+        inverseJoinColumns = @JoinColumn(name = "servico_id")
+    )
+    private List<Servico> servicosRealizados;
+
+    // Peças utilizadas - relacionamento com PecaOrdemServico
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name = "ordem_servico_id")
+    private List<PecaOrdemServico> pecasUtilizadas;
+
+    // Preço total
+    @Column(name = "preco_total")
+    private Double precoTotal;
+
+    // Garantia em meses
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer garantiaMeses = 3; // Padrão de 3 meses por lei
+
+    // Tipo de pagamento
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "tipo_pagamento_id")
+    private TipoPagamento tipoPagamento;
+
+    // Observações adicionais
+    @Column(length = 2000)
+    private String observacoes;
+
+    // Status da OS
+    @Column(nullable = false)
+    @Builder.Default
+    private String status = "Pendente";
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+    
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+    
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        if (this.dataHora == null) {
+            this.dataHora = LocalDateTime.now();
+        }
+        if (this.garantiaMeses == null) {
+            this.garantiaMeses = 3;
+        }
+        if (this.status == null) {
+            this.status = "Pendente";
+        }
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+}

@@ -1,0 +1,32 @@
+package tecstock_spring.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class OrdemServicoResumoDTO {
+    
+    private Long id;
+    private String numeroOS;
+    private LocalDateTime dataHora;
+    private String clienteNome;
+    private String clienteCpf;
+    private String veiculoNome;
+    private String veiculoPlaca;
+    private Double precoTotal;
+    private String status;
+    private Integer quantidadeServicos;
+    private String tipoPagamento;
+    private Integer garantiaMeses;
+    
+    // Campos para relatórios
+    private LocalDateTime createdAt;
+    private String observacoes;
+}

@@ -38,6 +38,12 @@ public class PecaController {
         return service.buscarPorId(id);
     }
 
+    @GetMapping("/buscarPorCodigo/{codigo}")
+    public Peca buscarPorCodigo(@PathVariable String codigo) {
+        logger.info("Buscando peça com código: " + codigo);
+        return service.buscarPorCodigo(codigo);
+    }
+
     @GetMapping("/listarTodas")
     public List<Peca> listarTodos() {
         logger.info("Listando todas as peças.");
