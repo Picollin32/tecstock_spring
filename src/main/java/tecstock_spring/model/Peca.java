@@ -58,18 +58,17 @@ public class Peca {
         updatedAt = LocalDateTime.now();
         calcularPrecoFinal();
     }
-
+    
     public void calcularPrecoFinal() {
         if (fornecedor != null && fornecedor.getMargemLucro() != null) {
             double margemLucro = fornecedor.getMargemLucro();
-
             double margemDecimal = margemLucro > 1 ? margemLucro / 100 : margemLucro;
             this.precoFinal = precoUnitario * (1 + margemDecimal);
         } else {
             this.precoFinal = precoUnitario;
         }
     }
-    
+
     public double getPrecoFinal() {
         if (precoFinal == 0 && precoUnitario > 0) {
             calcularPrecoFinal();

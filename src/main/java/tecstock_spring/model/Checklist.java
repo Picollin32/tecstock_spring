@@ -7,6 +7,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Column;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -40,6 +42,10 @@ public class Checklist {
     @Column(length = 1000)
     private String queixaPrincipal;
     private Integer nivelCombustivel;
+    
+    @ManyToOne
+    @JoinColumn(name = "consultor_id")
+    private Funcionario consultor;
     private String parachoquesDianteiro;
     private String parachoquesTraseiro;
     private String capo;

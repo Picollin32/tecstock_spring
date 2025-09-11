@@ -6,8 +6,10 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.exception.NomeDuplicadoException;
+import tecstock_spring.exception.TipoPagamentoEmUsoException;
 import tecstock_spring.model.TipoPagamento;
 import tecstock_spring.repository.TipoPagamentoRepository;
+import tecstock_spring.repository.OrdemServicoRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -15,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class TipoPagamentoServiceImpl implements TipoPagamentoService {
 
     private final TipoPagamentoRepository repository;
+    private final OrdemServicoRepository ordemServicoRepository;
     Logger logger = Logger.getLogger(TipoPagamentoServiceImpl.class);
 
     @Override
@@ -62,6 +65,17 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
 
     @Override
     public void deletar(Long id) {
+
+        TipoPagamento tipoPagamento = buscarPorId(id);
+        
+        boolean temOSVinculada = ordemServicoRepository.findAll().stream()
+                .anyMatch(os -> os.getTipoPagamento() != null && os.getTipoPagamento().getId().equals(id));
+        
+        if (temOSVinculada) {
+            throw new TipoPagamentoEmUsoException("Não é possível excluir o tipo de pagamento '" + tipoPagamento.getNome() + "' pois está sendo utilizado em uma ou mais ordens de serviço");
+        }
+        
         repository.deleteById(id);
+        logger.info("Tipo de pagamento excluído com sucesso: " + tipoPagamento.getNome());
     }
 }

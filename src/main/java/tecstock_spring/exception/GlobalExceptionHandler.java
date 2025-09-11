@@ -130,6 +130,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(TipoPagamentoEmUsoException.class)
+    public ResponseEntity<Map<String, Object>> handleTipoPagamentoEmUsoException(
+            TipoPagamentoEmUsoException ex, WebRequest request) {
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        body.put("error", "Tipo de Pagamento em Uso");
+        
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(OrdemServicoNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleOrdemServicoNotFoundException(
             OrdemServicoNotFoundException ex, WebRequest request) {

@@ -48,11 +48,15 @@ public class OrdemServico {
     private String veiculoQuilometragem;
     private String veiculoCategoria;
 
-
     private Long checklistId;
 
     @Column(length = 1000)
     private String queixaPrincipal;
+
+    private String nomeMecanico;
+    private String nomeConsultor;
+
+    private Integer numeroParcelas;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

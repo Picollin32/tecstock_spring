@@ -25,6 +25,9 @@ public class OrdemServicoResumoDTO {
     private Integer quantidadeServicos;
     private String tipoPagamento;
     private Integer garantiaMeses;
+    private String nomeMecanico;
+    private String nomeConsultor;
+    private Integer numeroParcelas;
     private LocalDateTime createdAt;
     private String observacoes;
 }

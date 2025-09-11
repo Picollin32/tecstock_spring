@@ -98,10 +98,11 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         LocalDateTime createdAtOriginal = ordemServicoExistente.getCreatedAt();
         
         BeanUtils.copyProperties(novaOrdemServico, ordemServicoExistente, "id", "numeroOS", "createdAt", "updatedAt");
-        
+
         ordemServicoExistente.setNumeroOS(numeroOSOriginal);
         ordemServicoExistente.setCreatedAt(createdAtOriginal);
         
+
         if (ordemServicoExistente.getServicosRealizados() != null && !ordemServicoExistente.getServicosRealizados().isEmpty()) {
             String categoriaVeiculo = ordemServicoExistente.getVeiculoCategoria();
             double total = ordemServicoExistente.getServicosRealizados().stream()

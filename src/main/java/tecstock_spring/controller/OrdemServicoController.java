@@ -120,6 +120,9 @@ public class OrdemServicoController {
                 .quantidadeServicos(os.getServicosRealizados() != null ? os.getServicosRealizados().size() : 0)
                 .tipoPagamento(os.getTipoPagamento() != null ? os.getTipoPagamento().getNome() : null)
                 .garantiaMeses(os.getGarantiaMeses())
+                .nomeMecanico(os.getNomeMecanico())
+                .nomeConsultor(os.getNomeConsultor())
+                .numeroParcelas(os.getNumeroParcelas())
                 .createdAt(os.getCreatedAt())
                 .observacoes(os.getObservacoes())
                 .build();

@@ -28,7 +28,7 @@ public class PecaOrdemServico {
     
     @Column(name = "valor_total")
     private Double valorTotal;
-
+    
     @PrePersist
     @PreUpdate
     protected void calculateValues() {
