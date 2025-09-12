@@ -29,10 +29,11 @@ public class MovimentacaoEstoqueController {
             @RequestParam String codigoPeca,
             @RequestParam Long fornecedorId,
             @RequestParam int quantidade,
+            @RequestParam Double precoUnitario,
             @RequestParam String numeroNotaFiscal,
             @RequestParam(required = false) String observacoes) {
-        logger.info("Registrando entrada - Código: " + codigoPeca + ", Fornecedor: " + fornecedorId + ", Quantidade: " + quantidade + ", Nota: " + numeroNotaFiscal);
-        return service.registrarEntrada(codigoPeca, fornecedorId, quantidade, numeroNotaFiscal, observacoes);
+        logger.info("Registrando entrada - Código: " + codigoPeca + ", Fornecedor: " + fornecedorId + ", Quantidade: " + quantidade + ", Preço: " + precoUnitario + ", Nota: " + numeroNotaFiscal);
+        return service.registrarEntrada(codigoPeca, fornecedorId, quantidade, precoUnitario, numeroNotaFiscal, observacoes);
     }
 
     @PostMapping("/saida")

@@ -33,8 +33,8 @@ public class Servico {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public static final String CATEGORIA_CAMINHONETE = "caminhonete";
-    public static final String CATEGORIA_PASSEIO = "passeio";
+    public static final String CATEGORIA_CAMINHONETE = "Caminhonete";
+    public static final String CATEGORIA_PASSEIO = "Passeio";
 
     public Double precoParaCategoria(String categoria) {
         if (categoria == null) return 0.0;

@@ -2,7 +2,6 @@ package tecstock_spring.service;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.log4j.Logger;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.exception.OrdemServicoNotFoundException;
 import tecstock_spring.model.OrdemServico;
@@ -30,16 +29,10 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             logger.info("Gerando novo número de OS: " + ordemServico.getNumeroOS());
         }
         
-        if (ordemServico.getServicosRealizados() != null && !ordemServico.getServicosRealizados().isEmpty()) {
-            String categoriaVeiculo = ordemServico.getVeiculoCategoria();
-            double total = ordemServico.getServicosRealizados().stream()
-                .mapToDouble(servico -> {
-                    return servico.precoParaCategoria(categoriaVeiculo);
-                })
-                .sum();
-            ordemServico.setPrecoTotal(total);
-            logger.info("Preço total calculado para categoria " + categoriaVeiculo + ": R$ " + total);
-        }
+        ordemServico.calcularTodosOsPrecos();
+        logger.info("Preços calculados - Serviços: R$ " + ordemServico.getPrecoTotalServicos() + 
+                   ", Peças: R$ " + ordemServico.getPrecoTotalPecas() + 
+                   ", Total: R$ " + ordemServico.getPrecoTotal());
         
         OrdemServico ordemServicoSalva = repository.save(ordemServico);
         logger.info("Ordem de Serviço salva com sucesso: " + ordemServicoSalva.getNumeroOS());
@@ -96,22 +89,46 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         
         String numeroOSOriginal = ordemServicoExistente.getNumeroOS();
         LocalDateTime createdAtOriginal = ordemServicoExistente.getCreatedAt();
+        ordemServicoExistente.setDataHora(novaOrdemServico.getDataHora());
+        ordemServicoExistente.setClienteNome(novaOrdemServico.getClienteNome());
+        ordemServicoExistente.setClienteCpf(novaOrdemServico.getClienteCpf());
+        ordemServicoExistente.setClienteTelefone(novaOrdemServico.getClienteTelefone());
+        ordemServicoExistente.setClienteEmail(novaOrdemServico.getClienteEmail());
+        ordemServicoExistente.setVeiculoNome(novaOrdemServico.getVeiculoNome());
+        ordemServicoExistente.setVeiculoMarca(novaOrdemServico.getVeiculoMarca());
+        ordemServicoExistente.setVeiculoAno(novaOrdemServico.getVeiculoAno());
+        ordemServicoExistente.setVeiculoCor(novaOrdemServico.getVeiculoCor());
+        ordemServicoExistente.setVeiculoPlaca(novaOrdemServico.getVeiculoPlaca());
+        ordemServicoExistente.setVeiculoQuilometragem(novaOrdemServico.getVeiculoQuilometragem());
+        ordemServicoExistente.setVeiculoCategoria(novaOrdemServico.getVeiculoCategoria());
+        ordemServicoExistente.setChecklistId(novaOrdemServico.getChecklistId());
+        ordemServicoExistente.setQueixaPrincipal(novaOrdemServico.getQueixaPrincipal());
+        ordemServicoExistente.setGarantiaMeses(novaOrdemServico.getGarantiaMeses());
+        ordemServicoExistente.setTipoPagamento(novaOrdemServico.getTipoPagamento());
+        ordemServicoExistente.setNumeroParcelas(novaOrdemServico.getNumeroParcelas());
+        ordemServicoExistente.setNomeMecanico(novaOrdemServico.getNomeMecanico());
+        ordemServicoExistente.setNomeConsultor(novaOrdemServico.getNomeConsultor());
+        ordemServicoExistente.setObservacoes(novaOrdemServico.getObservacoes());
+        ordemServicoExistente.setStatus(novaOrdemServico.getStatus());
+        ordemServicoExistente.getServicosRealizados().clear();
+        if (novaOrdemServico.getServicosRealizados() != null) {
+            ordemServicoExistente.getServicosRealizados().addAll(novaOrdemServico.getServicosRealizados());
+        }
         
-        BeanUtils.copyProperties(novaOrdemServico, ordemServicoExistente, "id", "numeroOS", "createdAt", "updatedAt");
+        ordemServicoExistente.getPecasUtilizadas().clear();
+        if (novaOrdemServico.getPecasUtilizadas() != null) {
+            for (tecstock_spring.model.PecaOrdemServico peca : novaOrdemServico.getPecasUtilizadas()) {
+                ordemServicoExistente.getPecasUtilizadas().add(peca);
+            }
+        }
 
         ordemServicoExistente.setNumeroOS(numeroOSOriginal);
         ordemServicoExistente.setCreatedAt(createdAtOriginal);
-        
 
-        if (ordemServicoExistente.getServicosRealizados() != null && !ordemServicoExistente.getServicosRealizados().isEmpty()) {
-            String categoriaVeiculo = ordemServicoExistente.getVeiculoCategoria();
-            double total = ordemServicoExistente.getServicosRealizados().stream()
-                .mapToDouble(servico -> {
-                    return servico.precoParaCategoria(categoriaVeiculo);
-                })
-                .sum();
-            ordemServicoExistente.setPrecoTotal(total);
-        }
+        ordemServicoExistente.calcularTodosOsPrecos();
+        logger.info("Preços recalculados na atualização - Serviços: R$ " + ordemServicoExistente.getPrecoTotalServicos() + 
+                   ", Peças: R$ " + ordemServicoExistente.getPrecoTotalPecas() + 
+                   ", Total: R$ " + ordemServicoExistente.getPrecoTotal());
         
         logger.info("Atualizando Ordem de Serviço ID: " + id + " - Preservando número: " + numeroOSOriginal);
         return repository.save(ordemServicoExistente);

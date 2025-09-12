@@ -21,6 +21,8 @@ public class OrdemServicoResumoDTO {
     private String veiculoNome;
     private String veiculoPlaca;
     private Double precoTotal;
+    private Double precoTotalServicos;
+    private Double precoTotalPecas;
     private String status;
     private Integer quantidadeServicos;
     private String tipoPagamento;

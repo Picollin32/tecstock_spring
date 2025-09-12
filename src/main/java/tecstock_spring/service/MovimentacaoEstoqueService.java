@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface MovimentacaoEstoqueService {
     
-    MovimentacaoEstoque registrarEntrada(String codigoPeca, Long fornecedorId, int quantidade, String numeroNotaFiscal, String observacoes);
+    MovimentacaoEstoque registrarEntrada(String codigoPeca, Long fornecedorId, int quantidade, Double precoUnitario, String numeroNotaFiscal, String observacoes);
     
     MovimentacaoEstoque registrarSaida(String codigoPeca, Long fornecedorId, int quantidade, String numeroNotaFiscal, String observacoes);
     

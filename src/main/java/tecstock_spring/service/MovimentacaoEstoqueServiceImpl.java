@@ -23,8 +23,8 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
     private static final Logger logger = Logger.getLogger(MovimentacaoEstoqueServiceImpl.class);
 
     @Override
-    public MovimentacaoEstoque registrarEntrada(String codigoPeca, Long fornecedorId, int quantidade, String numeroNotaFiscal, String observacoes) {
-        logger.info("Registrando entrada de estoque - Código: " + codigoPeca + ", Fornecedor ID: " + fornecedorId + ", Quantidade: " + quantidade + ", Nota: " + numeroNotaFiscal);
+    public MovimentacaoEstoque registrarEntrada(String codigoPeca, Long fornecedorId, int quantidade, Double precoUnitario, String numeroNotaFiscal, String observacoes) {
+        logger.info("Registrando entrada de estoque - Código: " + codigoPeca + ", Fornecedor ID: " + fornecedorId + ", Quantidade: " + quantidade + ", Preço: " + precoUnitario + ", Nota: " + numeroNotaFiscal);
         
         if (movimentacaoEstoqueRepository.existsByNumeroNotaFiscal(numeroNotaFiscal)) {
             throw new RuntimeException("O número da nota fiscal '" + numeroNotaFiscal + "' já foi utilizado em outra movimentação.");
@@ -40,10 +40,18 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         Fornecedor fornecedor = fornecedorRepository.findById(fornecedorId)
                 .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado"));
         
+        boolean precoAlterado = false;
+        if (precoUnitario != null && Math.abs(peca.getPrecoUnitario() - precoUnitario) > 0.01) {
+            logger.info("Atualizando preço da peça de " + peca.getPrecoUnitario() + " para " + precoUnitario);
+            peca.setPrecoUnitario(precoUnitario);
+            precoAlterado = true;
+        }
+        
         MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
         movimentacao.setCodigoPeca(codigoPeca);
         movimentacao.setFornecedor(fornecedor);
         movimentacao.setQuantidade(quantidade);
+        movimentacao.setPrecoUnitario(precoUnitario);
         movimentacao.setNumeroNotaFiscal(numeroNotaFiscal);
         movimentacao.setTipoMovimentacao(MovimentacaoEstoque.TipoMovimentacao.ENTRADA);
         movimentacao.setObservacoes(observacoes);
@@ -51,8 +59,11 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         MovimentacaoEstoque movimentacaoSalva = movimentacaoEstoqueRepository.save(movimentacao);
         
         peca.setQuantidadeEstoque(peca.getQuantidadeEstoque() + quantidade);
-        pecaRepository.save(peca);
+        peca = pecaRepository.save(peca);
         
+        if (precoAlterado) {
+            logger.info("Preço da peça atualizado. Novo preço de custo: " + peca.getPrecoUnitario() + ", Novo preço de venda: " + peca.getPrecoFinal());
+        }
         logger.info("Entrada registrada com sucesso. Novo estoque da peça: " + peca.getQuantidadeEstoque());
         
         return movimentacaoSalva;

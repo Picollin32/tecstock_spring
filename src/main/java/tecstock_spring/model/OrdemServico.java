@@ -72,6 +72,12 @@ public class OrdemServico {
 
     @Column(name = "preco_total")
     private Double precoTotal;
+    
+    @Column(name = "preco_total_servicos")
+    private Double precoTotalServicos;
+    
+    @Column(name = "preco_total_pecas")
+    private Double precoTotalPecas;
 
     @Column(nullable = false)
     @Builder.Default
@@ -113,5 +119,42 @@ public class OrdemServico {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+    
+    /**
+     * Calcula o valor total dos serviços baseado na categoria do veículo
+     */
+    public Double calcularPrecoTotalServicos() {
+        if (this.servicosRealizados == null || this.servicosRealizados.isEmpty()) {
+            return 0.0;
+        }
+        
+        return this.servicosRealizados.stream()
+            .filter(servico -> servico != null)
+            .mapToDouble(servico -> servico.precoParaCategoria(this.veiculoCategoria))
+            .sum();
+    }
+    
+    /**
+     * Calcula o valor total das peças
+     */
+    public Double calcularPrecoTotalPecas() {
+        if (this.pecasUtilizadas == null || this.pecasUtilizadas.isEmpty()) {
+            return 0.0;
+        }
+        
+        return this.pecasUtilizadas.stream()
+            .filter(peca -> peca != null && peca.getValorTotal() != null)
+            .mapToDouble(PecaOrdemServico::getValorTotal)
+            .sum();
+    }
+    
+    /**
+     * Calcula e atualiza todos os valores (serviços, peças e total geral)
+     */
+    public void calcularTodosOsPrecos() {
+        this.precoTotalServicos = calcularPrecoTotalServicos();
+        this.precoTotalPecas = calcularPrecoTotalPecas();
+        this.precoTotal = this.precoTotalServicos + this.precoTotalPecas;
     }
 }

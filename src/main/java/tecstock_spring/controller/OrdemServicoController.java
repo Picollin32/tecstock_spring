@@ -96,6 +96,14 @@ public class OrdemServicoController {
         return service.atualizar(id, ordemServico);
     }
     
+    @PatchMapping("/api/ordens-servico/{id}/recalcular-precos")
+    public OrdemServico recalcularPrecos(@PathVariable Long id) {
+        logger.info("Recalculando preços da OS ID: " + id);
+        OrdemServico ordemServico = service.buscarPorId(id);
+        ordemServico.calcularTodosOsPrecos();
+        return service.atualizar(id, ordemServico);
+    }
+    
     @GetMapping("/api/ordens-servico/resumo")
     public List<OrdemServicoResumoDTO> listarResumos() {
         logger.info("Listando resumos das ordens de serviço.");
@@ -116,6 +124,8 @@ public class OrdemServicoController {
                 .veiculoNome(os.getVeiculoNome())
                 .veiculoPlaca(os.getVeiculoPlaca())
                 .precoTotal(os.getPrecoTotal())
+                .precoTotalServicos(os.getPrecoTotalServicos())
+                .precoTotalPecas(os.getPrecoTotalPecas())
                 .status(os.getStatus())
                 .quantidadeServicos(os.getServicosRealizados() != null ? os.getServicosRealizados().size() : 0)
                 .tipoPagamento(os.getTipoPagamento() != null ? os.getTipoPagamento().getNome() : null)

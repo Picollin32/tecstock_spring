@@ -47,6 +47,9 @@ public class MovimentacaoEstoque {
     private LocalDateTime dataMovimentacao;
 
     private String observacoes;
+    
+    @Column(name = "preco_unitario")
+    private Double precoUnitario;
 
     public enum TipoMovimentacao {
         ENTRADA,

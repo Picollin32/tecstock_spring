@@ -173,15 +173,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleRuntimeException(
             RuntimeException ex, WebRequest request) {
         
+        String message = ex.getMessage() != null ? ex.getMessage() : "Erro interno do servidor";
+        
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
-        body.put("message", ex.getMessage());
+        body.put("message", message);
         body.put("path", request.getDescription(false));
         
         HttpStatus status = HttpStatus.BAD_REQUEST;
-        if (ex.getMessage().contains("não encontrado")) {
+        if (message.contains("não encontrado")) {
             status = HttpStatus.NOT_FOUND;
-        } else if (ex.getMessage().contains("já cadastrado")) {
+        } else if (message.contains("já cadastrado")) {
             status = HttpStatus.CONFLICT;
         }
         

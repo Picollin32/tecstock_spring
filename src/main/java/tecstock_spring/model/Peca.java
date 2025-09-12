@@ -30,6 +30,7 @@ public class Peca {
     private double precoUnitario;
     private double precoFinal;
     private int quantidadeEstoque;
+    private int estoqueSeguranca;
 
     @ManyToOne
     @JoinColumn(name = "fabricante_id")
