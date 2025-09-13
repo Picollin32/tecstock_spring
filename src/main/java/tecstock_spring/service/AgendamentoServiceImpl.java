@@ -43,6 +43,11 @@ public class AgendamentoServiceImpl implements AgendamentoService {
             throw new RuntimeException("Agendamento não encontrado: " + id);
         }
         Agendamento existente = opt.get();
+        
+        logger.info("=== DEBUG ATUALIZAÇÃO AGENDAMENTO ===");
+        logger.info("Agendamento existente - horaInicio: " + existente.getHoraInicio() + ", horaFim: " + existente.getHoraFim());
+        logger.info("Agendamento recebido - horaInicio: " + agendamento.getHoraInicio() + ", horaFim: " + agendamento.getHoraFim());
+        
         existente.setData(agendamento.getData());
         existente.setHoraInicio(agendamento.getHoraInicio());
         existente.setHoraFim(agendamento.getHoraFim());
@@ -51,8 +56,12 @@ public class AgendamentoServiceImpl implements AgendamentoService {
         existente.setNomeConsultor(agendamento.getNomeConsultor());
         existente.setCor(agendamento.getCor());
 
+        logger.info("Agendamento antes de salvar - horaInicio: " + existente.getHoraInicio() + ", horaFim: " + existente.getHoraFim());
+
         Agendamento atualizado = repository.save(existente);
         logger.info("Agendamento atualizado com sucesso: " + atualizado);
+        logger.info("Agendamento salvo - horaInicio: " + atualizado.getHoraInicio() + ", horaFim: " + atualizado.getHoraFim());
+        logger.info("=====================================");
         return atualizado;
     }
 

@@ -23,6 +23,8 @@ public class OrdemServicoResumoDTO {
     private Double precoTotal;
     private Double precoTotalServicos;
     private Double precoTotalPecas;
+    private Double descontoServicos;
+    private Double descontoPecas;
     private String status;
     private Integer quantidadeServicos;
     private String tipoPagamento;

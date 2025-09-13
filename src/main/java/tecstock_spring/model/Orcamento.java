@@ -14,14 +14,14 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OrdemServico {
+public class Orcamento {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String numeroOS;
+    private String numeroOrcamento;
 
     @Column(name = "data_hora")
     private LocalDateTime dataHora;
@@ -48,8 +48,6 @@ public class OrdemServico {
     private String veiculoQuilometragem;
     private String veiculoCategoria;
 
-    private Long checklistId;
-
     @Column(length = 1000)
     private String queixaPrincipal;
 
@@ -60,15 +58,15 @@ public class OrdemServico {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-        name = "ordem_servico_servicos",
-        joinColumns = @JoinColumn(name = "ordem_servico_id"),
+        name = "orcamento_servicos",
+        joinColumns = @JoinColumn(name = "orcamento_id"),
         inverseJoinColumns = @JoinColumn(name = "servico_id")
     )
-    private List<Servico> servicosRealizados;
+    private List<Servico> servicosOrcados;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    @JoinColumn(name = "ordem_servico_id")
-    private List<PecaOrdemServico> pecasUtilizadas;
+    @JoinColumn(name = "orcamento_id")
+    private List<PecaOrcamento> pecasOrcadas;
 
     @Column(name = "preco_total")
     private Double precoTotal;
@@ -98,7 +96,7 @@ public class OrdemServico {
 
     @Column(nullable = false)
     @Builder.Default
-    private String status = "Pendente";
+    private String status = "ABERTO";
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -118,7 +116,7 @@ public class OrdemServico {
             this.garantiaMeses = 3;
         }
         if (this.status == null) {
-            this.status = "Pendente";
+            this.status = "ABERTO";
         }
     }
     
@@ -131,11 +129,11 @@ public class OrdemServico {
      * Calcula o valor total dos serviços baseado na categoria do veículo
      */
     public Double calcularPrecoTotalServicos() {
-        if (this.servicosRealizados == null || this.servicosRealizados.isEmpty()) {
+        if (this.servicosOrcados == null || this.servicosOrcados.isEmpty()) {
             return 0.0;
         }
         
-        return this.servicosRealizados.stream()
+        return this.servicosOrcados.stream()
             .filter(servico -> servico != null)
             .mapToDouble(servico -> servico.precoParaCategoria(this.veiculoCategoria))
             .sum();
@@ -145,13 +143,13 @@ public class OrdemServico {
      * Calcula o valor total das peças
      */
     public Double calcularPrecoTotalPecas() {
-        if (this.pecasUtilizadas == null || this.pecasUtilizadas.isEmpty()) {
+        if (this.pecasOrcadas == null || this.pecasOrcadas.isEmpty()) {
             return 0.0;
         }
         
-        return this.pecasUtilizadas.stream()
+        return this.pecasOrcadas.stream()
             .filter(peca -> peca != null && peca.getValorTotal() != null)
-            .mapToDouble(PecaOrdemServico::getValorTotal)
+            .mapToDouble(PecaOrcamento::getValorTotal)
             .sum();
     }
     
@@ -183,17 +181,17 @@ public class OrdemServico {
      * Calcula o máximo de desconto permitido para peças (baseado na margem de lucro)
      */
     public Double calcularMaxDescontoPecas() {
-        if (this.pecasUtilizadas == null || this.pecasUtilizadas.isEmpty()) {
+        if (this.pecasOrcadas == null || this.pecasOrcadas.isEmpty()) {
             return 0.0;
         }
         
-        return this.pecasUtilizadas.stream()
-            .filter(pecaOS -> pecaOS != null && pecaOS.getPeca() != null)
-            .mapToDouble(pecaOS -> {
-                Peca peca = pecaOS.getPeca();
+        return this.pecasOrcadas.stream()
+            .filter(pecaOrcamento -> pecaOrcamento != null && pecaOrcamento.getPeca() != null)
+            .mapToDouble(pecaOrcamento -> {
+                Peca peca = pecaOrcamento.getPeca();
                 // Margem de lucro = precoFinal - precoUnitario
                 double margemPorUnidade = peca.getPrecoFinal() - peca.getPrecoUnitario();
-                return margemPorUnidade * pecaOS.getQuantidade();
+                return margemPorUnidade * pecaOrcamento.getQuantidade();
             })
             .sum();
     }

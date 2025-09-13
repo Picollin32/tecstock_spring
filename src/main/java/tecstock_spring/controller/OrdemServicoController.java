@@ -23,6 +23,16 @@ public class OrdemServicoController {
     @PostMapping("/api/ordens-servico/salvar")
     public OrdemServico salvar(@RequestBody OrdemServico ordemServico) {
         logger.info("Salvando ordem de serviço: " + ordemServico.getNumeroOS() + " no controller.");
+        
+        // Validar descontos antes de salvar
+        if (!ordemServico.isDescontoServicosValido(ordemServico.getDescontoServicos())) {
+            throw new IllegalArgumentException("Desconto de serviços excede o limite máximo de 10%");
+        }
+        
+        if (!ordemServico.isDescontoPecasValido(ordemServico.getDescontoPecas())) {
+            throw new IllegalArgumentException("Desconto de peças excede a margem de lucro disponível");
+        }
+        
         return service.salvar(ordemServico);
     }
 
@@ -79,6 +89,16 @@ public class OrdemServicoController {
     @PutMapping("/api/ordens-servico/atualizar/{id}")
     public OrdemServico atualizar(@PathVariable Long id, @RequestBody OrdemServico ordemServico) {
         logger.info("Atualizando ordem de serviço no controller. ID: " + id + ", OS: " + ordemServico.getNumeroOS());
+        
+        // Validar descontos antes de atualizar
+        if (!ordemServico.isDescontoServicosValido(ordemServico.getDescontoServicos())) {
+            throw new IllegalArgumentException("Desconto de serviços excede o limite máximo de 10%");
+        }
+        
+        if (!ordemServico.isDescontoPecasValido(ordemServico.getDescontoPecas())) {
+            throw new IllegalArgumentException("Desconto de peças excede a margem de lucro disponível");
+        }
+        
         return service.atualizar(id, ordemServico);
     }
 
@@ -104,6 +124,18 @@ public class OrdemServicoController {
         return service.atualizar(id, ordemServico);
     }
     
+    @GetMapping("/api/ordens-servico/{id}/max-descontos")
+    public java.util.Map<String, Double> calcularMaxDescontos(@PathVariable Long id) {
+        logger.info("Calculando máximos de desconto para OS ID: " + id);
+        OrdemServico ordemServico = service.buscarPorId(id);
+        
+        java.util.Map<String, Double> maxDescontos = new java.util.HashMap<>();
+        maxDescontos.put("maxDescontoServicos", ordemServico.calcularMaxDescontoServicos());
+        maxDescontos.put("maxDescontoPecas", ordemServico.calcularMaxDescontoPecas());
+        
+        return maxDescontos;
+    }
+    
     @GetMapping("/api/ordens-servico/resumo")
     public List<OrdemServicoResumoDTO> listarResumos() {
         logger.info("Listando resumos das ordens de serviço.");
@@ -126,6 +158,8 @@ public class OrdemServicoController {
                 .precoTotal(os.getPrecoTotal())
                 .precoTotalServicos(os.getPrecoTotalServicos())
                 .precoTotalPecas(os.getPrecoTotalPecas())
+                .descontoServicos(os.getDescontoServicos())
+                .descontoPecas(os.getDescontoPecas())
                 .status(os.getStatus())
                 .quantidadeServicos(os.getServicosRealizados() != null ? os.getServicosRealizados().size() : 0)
                 .tipoPagamento(os.getTipoPagamento() != null ? os.getTipoPagamento().getNome() : null)

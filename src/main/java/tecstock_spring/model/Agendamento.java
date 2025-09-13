@@ -1,5 +1,6 @@
 package tecstock_spring.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -26,9 +27,11 @@ public class Agendamento {
     private LocalDate data;
 
     @Column(name = "hora_inicio")
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime horaInicio;
 
     @Column(name = "hora_fim")
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime horaFim;
 
     private String placaVeiculo;
