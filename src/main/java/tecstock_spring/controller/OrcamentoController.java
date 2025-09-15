@@ -21,8 +21,7 @@ public class OrcamentoController {
     @PostMapping("/api/orcamentos/salvar")
     public Orcamento salvar(@RequestBody Orcamento orcamento) {
         logger.info("Salvando orçamento: " + orcamento.getNumeroOrcamento() + " no controller.");
-        
-        // Validar descontos antes de salvar
+
         if (!orcamento.isDescontoServicosValido(orcamento.getDescontoServicos())) {
             throw new IllegalArgumentException("Desconto de serviços excede o limite máximo de 10%");
         }
@@ -78,7 +77,6 @@ public class OrcamentoController {
     public Orcamento atualizar(@PathVariable Long id, @RequestBody Orcamento orcamento) {
         logger.info("Atualizando orçamento no controller. ID: " + id + ", Orçamento: " + orcamento.getNumeroOrcamento());
         
-        // Validar descontos antes de atualizar
         if (!orcamento.isDescontoServicosValido(orcamento.getDescontoServicos())) {
             throw new IllegalArgumentException("Desconto de serviços excede o limite máximo de 10%");
         }

@@ -98,7 +98,6 @@ public class OrcamentoServiceImpl implements OrcamentoService {
         orcamentoExistente.setNomeMecanico(novoOrcamento.getNomeMecanico());
         orcamentoExistente.setNomeConsultor(novoOrcamento.getNomeConsultor());
         orcamentoExistente.setObservacoes(novoOrcamento.getObservacoes());
-    // status field removed for Orcamento
         orcamentoExistente.getServicosOrcados().clear();
         if (novoOrcamento.getServicosOrcados() != null) {
             orcamentoExistente.getServicosOrcados().addAll(novoOrcamento.getServicosOrcados());

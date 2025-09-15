@@ -118,9 +118,6 @@ public class Orcamento {
         this.updatedAt = LocalDateTime.now();
     }
     
-    /**
-     * Calcula o valor total dos serviços baseado na categoria do veículo
-     */
     public Double calcularPrecoTotalServicos() {
         if (this.servicosOrcados == null || this.servicosOrcados.isEmpty()) {
             return 0.0;
@@ -132,9 +129,7 @@ public class Orcamento {
             .sum();
     }
     
-    /**
-     * Calcula o valor total das peças
-     */
+
     public Double calcularPrecoTotalPecas() {
         if (this.pecasOrcadas == null || this.pecasOrcadas.isEmpty()) {
             return 0.0;
@@ -146,23 +141,16 @@ public class Orcamento {
             .sum();
     }
     
-    /**
-     * Calcula e atualiza todos os valores (serviços, peças e total geral)
-     */
     public void calcularTodosOsPrecos() {
         this.precoTotalServicos = calcularPrecoTotalServicos();
         this.precoTotalPecas = calcularPrecoTotalPecas();
         
-        // Aplicar descontos se existirem
         double totalServicosComDesconto = this.precoTotalServicos - (this.descontoServicos != null ? this.descontoServicos : 0.0);
         double totalPecasComDesconto = this.precoTotalPecas - (this.descontoPecas != null ? this.descontoPecas : 0.0);
         
         this.precoTotal = totalServicosComDesconto + totalPecasComDesconto;
     }
     
-    /**
-     * Calcula o máximo de desconto permitido para serviços (10%)
-     */
     public Double calcularMaxDescontoServicos() {
         if (this.precoTotalServicos == null) {
             return 0.0;
@@ -170,9 +158,6 @@ public class Orcamento {
         return this.precoTotalServicos * 0.10;
     }
     
-    /**
-     * Calcula o máximo de desconto permitido para peças (baseado na margem de lucro)
-     */
     public Double calcularMaxDescontoPecas() {
         if (this.pecasOrcadas == null || this.pecasOrcadas.isEmpty()) {
             return 0.0;
@@ -182,16 +167,12 @@ public class Orcamento {
             .filter(pecaOrcamento -> pecaOrcamento != null && pecaOrcamento.getPeca() != null)
             .mapToDouble(pecaOrcamento -> {
                 Peca peca = pecaOrcamento.getPeca();
-                // Margem de lucro = precoFinal - precoUnitario
                 double margemPorUnidade = peca.getPrecoFinal() - peca.getPrecoUnitario();
                 return margemPorUnidade * pecaOrcamento.getQuantidade();
             })
             .sum();
     }
-    
-    /**
-     * Valida se o desconto de serviços está dentro do limite permitido
-     */
+
     public boolean isDescontoServicosValido(Double desconto) {
         if (desconto == null || desconto <= 0) {
             return true;
@@ -199,9 +180,6 @@ public class Orcamento {
         return desconto <= calcularMaxDescontoServicos();
     }
     
-    /**
-     * Valida se o desconto de peças está dentro do limite permitido
-     */
     public boolean isDescontoPecasValido(Double desconto) {
         if (desconto == null || desconto <= 0) {
             return true;

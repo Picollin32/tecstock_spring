@@ -23,8 +23,7 @@ public class OrdemServicoController {
     @PostMapping("/api/ordens-servico/salvar")
     public OrdemServico salvar(@RequestBody OrdemServico ordemServico) {
         logger.info("Salvando ordem de serviço: " + ordemServico.getNumeroOS() + " no controller.");
-        
-        // Validar descontos antes de salvar
+
         if (!ordemServico.isDescontoServicosValido(ordemServico.getDescontoServicos())) {
             throw new IllegalArgumentException("Desconto de serviços excede o limite máximo de 10%");
         }
@@ -90,7 +89,6 @@ public class OrdemServicoController {
     public OrdemServico atualizar(@PathVariable Long id, @RequestBody OrdemServico ordemServico) {
         logger.info("Atualizando ordem de serviço no controller. ID: " + id + ", OS: " + ordemServico.getNumeroOS());
         
-        // Validar descontos antes de atualizar
         if (!ordemServico.isDescontoServicosValido(ordemServico.getDescontoServicos())) {
             throw new IllegalArgumentException("Desconto de serviços excede o limite máximo de 10%");
         }

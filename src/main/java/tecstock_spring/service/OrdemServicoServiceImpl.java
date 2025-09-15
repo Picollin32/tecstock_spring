@@ -35,10 +35,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             logger.info("Gerando novo número de OS: " + ordemServico.getNumeroOS());
         }
         
-        // Processar estoque das peças antes de salvar
         processarEstoquePecas(ordemServico, isNovaOS);
-        
-        // Na criação, força o cálculo dos preços
+
         ordemServico.forcarRecalculoTodosOsPrecos();
         logger.info("Preços calculados - Serviços: R$ " + ordemServico.getPrecoTotalServicos() + 
                    ", Peças: R$ " + ordemServico.getPrecoTotalPecas() + 
@@ -96,8 +94,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Override
     public OrdemServico atualizar(Long id, OrdemServico novaOrdemServico) {
         OrdemServico ordemServicoExistente = buscarPorId(id);
-        
-        // Salvar estado das peças antes da atualização para calcular diferenças
+
         List<tecstock_spring.model.PecaOrdemServico> pecasAnteriores = new java.util.ArrayList<>();
         if (ordemServicoExistente.getPecasUtilizadas() != null) {
             for (tecstock_spring.model.PecaOrdemServico peca : ordemServicoExistente.getPecasUtilizadas()) {
@@ -133,25 +130,19 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             ordemServicoExistente.getServicosRealizados().addAll(novaOrdemServico.getServicosRealizados());
         }
         
-        // Processar diferenças no estoque de peças antes de limpar as antigas
         processarDiferencasEstoque(pecasAnteriores, novaOrdemServico.getPecasUtilizadas());
 
         ordemServicoExistente.getPecasUtilizadas().clear();
         if (novaOrdemServico.getPecasUtilizadas() != null) {
             for (tecstock_spring.model.PecaOrdemServico pecaNova : novaOrdemServico.getPecasUtilizadas()) {
-                // Criar uma nova instância para evitar problemas de entidade detached
                 tecstock_spring.model.PecaOrdemServico novaPecaOS = new tecstock_spring.model.PecaOrdemServico();
-                
-                // Se tem ID, é uma peça existente - buscar do banco
+
                 if (pecaNova.getId() != null) {
-                    // Buscar a peça existente do banco para manter o contexto JPA
                     java.util.Optional<tecstock_spring.model.PecaOrdemServico> pecaExistente = 
                         pecaOrdemServicoRepository.findById(pecaNova.getId());
                     if (pecaExistente.isPresent()) {
                         novaPecaOS = pecaExistente.get();
-                        // Atualizar apenas os campos necessários
                         novaPecaOS.setQuantidade(pecaNova.getQuantidade());
-                        // Manter valores históricos se já existem
                         if (novaPecaOS.getValorUnitario() == null) {
                             novaPecaOS.setValorUnitario(pecaNova.getValorUnitario());
                         }
@@ -160,7 +151,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                         }
                     }
                 } else {
-                    // É uma peça nova - criar normalmente
                     novaPecaOS.setPeca(pecaNova.getPeca());
                     novaPecaOS.setQuantidade(pecaNova.getQuantidade());
                     novaPecaOS.setValorUnitario(pecaNova.getValorUnitario());
@@ -174,7 +164,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         ordemServicoExistente.setNumeroOS(numeroOSOriginal);
         ordemServicoExistente.setCreatedAt(createdAtOriginal);
 
-        // Na edição, força o recálculo dos preços
         ordemServicoExistente.forcarRecalculoTodosOsPrecos();
         logger.info("Preços recalculados na atualização - Serviços: R$ " + ordemServicoExistente.getPrecoTotalServicos() + 
                    ", Peças: R$ " + ordemServicoExistente.getPrecoTotalPecas() + 
@@ -195,8 +184,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Override
     public void deletar(Long id) {
         OrdemServico ordemServico = buscarPorId(id);
-        
-        // Restaurar estoque das peças ao deletar a OS
+
         if (ordemServico.getPecasUtilizadas() != null && !ordemServico.getPecasUtilizadas().isEmpty()) {
             for (tecstock_spring.model.PecaOrdemServico pecaOS : ordemServico.getPecasUtilizadas()) {
                 try {
@@ -224,7 +212,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         for (tecstock_spring.model.PecaOrdemServico pecaOS : ordemServico.getPecasUtilizadas()) {
             if (pecaOS.getPeca() != null) {
                 if (isNovaOS) {
-                    // Para nova OS, subtrair do estoque
+
                     int novoEstoque = pecaOS.getPeca().getQuantidadeEstoque() - pecaOS.getQuantidade();
                     if (novoEstoque < 0) {
                         logger.warn("Estoque da peça " + pecaOS.getPeca().getNome() + " ficará negativo: " + novoEstoque);
@@ -232,7 +220,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                     }
                     pecaOS.getPeca().setQuantidadeEstoque(novoEstoque);
                     
-                    // Salvar a peça atualizada no banco
                     try {
                         pecaRepository.save(pecaOS.getPeca());
                         logger.info("Subtraído estoque da peça " + pecaOS.getPeca().getNome() + ": " + pecaOS.getQuantidade() + " unidades. Novo estoque: " + novoEstoque);
@@ -240,13 +227,11 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                         logger.error("Erro ao atualizar estoque da peça " + pecaOS.getPeca().getNome() + ": " + e.getMessage());
                     }
                 }
-                // Para edição de OS, o frontend já gerencia o estoque temporariamente
             }
         }
     }
 
     private void processarDiferencasEstoque(List<tecstock_spring.model.PecaOrdemServico> pecasAnteriores, List<tecstock_spring.model.PecaOrdemServico> pecasNovas) {
-        // Mapa das peças anteriores: pecaId -> quantidade
         java.util.Map<Long, Integer> pecasAnterioresMap = new java.util.HashMap<>();
         if (pecasAnteriores != null) {
             for (tecstock_spring.model.PecaOrdemServico peca : pecasAnteriores) {
@@ -256,7 +241,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             }
         }
         
-        // Mapa das peças novas: pecaId -> quantidade
         java.util.Map<Long, Integer> pecasNovasMap = new java.util.HashMap<>();
         if (pecasNovas != null) {
             for (tecstock_spring.model.PecaOrdemServico peca : pecasNovas) {
@@ -265,13 +249,11 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                 }
             }
         }
-        
-        // Conjunto de todas as peças que precisam ser analisadas
+
         java.util.Set<Long> todasAsPecas = new java.util.HashSet<>();
         todasAsPecas.addAll(pecasAnterioresMap.keySet());
         todasAsPecas.addAll(pecasNovasMap.keySet());
         
-        // Processar diferenças para cada peça
         for (Long pecaId : todasAsPecas) {
             int quantidadeAnterior = pecasAnterioresMap.getOrDefault(pecaId, 0);
             int quantidadeNova = pecasNovasMap.getOrDefault(pecaId, 0);

@@ -25,7 +25,6 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
     @Override
     public MovimentacaoEstoque registrarEntrada(String codigoPeca, Long fornecedorId, int quantidade, Double precoUnitario, String numeroNotaFiscal, String observacoes, String origem) {
         logger.info("Registrando entrada de estoque - Código: " + codigoPeca + ", Fornecedor ID: " + fornecedorId + ", Quantidade: " + quantidade + ", Preço: " + precoUnitario + ", Nota: " + numeroNotaFiscal);
-        // Bloquear alterações de estoque originadas por orçamentos
         if (origem != null && origem.equalsIgnoreCase("ORCAMENTO")) {
             logger.warn("Tentativa de registrar entrada de estoque com origem 'ORCAMENTO' - operação bloqueada.");
             throw new RuntimeException("Operação de movimentação de estoque não permitida para orçamentos");
@@ -77,7 +76,6 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
     @Override
     public MovimentacaoEstoque registrarSaida(String codigoPeca, Long fornecedorId, int quantidade, String numeroNotaFiscal, String observacoes, String origem) {
         logger.info("Registrando saída de estoque - Código: " + codigoPeca + ", Fornecedor ID: " + fornecedorId + ", Quantidade: " + quantidade + ", Nota: " + numeroNotaFiscal);
-        // Bloquear alterações de estoque originadas por orçamentos
         if (origem != null && origem.equalsIgnoreCase("ORCAMENTO")) {
             logger.warn("Tentativa de registrar saída de estoque com origem 'ORCAMENTO' - operação bloqueada.");
             throw new RuntimeException("Operação de movimentação de estoque não permitida para orçamentos");

@@ -126,10 +126,7 @@ public class OrdemServico {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-    
-    /**
-     * Calcula o valor total dos serviços baseado na categoria do veículo
-     */
+
     public Double calcularPrecoTotalServicos() {
         if (this.servicosRealizados == null || this.servicosRealizados.isEmpty()) {
             return 0.0;
@@ -140,10 +137,7 @@ public class OrdemServico {
             .mapToDouble(servico -> servico.precoParaCategoria(this.veiculoCategoria))
             .sum();
     }
-    
-    /**
-     * Calcula o valor total das peças
-     */
+
     public Double calcularPrecoTotalPecas() {
         if (this.pecasUtilizadas == null || this.pecasUtilizadas.isEmpty()) {
             return 0.0;
@@ -154,56 +148,39 @@ public class OrdemServico {
             .mapToDouble(PecaOrdemServico::getValorTotal)
             .sum();
     }
-    
-    /**
-     * Calcula e atualiza todos os valores (serviços, peças e total geral)
-     * Se os valores já existem (OS já foi salva), preserva os valores históricos
-     */
+
     public void calcularTodosOsPrecos() {
-        // Só calcula valores de serviços se ainda não foram definidos (preserva valores históricos)
         if (this.precoTotalServicos == null) {
             this.precoTotalServicos = calcularPrecoTotalServicos();
         }
         
-        // Só calcula valores de peças se ainda não foram definidos (preserva valores históricos)
         if (this.precoTotalPecas == null) {
             this.precoTotalPecas = calcularPrecoTotalPecas();
         }
         
-        // Recalcula apenas o total geral aplicando descontos
         double totalServicosComDesconto = this.precoTotalServicos - (this.descontoServicos != null ? this.descontoServicos : 0.0);
         double totalPecasComDesconto = this.precoTotalPecas - (this.descontoPecas != null ? this.descontoPecas : 0.0);
         
         this.precoTotal = totalServicosComDesconto + totalPecasComDesconto;
     }
     
-    /**
-     * Força o recálculo de todos os valores (usado apenas na criação/edição explícita)
-     */
     public void forcarRecalculoTodosOsPrecos() {
         this.precoTotalServicos = calcularPrecoTotalServicos();
         this.precoTotalPecas = calcularPrecoTotalPecas();
         
-        // Aplicar descontos se existirem
         double totalServicosComDesconto = this.precoTotalServicos - (this.descontoServicos != null ? this.descontoServicos : 0.0);
         double totalPecasComDesconto = this.precoTotalPecas - (this.descontoPecas != null ? this.descontoPecas : 0.0);
         
         this.precoTotal = totalServicosComDesconto + totalPecasComDesconto;
     }
     
-    /**
-     * Calcula o máximo de desconto permitido para serviços (10%)
-     */
     public Double calcularMaxDescontoServicos() {
         if (this.precoTotalServicos == null) {
             return 0.0;
         }
         return this.precoTotalServicos * 0.10;
     }
-    
-    /**
-     * Calcula o máximo de desconto permitido para peças (baseado na margem de lucro)
-     */
+
     public Double calcularMaxDescontoPecas() {
         if (this.pecasUtilizadas == null || this.pecasUtilizadas.isEmpty()) {
             return 0.0;
@@ -213,26 +190,19 @@ public class OrdemServico {
             .filter(pecaOS -> pecaOS != null && pecaOS.getPeca() != null)
             .mapToDouble(pecaOS -> {
                 Peca peca = pecaOS.getPeca();
-                // Margem de lucro = precoFinal - precoUnitario
                 double margemPorUnidade = peca.getPrecoFinal() - peca.getPrecoUnitario();
                 return margemPorUnidade * pecaOS.getQuantidade();
             })
             .sum();
     }
     
-    /**
-     * Valida se o desconto de serviços está dentro do limite permitido
-     */
     public boolean isDescontoServicosValido(Double desconto) {
         if (desconto == null || desconto <= 0) {
             return true;
         }
         return desconto <= calcularMaxDescontoServicos();
     }
-    
-    /**
-     * Valida se o desconto de peças está dentro do limite permitido
-     */
+
     public boolean isDescontoPecasValido(Double desconto) {
         if (desconto == null || desconto <= 0) {
             return true;
