@@ -64,11 +64,7 @@ public class OrcamentoController {
         return service.listarPorVeiculo(placa);
     }
     
-    @GetMapping("/api/orcamentos/status/{status}")
-    public List<Orcamento> listarPorStatus(@PathVariable String status) {
-        logger.info("Listando orçamentos com status: " + status);
-        return service.listarPorStatus(status);
-    }
+    
     
     @GetMapping("/api/orcamentos/periodo")
     public List<Orcamento> listarPorPeriodo(
@@ -100,13 +96,7 @@ public class OrcamentoController {
         service.deletar(id);
     }
     
-    @PatchMapping("/api/orcamentos/{id}/status")
-    public Orcamento atualizarStatus(@PathVariable Long id, @RequestParam String status) {
-        logger.info("Atualizando status do orçamento ID: " + id + " para: " + status);
-        Orcamento orcamento = service.buscarPorId(id);
-        orcamento.setStatus(status);
-        return service.atualizar(id, orcamento);
-    }
+    
     
     @PatchMapping("/api/orcamentos/{id}/recalcular-precos")
     public Orcamento recalcularPrecos(@PathVariable Long id) {

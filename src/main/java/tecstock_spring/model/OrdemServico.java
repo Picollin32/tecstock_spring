@@ -157,8 +157,30 @@ public class OrdemServico {
     
     /**
      * Calcula e atualiza todos os valores (serviços, peças e total geral)
+     * Se os valores já existem (OS já foi salva), preserva os valores históricos
      */
     public void calcularTodosOsPrecos() {
+        // Só calcula valores de serviços se ainda não foram definidos (preserva valores históricos)
+        if (this.precoTotalServicos == null) {
+            this.precoTotalServicos = calcularPrecoTotalServicos();
+        }
+        
+        // Só calcula valores de peças se ainda não foram definidos (preserva valores históricos)
+        if (this.precoTotalPecas == null) {
+            this.precoTotalPecas = calcularPrecoTotalPecas();
+        }
+        
+        // Recalcula apenas o total geral aplicando descontos
+        double totalServicosComDesconto = this.precoTotalServicos - (this.descontoServicos != null ? this.descontoServicos : 0.0);
+        double totalPecasComDesconto = this.precoTotalPecas - (this.descontoPecas != null ? this.descontoPecas : 0.0);
+        
+        this.precoTotal = totalServicosComDesconto + totalPecasComDesconto;
+    }
+    
+    /**
+     * Força o recálculo de todos os valores (usado apenas na criação/edição explícita)
+     */
+    public void forcarRecalculoTodosOsPrecos() {
         this.precoTotalServicos = calcularPrecoTotalServicos();
         this.precoTotalPecas = calcularPrecoTotalPecas();
         

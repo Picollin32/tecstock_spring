@@ -94,10 +94,6 @@ public class Orcamento {
     @Column(length = 2000)
     private String observacoes;
 
-    @Column(nullable = false)
-    @Builder.Default
-    private String status = "ABERTO";
-
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
@@ -114,9 +110,6 @@ public class Orcamento {
         }
         if (this.garantiaMeses == null) {
             this.garantiaMeses = 3;
-        }
-        if (this.status == null) {
-            this.status = "ABERTO";
         }
     }
     

@@ -31,9 +31,10 @@ public class MovimentacaoEstoqueController {
             @RequestParam int quantidade,
             @RequestParam Double precoUnitario,
             @RequestParam String numeroNotaFiscal,
-            @RequestParam(required = false) String observacoes) {
-        logger.info("Registrando entrada - Código: " + codigoPeca + ", Fornecedor: " + fornecedorId + ", Quantidade: " + quantidade + ", Preço: " + precoUnitario + ", Nota: " + numeroNotaFiscal);
-        return service.registrarEntrada(codigoPeca, fornecedorId, quantidade, precoUnitario, numeroNotaFiscal, observacoes);
+            @RequestParam(required = false) String observacoes,
+            @RequestParam(required = false) String origem) {
+        logger.info("Registrando entrada - Código: " + codigoPeca + ", Fornecedor: " + fornecedorId + ", Quantidade: " + quantidade + ", Preço: " + precoUnitario + ", Nota: " + numeroNotaFiscal + ", Origem: " + origem);
+        return service.registrarEntrada(codigoPeca, fornecedorId, quantidade, precoUnitario, numeroNotaFiscal, observacoes, origem);
     }
 
     @PostMapping("/saida")
@@ -42,9 +43,10 @@ public class MovimentacaoEstoqueController {
             @RequestParam Long fornecedorId,
             @RequestParam int quantidade,
             @RequestParam String numeroNotaFiscal,
-            @RequestParam(required = false) String observacoes) {
-        logger.info("Registrando saída - Código: " + codigoPeca + ", Fornecedor: " + fornecedorId + ", Quantidade: " + quantidade + ", Nota: " + numeroNotaFiscal);
-        return service.registrarSaida(codigoPeca, fornecedorId, quantidade, numeroNotaFiscal, observacoes);
+            @RequestParam(required = false) String observacoes,
+            @RequestParam(required = false) String origem) {
+        logger.info("Registrando saída - Código: " + codigoPeca + ", Fornecedor: " + fornecedorId + ", Quantidade: " + quantidade + ", Nota: " + numeroNotaFiscal + ", Origem: " + origem);
+        return service.registrarSaida(codigoPeca, fornecedorId, quantidade, numeroNotaFiscal, observacoes, origem);
     }
 
     @GetMapping("/listar")

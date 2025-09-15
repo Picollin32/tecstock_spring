@@ -111,16 +111,14 @@ public class OrdemServicoController {
     @PatchMapping("/api/ordens-servico/{id}/status")
     public OrdemServico atualizarStatus(@PathVariable Long id, @RequestParam String status) {
         logger.info("Atualizando status da OS ID: " + id + " para: " + status);
-        OrdemServico ordemServico = service.buscarPorId(id);
-        ordemServico.setStatus(status);
-        return service.atualizar(id, ordemServico);
+        return service.atualizarApenasStatus(id, status);
     }
     
     @PatchMapping("/api/ordens-servico/{id}/recalcular-precos")
     public OrdemServico recalcularPrecos(@PathVariable Long id) {
         logger.info("Recalculando preços da OS ID: " + id);
         OrdemServico ordemServico = service.buscarPorId(id);
-        ordemServico.calcularTodosOsPrecos();
+        ordemServico.forcarRecalculoTodosOsPrecos();
         return service.atualizar(id, ordemServico);
     }
     

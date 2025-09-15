@@ -69,11 +69,6 @@ public class OrcamentoServiceImpl implements OrcamentoService {
     }
     
     @Override
-    public List<Orcamento> listarPorStatus(String status) {
-        return repository.findByStatusOrderByDataHoraDesc(status);
-    }
-    
-    @Override
     public List<Orcamento> listarPorPeriodo(LocalDateTime inicio, LocalDateTime fim) {
         return repository.findByDataHoraBetween(inicio, fim);
     }
@@ -103,7 +98,7 @@ public class OrcamentoServiceImpl implements OrcamentoService {
         orcamentoExistente.setNomeMecanico(novoOrcamento.getNomeMecanico());
         orcamentoExistente.setNomeConsultor(novoOrcamento.getNomeConsultor());
         orcamentoExistente.setObservacoes(novoOrcamento.getObservacoes());
-        orcamentoExistente.setStatus(novoOrcamento.getStatus());
+    // status field removed for Orcamento
         orcamentoExistente.getServicosOrcados().clear();
         if (novoOrcamento.getServicosOrcados() != null) {
             orcamentoExistente.getServicosOrcados().addAll(novoOrcamento.getServicosOrcados());

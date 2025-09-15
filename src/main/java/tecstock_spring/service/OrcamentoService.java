@@ -19,7 +19,6 @@ public interface OrcamentoService {
     
     List<Orcamento> listarPorVeiculo(String veiculoPlaca);
     
-    List<Orcamento> listarPorStatus(String status);
     
     List<Orcamento> listarPorPeriodo(LocalDateTime inicio, LocalDateTime fim);
 

@@ -26,6 +26,10 @@ public interface OrdemServicoService {
     List<OrdemServico> listarPorPeriodo(LocalDateTime inicio, LocalDateTime fim);
 
     OrdemServico atualizar(Long id, OrdemServico ordemServico);
+    
+    OrdemServico atualizarApenasStatus(Long id, String novoStatus);
 
     void deletar(Long id);
+    
+    void processarEstoquePecas(OrdemServico ordemServico, boolean isNovaOS);
 }

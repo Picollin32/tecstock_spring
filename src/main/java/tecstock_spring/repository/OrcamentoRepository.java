@@ -19,7 +19,5 @@ public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
     
     List<Orcamento> findByVeiculoPlacaOrderByDataHoraDesc(String veiculoPlaca);
     
-    List<Orcamento> findByStatusOrderByDataHoraDesc(String status);
-    
     List<Orcamento> findByDataHoraBetween(LocalDateTime inicio, LocalDateTime fim);
 }
