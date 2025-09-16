@@ -63,13 +63,12 @@ public class MovimentacaoEstoque {
     protected void onCreate() {
         LocalDateTime agora = LocalDateTime.now();
         
-        // Para movimentações de ENTRADA, preenche apenas dataEntrada
         if (tipoMovimentacao == TipoMovimentacao.ENTRADA) {
             if (dataEntrada == null) {
                 dataEntrada = agora;
             }
         }
-        // Para movimentações de SAÍDA, preenche apenas dataSaida
+
         else if (tipoMovimentacao == TipoMovimentacao.SAIDA) {
             if (dataSaida == null) {
                 dataSaida = agora;

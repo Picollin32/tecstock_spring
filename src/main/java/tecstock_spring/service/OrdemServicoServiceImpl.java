@@ -127,8 +127,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         ordemServicoExistente.setConsultor(novaOrdemServico.getConsultor());
         ordemServicoExistente.setObservacoes(novaOrdemServico.getObservacoes());
         ordemServicoExistente.setStatus(novaOrdemServico.getStatus());
-        
-        // Atualizando campos de desconto
         ordemServicoExistente.setDescontoServicos(novaOrdemServico.getDescontoServicos());
         ordemServicoExistente.setDescontoPecas(novaOrdemServico.getDescontoPecas());
         logger.info("Descontos atualizados - Serviços: R$ " + ordemServicoExistente.getDescontoServicos() + 
@@ -200,24 +198,20 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                    " | Status atual: " + ordemServico.getStatus() +
                    " | Peças utilizadas: " + (ordemServico.getPecasUtilizadas() != null ? ordemServico.getPecasUtilizadas().size() : "0"));
         
-        // Verificar se a OS já está fechada
         if ("Fechada".equals(ordemServico.getStatus())) {
             logger.warn("⚠️ Tentativa de fechar OS já fechada: " + ordemServico.getNumeroOS());
             return ordemServico;
         }
         
         logger.info("✅ OS válida para fechamento. Prosseguindo...");
-        
-        // Atualizar status para fechada
+
         ordemServico.setStatus("Fechada");
         logger.info("📝 Status da OS alterado para 'Fechada'");
-        
-        // Processar saída das peças utilizadas
+
         if (ordemServico.getPecasUtilizadas() != null && !ordemServico.getPecasUtilizadas().isEmpty()) {
             logger.info("🚀 Iniciando processamento de saída para " + ordemServico.getPecasUtilizadas().size() + 
                        " peças da OS " + ordemServico.getNumeroOS());
-            
-            // Verificar se o service foi injetado corretamente
+
             if (movimentacaoEstoqueService == null) {
                 logger.error("❌ ERRO CRÍTICO: MovimentacaoEstoqueService é NULO!");
                 throw new RuntimeException("Serviço de movimentação de estoque não foi injetado");
@@ -231,8 +225,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                         logger.info("🔄 Processando peça " + (pecasProcessadas + 1) + "/" + ordemServico.getPecasUtilizadas().size() + 
                                    ": " + pecaOS.getPeca().getNome() + " (Código: " + pecaOS.getPeca().getCodigoFabricante() + 
                                    ", Quantidade: " + pecaOS.getQuantidade() + ")");
-                        
-                        // Processar saída da peça e registrar movimentação
+
                         logger.info("📞 Chamando movimentacaoEstoqueService.processarSaidaPorOrdemServico...");
                         movimentacaoEstoqueService.processarSaidaPorOrdemServico(
                             pecaOS.getPeca().getCodigoFabricante(),
@@ -248,7 +241,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                         logger.error("❌ Erro ao processar saída da peça " + pecaOS.getPeca().getNome() + 
                                    " para OS " + ordemServico.getNumeroOS() + ": " + e.getMessage());
                         logger.error("❌ Stack trace:", e);
-                        // Continue com as outras peças mesmo se uma der erro
+
                     }
                 } else {
                     logger.warn("⚠️ Peça nula encontrada na posição " + (pecasProcessadas + 1) + " da OS " + ordemServico.getNumeroOS());
@@ -272,7 +265,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     public void deletar(Long id) {
         OrdemServico ordemServico = buscarPorId(id);
 
-        // Só restaurar estoque se a OS estiver fechada (pois só nesse caso o estoque foi subtraído)
         if ("Fechada".equals(ordemServico.getStatus()) && 
             ordemServico.getPecasUtilizadas() != null && !ordemServico.getPecasUtilizadas().isEmpty()) {
             
@@ -301,14 +293,12 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         }
         
         logger.info("Processando estoque de peças para OS: " + ordemServico.getNumeroOS() + " (Nova OS: " + isNovaOS + ")");
-        
-        // NOTA: O estoque NÃO é subtraído na criação da OS
-        // A subtração e registro de saída acontecem apenas quando a OS for FECHADA
+
         logger.info("Estoque das peças não será alterado na criação/atualização da OS. Alteração ocorrerá apenas no fechamento da OS.");
         
         for (tecstock_spring.model.PecaOrdemServico pecaOS : ordemServico.getPecasUtilizadas()) {
             if (pecaOS.getPeca() != null) {
-                // Validar se há estoque suficiente disponível (sem subtrair)
+
                 if (pecaOS.getPeca().getQuantidadeEstoque() < pecaOS.getQuantidade()) {
                     logger.warn("AVISO: Peça " + pecaOS.getPeca().getNome() + 
                                " tem estoque insuficiente. Disponível: " + pecaOS.getPeca().getQuantidadeEstoque() + 
