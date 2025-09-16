@@ -62,4 +62,18 @@ public class ChecklistServiceImpl implements ChecklistService {
     public void deletar(Long id) {
         repository.deleteById(id);
     }
+    
+    @Override
+    public boolean fecharChecklist(Long id) {
+        try {
+            Checklist checklist = buscarPorId(id);
+            checklist.setStatus("FECHADO");
+            repository.save(checklist);
+            logger.info("Checklist ID " + id + " foi fechado com sucesso");
+            return true;
+        } catch (Exception e) {
+            logger.error("Erro ao fechar checklist ID " + id + ": " + e.getMessage());
+            return false;
+        }
+    }
 }

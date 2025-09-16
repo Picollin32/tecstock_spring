@@ -39,6 +39,7 @@ public class Checklist {
     private String veiculoCor;
     private String veiculoPlaca;
     private String veiculoQuilometragem;
+    private String veiculoCategoria;
     @Column(length = 1000)
     private String queixaPrincipal;
     private Integer nivelCombustivel;
@@ -101,6 +102,10 @@ public class Checklist {
     private String chaveRoda;
     private String triangulo;
     private String tapetes;
+    
+    @Column(nullable = false)
+    @Builder.Default
+    private String status = "ABERTO";
     
     @Column(name = "created_at")
     private LocalDateTime createdAt;

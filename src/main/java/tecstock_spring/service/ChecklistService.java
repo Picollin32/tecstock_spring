@@ -13,4 +13,6 @@ public interface ChecklistService {
     Checklist atualizar(Long id, Checklist checklist);
 
     void deletar(Long id);
+    
+    boolean fecharChecklist(Long id);
 }

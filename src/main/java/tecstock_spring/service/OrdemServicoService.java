@@ -29,6 +29,8 @@ public interface OrdemServicoService {
     
     OrdemServico atualizarApenasStatus(Long id, String novoStatus);
 
+    OrdemServico fecharOrdemServico(Long id);
+
     void deletar(Long id);
     
     void processarEstoquePecas(OrdemServico ordemServico, boolean isNovaOS);

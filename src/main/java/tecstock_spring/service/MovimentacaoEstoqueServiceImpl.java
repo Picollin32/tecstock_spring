@@ -30,8 +30,8 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
             throw new RuntimeException("Operação de movimentação de estoque não permitida para orçamentos");
         }
 
-        if (movimentacaoEstoqueRepository.existsByNumeroNotaFiscal(numeroNotaFiscal)) {
-            throw new RuntimeException("O número da nota fiscal '" + numeroNotaFiscal + "' já foi utilizado em outra movimentação.");
+        if (movimentacaoEstoqueRepository.existsByNumeroNotaFiscalAndFornecedorId(numeroNotaFiscal, fornecedorId)) {
+            throw new RuntimeException("O número da nota fiscal '" + numeroNotaFiscal + "' já foi utilizado em outra movimentação para este fornecedor.");
         }
 
         Optional<Peca> pecaOptional = pecaRepository.findByCodigoFabricanteAndFornecedorId(codigoPeca, fornecedorId);
@@ -81,8 +81,8 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
             throw new RuntimeException("Operação de movimentação de estoque não permitida para orçamentos");
         }
 
-        if (movimentacaoEstoqueRepository.existsByNumeroNotaFiscal(numeroNotaFiscal)) {
-            throw new RuntimeException("O número da nota fiscal '" + numeroNotaFiscal + "' já foi utilizado em outra movimentação.");
+        if (movimentacaoEstoqueRepository.existsByNumeroNotaFiscalAndFornecedorId(numeroNotaFiscal, fornecedorId)) {
+            throw new RuntimeException("O número da nota fiscal '" + numeroNotaFiscal + "' já foi utilizado em outra movimentação para este fornecedor.");
         }
         
         Optional<Peca> pecaOptional = pecaRepository.findByCodigoFabricanteAndFornecedorId(codigoPeca, fornecedorId);
@@ -119,22 +119,92 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
 
     @Override
     public List<MovimentacaoEstoque> listarTodas() {
-        return movimentacaoEstoqueRepository.findAllByOrderByDataMovimentacaoDesc();
+        return movimentacaoEstoqueRepository.findAllByOrderByDataEntradaDesc();
     }
 
     @Override
     public List<MovimentacaoEstoque> listarPorCodigoPeca(String codigoPeca) {
-        return movimentacaoEstoqueRepository.findByCodigoPecaOrderByDataMovimentacaoDesc(codigoPeca);
+        return movimentacaoEstoqueRepository.findByCodigoPecaOrderByDataEntradaDesc(codigoPeca);
     }
 
     @Override
     public List<MovimentacaoEstoque> listarPorFornecedor(Long fornecedorId) {
-        return movimentacaoEstoqueRepository.findByFornecedorIdOrderByDataMovimentacaoDesc(fornecedorId);
+        return movimentacaoEstoqueRepository.findByFornecedorIdOrderByDataEntradaDesc(fornecedorId);
     }
 
     @Override
     public MovimentacaoEstoque buscarPorId(Long id) {
         return movimentacaoEstoqueRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Movimentação não encontrada"));
+    }
+
+    @Override
+    public void processarSaidaPorOrdemServico(String codigoPeca, Long fornecedorId, int quantidade, String numeroOS) {
+        logger.info("🎯 MÉTODO CHAMADO: processarSaidaPorOrdemServico");
+        logger.info("🔄 INICIANDO processamento de saída - Peça: " + codigoPeca + 
+                   " | Quantidade: " + quantidade + " | OS: " + numeroOS + " | Fornecedor ID: " + fornecedorId);
+        
+        try {
+            Fornecedor fornecedor = fornecedorRepository.findById(fornecedorId)
+                    .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado"));
+            
+            // Buscar a peça para atualizar o estoque
+            Optional<Peca> pecaOptional = pecaRepository.findByCodigoFabricanteAndFornecedorId(codigoPeca, fornecedorId);
+            if (pecaOptional.isEmpty()) {
+                throw new RuntimeException("Peça não encontrada com código: " + codigoPeca + " para o fornecedor informado");
+            }
+            
+            Peca peca = pecaOptional.get();
+            logger.info("📦 Peça encontrada: " + peca.getNome() + " | Estoque atual: " + peca.getQuantidadeEstoque());
+            
+            // Verificar se há estoque suficiente
+            if (peca.getQuantidadeEstoque() < quantidade) {
+                throw new RuntimeException("Estoque insuficiente para a peça " + peca.getNome() + 
+                                         ". Disponível: " + peca.getQuantidadeEstoque() + 
+                                         ", Solicitado: " + quantidade);
+            }
+            
+            // 1. SUBTRAIR DO ESTOQUE da peça
+            int estoqueAnterior = peca.getQuantidadeEstoque();
+            int novoEstoque = estoqueAnterior - quantidade;
+            peca.setQuantidadeEstoque(novoEstoque);
+            pecaRepository.save(peca);
+            logger.info("📉 ESTOQUE ATUALIZADO - Peça: " + peca.getNome() + 
+                       " | Estoque anterior: " + estoqueAnterior + 
+                       " | Quantidade subtraída: " + quantidade + 
+                       " | Novo estoque: " + novoEstoque);
+            
+            // 2. REGISTRAR MOVIMENTAÇÃO DE SAÍDA
+            String numeroNotaFiscal = "OS-" + numeroOS + "-SAIDA-" + codigoPeca;
+            MovimentacaoEstoque movimentacaoSaida = new MovimentacaoEstoque();
+            movimentacaoSaida.setCodigoPeca(codigoPeca);
+            movimentacaoSaida.setFornecedor(fornecedor);
+            movimentacaoSaida.setQuantidade(quantidade);
+            movimentacaoSaida.setPrecoUnitario(peca.getPrecoUnitario()); // Adicionar preço unitário atual da peça
+            movimentacaoSaida.setNumeroNotaFiscal(numeroNotaFiscal);
+            movimentacaoSaida.setTipoMovimentacao(MovimentacaoEstoque.TipoMovimentacao.SAIDA);
+            movimentacaoSaida.setObservacoes("Saída por fechamento da OS " + numeroOS + " - Peça: " + peca.getNome());
+            // dataEntrada e dataSaida serão preenchidas automaticamente pelo @PrePersist
+            
+            MovimentacaoEstoque movimentacaoSalva = movimentacaoEstoqueRepository.save(movimentacaoSaida);
+            logger.info("📝 MOVIMENTAÇÃO REGISTRADA - ID: " + movimentacaoSalva.getId() + 
+                       " | Tipo: SAIDA | Peça: " + codigoPeca + 
+                       " | Quantidade: " + quantidade + 
+                       " | Preço Unitário: R$ " + String.format("%.2f", peca.getPrecoUnitario()) +
+                       " | Nota Fiscal: " + numeroNotaFiscal + 
+                       " | OS: " + numeroOS);
+            
+            logger.info("✅ SUCESSO - Saída processada completamente para peça " + peca.getNome() + 
+                       " (OS: " + numeroOS + ")");
+            
+        } catch (Exception e) {
+            logger.error("❌ ERRO ao processar saída da peça " + codigoPeca + " (OS: " + numeroOS + "): " + e.getMessage());
+            throw new RuntimeException("Erro ao processar saída da peça: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<MovimentacaoEstoque> listarPorOrdemServico(String numeroOS) {
+        return movimentacaoEstoqueRepository.findByObservacoesContainingOrderByDataEntradaDesc("OS " + numeroOS);
     }
 }

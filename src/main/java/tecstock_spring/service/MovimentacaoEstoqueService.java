@@ -24,4 +24,8 @@ public interface MovimentacaoEstoqueService {
     List<MovimentacaoEstoque> listarPorFornecedor(Long fornecedorId);
     
     MovimentacaoEstoque buscarPorId(Long id);
+    
+    void processarSaidaPorOrdemServico(String codigoPeca, Long fornecedorId, int quantidade, String numeroOS);
+    
+    List<MovimentacaoEstoque> listarPorOrdemServico(String numeroOS);
 }

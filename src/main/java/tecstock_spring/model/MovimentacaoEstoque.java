@@ -43,8 +43,11 @@ public class MovimentacaoEstoque {
     @Column(nullable = false)
     private TipoMovimentacao tipoMovimentacao;
 
-    @Column(name = "data_movimentacao", nullable = false)
-    private LocalDateTime dataMovimentacao;
+    @Column(name = "data_entrada")
+    private LocalDateTime dataEntrada;
+
+    @Column(name = "data_saida")
+    private LocalDateTime dataSaida;
 
     private String observacoes;
     
@@ -58,8 +61,19 @@ public class MovimentacaoEstoque {
 
     @PrePersist
     protected void onCreate() {
-        if (dataMovimentacao == null) {
-            dataMovimentacao = LocalDateTime.now();
+        LocalDateTime agora = LocalDateTime.now();
+        
+        // Para movimentações de ENTRADA, preenche apenas dataEntrada
+        if (tipoMovimentacao == TipoMovimentacao.ENTRADA) {
+            if (dataEntrada == null) {
+                dataEntrada = agora;
+            }
+        }
+        // Para movimentações de SAÍDA, preenche apenas dataSaida
+        else if (tipoMovimentacao == TipoMovimentacao.SAIDA) {
+            if (dataSaida == null) {
+                dataSaida = agora;
+            }
         }
     }
 }

@@ -52,4 +52,10 @@ public class ChecklistController {
         logger.info("Deletando checklist no controller. ID: " + id);
         service.deletar(id);
     }
+    
+    @PutMapping("/api/checklists/fechar/{id}")
+    public boolean fecharChecklist(@PathVariable Long id) {
+        logger.info("Fechando checklist no controller. ID: " + id);
+        return service.fecharChecklist(id);
+    }
 }

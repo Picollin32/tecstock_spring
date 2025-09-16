@@ -51,8 +51,13 @@ public class Orcamento {
     @Column(length = 1000)
     private String queixaPrincipal;
 
-    private String nomeMecanico;
-    private String nomeConsultor;
+    @ManyToOne
+    @JoinColumn(name = "mecanico_id")
+    private Funcionario mecanico;
+    
+    @ManyToOne
+    @JoinColumn(name = "consultor_id")
+    private Funcionario consultor;
 
     private Integer numeroParcelas;
 

@@ -112,6 +112,15 @@ public class OrdemServicoController {
         return service.atualizarApenasStatus(id, status);
     }
     
+    @PostMapping("/api/ordens-servico/{id}/fechar")
+    public OrdemServico fecharOrdemServico(@PathVariable Long id) {
+        logger.info("🔥 CONTROLLER: Recebida solicitação para fechar OS com ID: " + id);
+        OrdemServico resultado = service.fecharOrdemServico(id);
+        logger.info("🎉 CONTROLLER: OS fechada com sucesso - Número: " + resultado.getNumeroOS() + 
+                   " | Status: " + resultado.getStatus());
+        return resultado;
+    }
+    
     @PatchMapping("/api/ordens-servico/{id}/recalcular-precos")
     public OrdemServico recalcularPrecos(@PathVariable Long id) {
         logger.info("Recalculando preços da OS ID: " + id);
@@ -160,8 +169,8 @@ public class OrdemServicoController {
                 .quantidadeServicos(os.getServicosRealizados() != null ? os.getServicosRealizados().size() : 0)
                 .tipoPagamento(os.getTipoPagamento() != null ? os.getTipoPagamento().getNome() : null)
                 .garantiaMeses(os.getGarantiaMeses())
-                .nomeMecanico(os.getNomeMecanico())
-                .nomeConsultor(os.getNomeConsultor())
+                .nomeMecanico(os.getMecanico() != null ? os.getMecanico().getNome() : null)
+                .nomeConsultor(os.getConsultor() != null ? os.getConsultor().getNome() : null)
                 .numeroParcelas(os.getNumeroParcelas())
                 .createdAt(os.getCreatedAt())
                 .observacoes(os.getObservacoes())
