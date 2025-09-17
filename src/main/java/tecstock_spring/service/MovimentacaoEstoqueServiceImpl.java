@@ -30,6 +30,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
             throw new RuntimeException("Operação de movimentação de estoque não permitida para orçamentos");
         }
 
+        // Verifica se a nota fiscal já foi utilizada para este fornecedor
         if (movimentacaoEstoqueRepository.existsByNumeroNotaFiscalAndFornecedorId(numeroNotaFiscal, fornecedorId)) {
             throw new RuntimeException("O número da nota fiscal '" + numeroNotaFiscal + "' já foi utilizado em outra movimentação para este fornecedor.");
         }
@@ -81,6 +82,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
             throw new RuntimeException("Operação de movimentação de estoque não permitida para orçamentos");
         }
 
+        // Verifica se a nota fiscal já foi utilizada para este fornecedor
         if (movimentacaoEstoqueRepository.existsByNumeroNotaFiscalAndFornecedorId(numeroNotaFiscal, fornecedorId)) {
             throw new RuntimeException("O número da nota fiscal '" + numeroNotaFiscal + "' já foi utilizado em outra movimentação para este fornecedor.");
         }
@@ -202,5 +204,53 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
     @Override
     public List<MovimentacaoEstoque> listarPorOrdemServico(String numeroOS) {
         return movimentacaoEstoqueRepository.findByObservacoesContainingOrderByDataEntradaDesc("OS " + numeroOS);
+    }
+    
+    @Override
+    public boolean verificarNotaFiscalJaUtilizada(String numeroNotaFiscal, Long fornecedorId) {
+        return movimentacaoEstoqueRepository.existsByNumeroNotaFiscalAndFornecedorId(numeroNotaFiscal, fornecedorId);
+    }
+    
+    @Override
+    public MovimentacaoEstoque registrarEntradaSemValidacaoNota(String codigoPeca, Long fornecedorId, int quantidade, Double precoUnitario, String numeroNotaFiscal, String observacoes) {
+        logger.info("Registrando entrada SEM validação de nota - Código: " + codigoPeca + ", Fornecedor ID: " + fornecedorId + ", Quantidade: " + quantidade);
+        
+        Optional<Peca> pecaOptional = pecaRepository.findByCodigoFabricanteAndFornecedorId(codigoPeca, fornecedorId);
+        if (pecaOptional.isEmpty()) {
+            throw new RuntimeException("Não foi encontrada uma peça cadastrada com o código '" + codigoPeca + "' para o fornecedor informado.");
+        }
+        
+        Peca peca = pecaOptional.get();
+        
+        Fornecedor fornecedor = fornecedorRepository.findById(fornecedorId)
+                .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado"));
+        
+        boolean precoAlterado = false;
+        if (precoUnitario != null && Math.abs(peca.getPrecoUnitario() - precoUnitario) > 0.01) {
+            logger.info("Atualizando preço da peça de " + peca.getPrecoUnitario() + " para " + precoUnitario);
+            peca.setPrecoUnitario(precoUnitario);
+            precoAlterado = true;
+        }
+        
+        MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
+        movimentacao.setCodigoPeca(codigoPeca);
+        movimentacao.setFornecedor(fornecedor);
+        movimentacao.setQuantidade(quantidade);
+        movimentacao.setPrecoUnitario(precoUnitario);
+        movimentacao.setNumeroNotaFiscal(numeroNotaFiscal);
+        movimentacao.setTipoMovimentacao(MovimentacaoEstoque.TipoMovimentacao.ENTRADA);
+        movimentacao.setObservacoes(observacoes);
+        
+        MovimentacaoEstoque movimentacaoSalva = movimentacaoEstoqueRepository.save(movimentacao);
+        
+        peca.setQuantidadeEstoque(peca.getQuantidadeEstoque() + quantidade);
+        peca = pecaRepository.save(peca);
+        
+        if (precoAlterado) {
+            logger.info("Preço da peça atualizado. Novo preço de custo: " + peca.getPrecoUnitario() + ", Novo preço de venda: " + peca.getPrecoFinal());
+        }
+        logger.info("Entrada registrada com sucesso. Novo estoque da peça: " + peca.getQuantidadeEstoque());
+        
+        return movimentacaoSalva;
     }
 }

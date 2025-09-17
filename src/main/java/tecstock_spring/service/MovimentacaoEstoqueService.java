@@ -28,4 +28,8 @@ public interface MovimentacaoEstoqueService {
     void processarSaidaPorOrdemServico(String codigoPeca, Long fornecedorId, int quantidade, String numeroOS);
     
     List<MovimentacaoEstoque> listarPorOrdemServico(String numeroOS);
+    
+    boolean verificarNotaFiscalJaUtilizada(String numeroNotaFiscal, Long fornecedorId);
+    
+    MovimentacaoEstoque registrarEntradaSemValidacaoNota(String codigoPeca, Long fornecedorId, int quantidade, Double precoUnitario, String numeroNotaFiscal, String observacoes);
 }

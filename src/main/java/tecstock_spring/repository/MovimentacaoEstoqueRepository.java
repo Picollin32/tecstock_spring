@@ -25,6 +25,9 @@ public interface MovimentacaoEstoqueRepository extends JpaRepository<Movimentaca
     
     boolean existsByNumeroNotaFiscalAndFornecedorId(String numeroNotaFiscal, Long fornecedorId);
     
+    @Query("SELECT COUNT(m) > 0 FROM MovimentacaoEstoque m WHERE m.numeroNotaFiscal = ?1 AND m.fornecedor.id = ?2 AND DATE(COALESCE(m.dataSaida, m.dataEntrada)) != ?3")
+    boolean existsByNumeroNotaFiscalAndFornecedorIdAndDataEntradaNot(String numeroNotaFiscal, Long fornecedorId, java.time.LocalDate dataAtual);
+    
     @Query("SELECT m FROM MovimentacaoEstoque m WHERE m.observacoes LIKE %?1% ORDER BY COALESCE(m.dataSaida, m.dataEntrada) DESC")
     List<MovimentacaoEstoque> findByObservacoesContainingOrderByDataEntradaDesc(String observacoes);
 }
