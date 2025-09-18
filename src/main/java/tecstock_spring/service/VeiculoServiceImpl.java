@@ -11,6 +11,7 @@ import tecstock_spring.model.Veiculo;
 import tecstock_spring.repository.VeiculoRepository;
 import tecstock_spring.repository.ChecklistRepository;
 import tecstock_spring.repository.AgendamentoRepository;
+import tecstock_spring.repository.OrdemServicoRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -20,6 +21,7 @@ public class VeiculoServiceImpl implements VeiculoService {
     private final VeiculoRepository repository;
     private final ChecklistRepository checklistRepository;
     private final AgendamentoRepository agendamentoRepository;
+    private final OrdemServicoRepository ordemServicoRepository;
     Logger logger = Logger.getLogger(VeiculoController.class);
 
     @Override
@@ -65,13 +67,16 @@ public class VeiculoServiceImpl implements VeiculoService {
     @Override
     public void deletar(Long id) {
         Veiculo veiculo = buscarPorId(id);
-        
-        if (checklistRepository.existsByVeiculoPlaca(veiculo.getPlaca())) {
-            throw new VeiculoEmUsoException("Veículo não pode ser excluído pois está vinculado a um checklist");
+        if (ordemServicoRepository != null && ordemServicoRepository.existsByVeiculoPlaca(veiculo.getPlaca())) {
+            throw new VeiculoEmUsoException("Veículo não pode ser excluído: está em uso em uma Ordem de Serviço (OS) com placa " + veiculo.getPlaca());
         }
-        
+
+        if (checklistRepository.existsByVeiculoPlaca(veiculo.getPlaca())) {
+            throw new VeiculoEmUsoException("Veículo não pode ser excluído: está em uso em um Checklist com placa " + veiculo.getPlaca());
+        }
+
         if (agendamentoRepository.existsByPlacaVeiculo(veiculo.getPlaca())) {
-            throw new VeiculoEmUsoException("Veículo não pode ser excluído pois está vinculado a um agendamento");
+            throw new VeiculoEmUsoException("Veículo não pode ser excluído: está em uso em um Agendamento com placa " + veiculo.getPlaca());
         }
         
         repository.deleteById(id);

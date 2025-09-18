@@ -16,8 +16,16 @@ public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
     List<Orcamento> findAllByOrderByCreatedAtDesc();
     
     List<Orcamento> findByClienteCpfOrderByDataHoraDesc(String clienteCpf);
+    java.util.Optional<Orcamento> findFirstByClienteCpfOrderByDataHoraDesc(String clienteCpf);
     
     List<Orcamento> findByVeiculoPlacaOrderByDataHoraDesc(String veiculoPlaca);
+    java.util.Optional<Orcamento> findFirstByVeiculoPlacaOrderByDataHoraDesc(String veiculoPlaca);
     
     List<Orcamento> findByDataHoraBetween(LocalDateTime inicio, LocalDateTime fim);
+    boolean existsByClienteCpf(String clienteCpf);
+    boolean existsByVeiculoPlaca(String veiculoPlaca);
+    boolean existsByMecanicoId(Long mecanicoId);
+    boolean existsByConsultorId(Long consultorId);
+    java.util.Optional<Orcamento> findFirstByMecanicoIdOrderByDataHoraDesc(Long mecanicoId);
+    java.util.Optional<Orcamento> findFirstByConsultorIdOrderByDataHoraDesc(Long consultorId);
 }

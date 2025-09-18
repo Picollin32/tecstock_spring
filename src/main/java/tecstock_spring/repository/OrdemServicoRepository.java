@@ -16,8 +16,16 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
     boolean existsByNumeroOS(String numeroOS);
     
     List<OrdemServico> findByClienteCpfOrderByDataHoraDesc(String clienteCpf);
+    java.util.Optional<OrdemServico> findFirstByClienteCpfOrderByDataHoraDesc(String clienteCpf);
     
     List<OrdemServico> findByVeiculoPlacaOrderByDataHoraDesc(String veiculoPlaca);
+    java.util.Optional<OrdemServico> findFirstByVeiculoPlacaOrderByDataHoraDesc(String veiculoPlaca);
+    boolean existsByClienteCpf(String clienteCpf);
+    boolean existsByVeiculoPlaca(String veiculoPlaca);
+    boolean existsByMecanicoId(Long mecanicoId);
+    boolean existsByConsultorId(Long consultorId);
+    java.util.Optional<OrdemServico> findFirstByMecanicoIdOrderByDataHoraDesc(Long mecanicoId);
+    java.util.Optional<OrdemServico> findFirstByConsultorIdOrderByDataHoraDesc(Long consultorId);
     
     List<OrdemServico> findByStatusOrderByDataHoraDesc(String status);
     

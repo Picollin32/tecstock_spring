@@ -116,7 +116,7 @@ public class OrdemServicoController {
     public OrdemServico fecharOrdemServico(@PathVariable Long id) {
         logger.info("🔥 CONTROLLER: Recebida solicitação para fechar OS com ID: " + id);
         OrdemServico resultado = service.fecharOrdemServico(id);
-        logger.info("🎉 CONTROLLER: OS fechada com sucesso - Número: " + resultado.getNumeroOS() + 
+        logger.info("🎉 CONTROLLER: OS encerrada com sucesso - Número: " + resultado.getNumeroOS() + 
                    " | Status: " + resultado.getStatus());
         return resultado;
     }

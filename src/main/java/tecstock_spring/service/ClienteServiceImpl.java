@@ -9,6 +9,10 @@ import tecstock_spring.controller.ClienteController;
 import tecstock_spring.exception.CpfDuplicadoException;
 import tecstock_spring.model.Cliente;
 import tecstock_spring.repository.ClienteRepository;
+import tecstock_spring.repository.OrdemServicoRepository;
+import tecstock_spring.repository.OrcamentoRepository;
+import tecstock_spring.repository.ChecklistRepository;
+import tecstock_spring.exception.ClienteEmUsoException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -16,6 +20,9 @@ import lombok.RequiredArgsConstructor;
 public class ClienteServiceImpl implements ClienteService {
 
     private final ClienteRepository repository;
+    private final OrdemServicoRepository ordemServicoRepository;
+    private final OrcamentoRepository orcamentoRepository;
+    private final ChecklistRepository checklistRepository;
     Logger logger = Logger.getLogger(ClienteController.class);
 
     @Override
@@ -60,6 +67,34 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public void deletar(Long id) {
+        Cliente cliente = buscarPorId(id);
+        String cpf = cliente.getCpf();
+
+        boolean temOrdem = ordemServicoRepository.existsByClienteCpf(cpf);
+        boolean temOrcamento = orcamentoRepository.existsByClienteCpf(cpf);
+        boolean temChecklist = checklistRepository.existsByClienteCpf(cpf);
+
+        if (temOrdem) {
+            String motivo = ordemServicoRepository.findFirstByClienteCpfOrderByDataHoraDesc(cpf)
+                    .map(os -> "OS nº " + os.getNumeroOS())
+                    .orElse("uma Ordem de Serviço");
+            throw new ClienteEmUsoException("Cliente não pode ser excluído: está em uso em " + motivo + " (CPF: " + cpf + ")");
+        }
+
+        if (temChecklist) {
+            String motivo = checklistRepository.findFirstByClienteCpfOrderByCreatedAtDesc(cpf)
+                    .map(c -> "Checklist id " + c.getId())
+                    .orElse("um Checklist");
+            throw new ClienteEmUsoException("Cliente não pode ser excluído: está em uso em " + motivo + " (CPF: " + cpf + ")");
+        }
+
+        if (temOrcamento) {
+            String motivo = orcamentoRepository.findFirstByClienteCpfOrderByDataHoraDesc(cpf)
+                    .map(o -> "Orçamento nº " + o.getNumeroOrcamento())
+                    .orElse("um Orçamento");
+            throw new ClienteEmUsoException("Cliente não pode ser excluído: está em uso em " + motivo + " (CPF: " + cpf + ")");
+        }
+
         repository.deleteById(id);
     }
 }

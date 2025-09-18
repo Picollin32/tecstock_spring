@@ -198,15 +198,15 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                    " | Status atual: " + ordemServico.getStatus() +
                    " | Peças utilizadas: " + (ordemServico.getPecasUtilizadas() != null ? ordemServico.getPecasUtilizadas().size() : "0"));
         
-        if ("Fechada".equals(ordemServico.getStatus())) {
-            logger.warn("⚠️ Tentativa de fechar OS já fechada: " + ordemServico.getNumeroOS());
+        if ("Encerrada".equals(ordemServico.getStatus())) {
+            logger.warn("⚠️ Tentativa de fechar OS já encerrada: " + ordemServico.getNumeroOS());
             return ordemServico;
         }
         
         logger.info("✅ OS válida para fechamento. Prosseguindo...");
 
-        ordemServico.setStatus("Fechada");
-        logger.info("📝 Status da OS alterado para 'Fechada'");
+    ordemServico.setStatus("Encerrada");
+    logger.info("📝 Status da OS alterado para 'Encerrada'");
 
         if (ordemServico.getPecasUtilizadas() != null && !ordemServico.getPecasUtilizadas().isEmpty()) {
             logger.info("🚀 Iniciando processamento de saída para " + ordemServico.getPecasUtilizadas().size() + 
@@ -254,9 +254,9 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             logger.info("ℹ️ Nenhuma peça encontrada para processar saída na OS " + ordemServico.getNumeroOS());
         }
         
-        logger.info("💾 Salvando OS com status 'Fechada'...");
+    logger.info("💾 Salvando OS com status 'Encerrada'...");
         OrdemServico ordemServicoSalva = repository.save(ordemServico);
-        logger.info("🎉 Ordem de Serviço fechada com sucesso: " + ordemServicoSalva.getNumeroOS() + 
+    logger.info("🎉 Ordem de Serviço encerrada com sucesso: " + ordemServicoSalva.getNumeroOS() + 
                    " | Status final: " + ordemServicoSalva.getStatus());
         return ordemServicoSalva;
     }
@@ -265,10 +265,10 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     public void deletar(Long id) {
         OrdemServico ordemServico = buscarPorId(id);
 
-        if ("Fechada".equals(ordemServico.getStatus()) && 
+        if ("Encerrada".equals(ordemServico.getStatus()) && 
             ordemServico.getPecasUtilizadas() != null && !ordemServico.getPecasUtilizadas().isEmpty()) {
             
-            logger.info("OS está fechada. Restaurando estoque das peças...");
+            logger.info("OS está encerrada. Restaurando estoque das peças...");
             for (tecstock_spring.model.PecaOrdemServico pecaOS : ordemServico.getPecasUtilizadas()) {
                 try {
                     pecaOS.getPeca().setQuantidadeEstoque(pecaOS.getPeca().getQuantidadeEstoque() + pecaOS.getQuantidade());
@@ -278,8 +278,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                     logger.error("Erro ao restaurar estoque da peça " + pecaOS.getPeca().getNome() + ": " + e.getMessage());
                 }
             }
-        } else if (!"Fechada".equals(ordemServico.getStatus())) {
-            logger.info("OS não está fechada. Nenhum estoque será restaurado (estoque não foi subtraído).");
+        } else if (!"Encerrada".equals(ordemServico.getStatus())) {
+            logger.info("OS não está encerrada. Nenhum estoque será restaurado (estoque não foi subtraído).");
         }
         
         logger.info("Deletando Ordem de Serviço: " + ordemServico.getNumeroOS());

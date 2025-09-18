@@ -8,6 +8,10 @@ import tecstock_spring.controller.FuncionarioController;
 import tecstock_spring.exception.CpfDuplicadoException;
 import tecstock_spring.model.Funcionario;
 import tecstock_spring.repository.FuncionarioRepository;
+import tecstock_spring.repository.OrdemServicoRepository;
+import tecstock_spring.repository.OrcamentoRepository;
+import tecstock_spring.repository.ChecklistRepository;
+import tecstock_spring.exception.FuncionarioEmUsoException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -15,6 +19,9 @@ import lombok.RequiredArgsConstructor;
 public class FuncionarioServiceImpl implements FuncionarioService {
 
     private final FuncionarioRepository repository;
+    private final OrdemServicoRepository ordemServicoRepository;
+    private final OrcamentoRepository orcamentoRepository;
+    private final ChecklistRepository checklistRepository;
     Logger logger = Logger.getLogger(FuncionarioController.class);
 
     @Override
@@ -54,6 +61,48 @@ public class FuncionarioServiceImpl implements FuncionarioService {
 
     @Override
     public void deletar(Long id) {
+    // Verificações de uso em outras entidades
+        boolean emOrdemComoMecanico = ordemServicoRepository.existsByMecanicoId(id);
+    boolean emOrdemComoConsultor = ordemServicoRepository.existsByConsultorId(id);
+        boolean emOrcamentoComoMecanico = orcamentoRepository.existsByMecanicoId(id);
+        boolean emOrcamentoComoConsultor = orcamentoRepository.existsByConsultorId(id);
+        boolean emChecklistComoConsultor = checklistRepository.existsByConsultorId(id);
+
+        if (emOrdemComoMecanico) {
+            String motivo = ordemServicoRepository.findFirstByMecanicoIdOrderByDataHoraDesc(id)
+                    .map(os -> "OS nº " + os.getNumeroOS())
+                    .orElse("uma Ordem de Serviço");
+            throw new FuncionarioEmUsoException("Funcionário não pode ser excluído: está em uso como mecânico em " + motivo + ".");
+        }
+
+        if (emOrdemComoConsultor) {
+            String motivo = ordemServicoRepository.findFirstByConsultorIdOrderByDataHoraDesc(id)
+                    .map(os -> "OS nº " + os.getNumeroOS())
+                    .orElse("uma Ordem de Serviço");
+            throw new FuncionarioEmUsoException("Funcionário não pode ser excluído: está em uso como consultor em " + motivo + ".");
+        }
+
+        if (emChecklistComoConsultor) {
+            String motivo = checklistRepository.findFirstByConsultorIdOrderByCreatedAtDesc(id)
+                    .map(c -> "Checklist id " + c.getId())
+                    .orElse("um Checklist");
+            throw new FuncionarioEmUsoException("Funcionário não pode ser excluído: está em uso como consultor em " + motivo + ".");
+        }
+
+        if (emOrcamentoComoMecanico) {
+            String motivo = orcamentoRepository.findFirstByMecanicoIdOrderByDataHoraDesc(id)
+                    .map(o -> "Orçamento nº " + o.getNumeroOrcamento())
+                    .orElse("um Orçamento");
+            throw new FuncionarioEmUsoException("Funcionário não pode ser excluído: está em uso como mecânico em " + motivo + ".");
+        }
+
+        if (emOrcamentoComoConsultor) {
+            String motivo = orcamentoRepository.findFirstByConsultorIdOrderByDataHoraDesc(id)
+                    .map(o -> "Orçamento nº " + o.getNumeroOrcamento())
+                    .orElse("um Orçamento");
+            throw new FuncionarioEmUsoException("Funcionário não pode ser excluído: está em uso como consultor em " + motivo + ".");
+        }
+
         repository.deleteById(id);
     }
     
