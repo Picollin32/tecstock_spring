@@ -61,9 +61,8 @@ public class FuncionarioServiceImpl implements FuncionarioService {
 
     @Override
     public void deletar(Long id) {
-    // Verificações de uso em outras entidades
         boolean emOrdemComoMecanico = ordemServicoRepository.existsByMecanicoId(id);
-    boolean emOrdemComoConsultor = ordemServicoRepository.existsByConsultorId(id);
+        boolean emOrdemComoConsultor = ordemServicoRepository.existsByConsultorId(id);
         boolean emOrcamentoComoMecanico = orcamentoRepository.existsByMecanicoId(id);
         boolean emOrcamentoComoConsultor = orcamentoRepository.existsByConsultorId(id);
         boolean emChecklistComoConsultor = checklistRepository.existsByConsultorId(id);

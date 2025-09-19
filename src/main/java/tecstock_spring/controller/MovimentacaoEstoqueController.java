@@ -69,7 +69,6 @@ public class MovimentacaoEstoqueController {
             int sucessos = 0;
             int falhas = 0;
             
-            // Verifica se a nota fiscal já foi utilizada ANTES de processar qualquer peça
             if (service.verificarNotaFiscalJaUtilizada(numeroNotaFiscal, fornecedorId)) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("sucesso", false);
@@ -83,7 +82,6 @@ public class MovimentacaoEstoqueController {
                     int quantidade = Integer.parseInt(peca.get("quantidade").toString());
                     Double precoUnitario = Double.parseDouble(peca.get("precoUnitario").toString());
                     
-                    // Registra a entrada SEM verificar a nota fiscal novamente (já verificamos acima)
                     service.registrarEntradaSemValidacaoNota(
                         codigoPeca, fornecedorId, quantidade, precoUnitario, numeroNotaFiscal, observacoes
                     );

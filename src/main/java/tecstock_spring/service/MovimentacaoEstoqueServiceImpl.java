@@ -30,7 +30,6 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
             throw new RuntimeException("Operação de movimentação de estoque não permitida para orçamentos");
         }
 
-        // Verifica se a nota fiscal já foi utilizada para este fornecedor
         if (movimentacaoEstoqueRepository.existsByNumeroNotaFiscalAndFornecedorId(numeroNotaFiscal, fornecedorId)) {
             throw new RuntimeException("O número da nota fiscal '" + numeroNotaFiscal + "' já foi utilizado em outra movimentação para este fornecedor.");
         }
@@ -82,7 +81,6 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
             throw new RuntimeException("Operação de movimentação de estoque não permitida para orçamentos");
         }
 
-        // Verifica se a nota fiscal já foi utilizada para este fornecedor
         if (movimentacaoEstoqueRepository.existsByNumeroNotaFiscalAndFornecedorId(numeroNotaFiscal, fornecedorId)) {
             throw new RuntimeException("O número da nota fiscal '" + numeroNotaFiscal + "' já foi utilizado em outra movimentação para este fornecedor.");
         }
