@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Column;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
@@ -53,6 +54,9 @@ public class MovimentacaoEstoque {
     
     @Column(name = "preco_unitario")
     private Double precoUnitario;
+    
+    @Column(name = "preco_final")
+    private Double precoFinal;
 
     public enum TipoMovimentacao {
         ENTRADA,
@@ -73,6 +77,27 @@ public class MovimentacaoEstoque {
             if (dataSaida == null) {
                 dataSaida = agora;
             }
+        }
+        calcularPrecoFinal();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        calcularPrecoFinal();
+    }
+
+    public void calcularPrecoFinal() {
+        if (precoUnitario == null) {
+            precoFinal = null;
+            return;
+        }
+
+        if (fornecedor != null && fornecedor.getMargemLucro() != null) {
+            double margemLucro = fornecedor.getMargemLucro();
+            double margemDecimal = margemLucro > 1 ? margemLucro / 100.0 : margemLucro;
+            this.precoFinal = this.precoUnitario * (1 + margemDecimal);
+        } else {
+            this.precoFinal = this.precoUnitario;
         }
     }
 }

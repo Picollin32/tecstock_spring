@@ -103,6 +103,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         movimentacao.setCodigoPeca(codigoPeca);
         movimentacao.setFornecedor(fornecedor);
         movimentacao.setQuantidade(quantidade);
+        movimentacao.setPrecoUnitario(peca.getPrecoUnitario());
         movimentacao.setNumeroNotaFiscal(numeroNotaFiscal);
         movimentacao.setTipoMovimentacao(MovimentacaoEstoque.TipoMovimentacao.SAIDA);
         movimentacao.setObservacoes(observacoes);
