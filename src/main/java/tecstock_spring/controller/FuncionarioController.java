@@ -41,6 +41,12 @@ public class FuncionarioController {
         return service.listarTodos();
     }
 
+    @GetMapping("/api/funcionarios/listarMecanicos")
+    public List<Funcionario> listarMecanicos() {
+        logger.info("Listando mecânicos no controller.");
+        return service.listarMecanicos();
+    }
+
     @PutMapping("/api/funcionarios/atualizar/{id}")
     public Funcionario atualizar(@PathVariable Long id, @RequestBody Funcionario funcionario) {
         logger.info("Atualizando funcionario no controller. ID: " + id + ", funcionario: " + funcionario);

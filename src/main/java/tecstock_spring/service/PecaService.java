@@ -11,6 +11,10 @@ public interface PecaService {
     Peca buscarPorCodigo(String codigo);
 
     List<Peca> listarTodas();
+    
+    List<Peca> listarEmUso();
+    
+    void atualizarUnidadesUsadas();
 
     Peca atualizar(Long id, Peca peca);
 

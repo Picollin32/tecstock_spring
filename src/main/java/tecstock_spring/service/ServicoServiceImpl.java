@@ -1,13 +1,16 @@
 package tecstock_spring.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.ServicoController;
 import tecstock_spring.exception.NomeDuplicadoException;
+import tecstock_spring.model.OrdemServico;
 import tecstock_spring.model.Servico;
+import tecstock_spring.repository.OrdemServicoRepository;
 import tecstock_spring.repository.ServicoRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -16,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class ServicoServiceImpl implements ServicoService {
 
     private final ServicoRepository repository;
+    private final OrdemServicoRepository ordemServicoRepository;
     Logger logger = Logger.getLogger(ServicoController.class);
 
     @Override
@@ -54,6 +58,45 @@ public class ServicoServiceImpl implements ServicoService {
     @Override
     public void deletar(Long id) {
         repository.deleteById(id);
+    }
+    
+    @Override
+    public List<Servico> listarComPendentes() {
+        logger.info("Listando serviços com unidades pendentes em OSs não encerradas");
+        List<Servico> servicos = repository.findAll();
+        return servicos.stream()
+                .filter(servico -> servico.getUnidadesUsadasEmOS() != null && servico.getUnidadesUsadasEmOS() > 0)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public void atualizarUnidadesUsadas() {
+        logger.info("Atualizando unidades usadas em OSs para todos os serviços");
+        
+        List<Servico> todosServicos = repository.findAll();
+        List<OrdemServico> osNaoEncerradas = ordemServicoRepository.findByStatusNot("Encerrada");
+        
+        for (Servico servico : todosServicos) {
+            int unidadesUsadas = 0;
+            
+            for (OrdemServico os : osNaoEncerradas) {
+                if (os.getServicosRealizados() != null) {
+                    long count = os.getServicosRealizados().stream()
+                            .filter(s -> s.getId().equals(servico.getId()))
+                            .count();
+                    unidadesUsadas += count;
+                }
+            }
+            
+            servico.setUnidadesUsadasEmOS(unidadesUsadas);
+            repository.save(servico);
+            
+            if (unidadesUsadas > 0) {
+                logger.info("Serviço '" + servico.getNome() + "' tem " + unidadesUsadas + " unidades em OSs não encerradas");
+            }
+        }
+        
+        logger.info("Atualização de unidades usadas concluída");
     }
     
     private void validarNomeDuplicado(String nome, Long idExcluir) {

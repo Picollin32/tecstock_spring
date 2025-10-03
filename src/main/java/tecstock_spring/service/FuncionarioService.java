@@ -10,6 +10,8 @@ public interface FuncionarioService {
 
     List<Funcionario> listarTodos();
 
+    List<Funcionario> listarMecanicos();
+
     Funcionario atualizar(Long id, Funcionario funcionario);
 
     void deletar(Long id);

@@ -21,6 +21,9 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final PecaRepository pecaRepository;
     private final PecaOrdemServicoRepository pecaOrdemServicoRepository;
     private final MovimentacaoEstoqueService movimentacaoEstoqueService;
+    private final ServicoOrdemServicoService servicoOrdemServicoService;
+    private final ServicoService servicoService;
+    private final PecaService pecaService;
     private static final Logger logger = Logger.getLogger(OrdemServicoServiceImpl.class);
 
     @Override
@@ -46,6 +49,12 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         
         OrdemServico ordemServicoSalva = repository.save(ordemServico);
         logger.info("Ordem de Serviço salva com sucesso: " + ordemServicoSalva.getNumeroOS());
+        
+        // Atualizar contadores de unidades usadas em OS
+        logger.info("Atualizando contadores de serviços e peças em uso");
+        servicoService.atualizarUnidadesUsadas();
+        pecaService.atualizarUnidadesUsadas();
+        
         return ordemServicoSalva;
     }
 
@@ -177,13 +186,27 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                    ", Total: R$ " + ordemServicoExistente.getPrecoTotal());
         
         logger.info("Atualizando Ordem de Serviço ID: " + id + " - Preservando número: " + numeroOSOriginal);
-        return repository.save(ordemServicoExistente);
+        OrdemServico ordemServicoAtualizada = repository.save(ordemServicoExistente);
+        
+        // Atualizar contadores de unidades usadas em OS
+        logger.info("Atualizando contadores de serviços e peças em uso");
+        servicoService.atualizarUnidadesUsadas();
+        pecaService.atualizarUnidadesUsadas();
+        
+        return ordemServicoAtualizada;
     }
     
     @Override
     public OrdemServico atualizarApenasStatus(Long id, String novoStatus) {
         OrdemServico ordemServico = buscarPorId(id);
         ordemServico.setStatus(novoStatus);
+        
+        // Se o status for ENCERRADA, registrar a data/hora de encerramento
+        if ("ENCERRADA".equalsIgnoreCase(novoStatus)) {
+            ordemServico.setDataHoraEncerramento(LocalDateTime.now());
+            logger.info("🕐 Registrando data/hora de encerramento: " + LocalDateTime.now());
+        }
+        
         logger.info("Atualizando apenas status da OS ID: " + id + " para: " + novoStatus);
         return repository.save(ordemServico);
     }
@@ -205,8 +228,15 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         
         logger.info("✅ OS válida para fechamento. Prosseguindo...");
 
-    ordemServico.setStatus("Encerrada");
-    logger.info("📝 Status da OS alterado para 'Encerrada'");
+        ordemServico.setStatus("Encerrada");
+        ordemServico.setDataHoraEncerramento(LocalDateTime.now());
+        logger.info("📝 Status da OS alterado para 'Encerrada'");
+        logger.info("🕐 Data/hora de encerramento registrada: " + LocalDateTime.now());
+
+        // Registrar serviços realizados na tabela servico_ordem_servico
+        logger.info("🔧 Iniciando registro dos serviços realizados na OS: " + ordemServico.getNumeroOS());
+        servicoOrdemServicoService.registrarServicosRealizados(ordemServico);
+        logger.info("✅ Serviços registrados com sucesso");
 
         if (ordemServico.getPecasUtilizadas() != null && !ordemServico.getPecasUtilizadas().isEmpty()) {
             logger.info("🚀 Iniciando processamento de saída para " + ordemServico.getPecasUtilizadas().size() + 
@@ -258,6 +288,12 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         OrdemServico ordemServicoSalva = repository.save(ordemServico);
     logger.info("🎉 Ordem de Serviço encerrada com sucesso: " + ordemServicoSalva.getNumeroOS() + 
                    " | Status final: " + ordemServicoSalva.getStatus());
+        
+        // Atualizar contadores de unidades usadas em OS
+        logger.info("Atualizando contadores de serviços e peças em uso após encerramento");
+        servicoService.atualizarUnidadesUsadas();
+        pecaService.atualizarUnidadesUsadas();
+        
         return ordemServicoSalva;
     }
 
@@ -284,6 +320,11 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         
         logger.info("Deletando Ordem de Serviço: " + ordemServico.getNumeroOS());
         repository.deleteById(id);
+        
+        // Atualizar contadores de unidades usadas em OS após deletar
+        logger.info("Atualizando contadores de serviços e peças em uso após deletar OS");
+        servicoService.atualizarUnidadesUsadas();
+        pecaService.atualizarUnidadesUsadas();
     }
     
     @Override

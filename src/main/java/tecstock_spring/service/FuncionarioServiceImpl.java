@@ -52,6 +52,15 @@ public class FuncionarioServiceImpl implements FuncionarioService {
     }
 
     @Override
+    public List<Funcionario> listarMecanicos() {
+        List<Funcionario> mecanicos = repository.findAll().stream()
+                .filter(f -> f.getNivelAcesso() == 2)
+                .toList();
+        logger.info(mecanicos.size() + " mecânicos encontrados.");
+        return mecanicos;
+    }
+
+    @Override
     public Funcionario atualizar(Long id, Funcionario novoFuncionario) {
         Funcionario funcionarioExistente = buscarPorId(id);
         validarCpfDuplicado(novoFuncionario.getCpf(), id);

@@ -8,14 +8,18 @@ import tecstock_spring.exception.CodigoPecaDuplicadoException;
 import tecstock_spring.exception.PecaComEstoqueException;
 import tecstock_spring.model.Fabricante;
 import tecstock_spring.model.Fornecedor;
+import tecstock_spring.model.OrdemServico;
 import tecstock_spring.model.Peca;
+import tecstock_spring.model.PecaOrdemServico;
 import tecstock_spring.repository.FabricanteRepository;
 import tecstock_spring.repository.FornecedorRepository;
+import tecstock_spring.repository.OrdemServicoRepository;
 import tecstock_spring.repository.PecaRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +28,7 @@ public class PecaServiceImpl implements PecaService {
     private final PecaRepository pecaRepository;
     private final FabricanteRepository fabricanteRepository; 
     private final FornecedorRepository fornecedorRepository;
+    private final OrdemServicoRepository ordemServicoRepository;
     
     Logger logger = Logger.getLogger(PecaController.class);
 
@@ -150,5 +155,45 @@ public class PecaServiceImpl implements PecaService {
         
         logger.info("Excluindo peça com estoque zero: " + peca.getNome());
         pecaRepository.deleteById(id);
+    }
+    
+    @Override
+    public List<Peca> listarEmUso() {
+        logger.info("Listando peças em uso em OSs não encerradas");
+        List<Peca> pecas = pecaRepository.findAll();
+        return pecas.stream()
+                .filter(peca -> peca.getUnidadesUsadasEmOS() != null && peca.getUnidadesUsadasEmOS() > 0)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public void atualizarUnidadesUsadas() {
+        logger.info("Atualizando unidades usadas em OSs para todas as peças");
+        
+        List<Peca> todasPecas = pecaRepository.findAll();
+        List<OrdemServico> osNaoEncerradas = ordemServicoRepository.findByStatusNot("Encerrada");
+        
+        for (Peca peca : todasPecas) {
+            int unidadesUsadas = 0;
+            
+            for (OrdemServico os : osNaoEncerradas) {
+                if (os.getPecasUtilizadas() != null) {
+                    for (PecaOrdemServico pecaOS : os.getPecasUtilizadas()) {
+                        if (pecaOS.getPeca() != null && pecaOS.getPeca().getId().equals(peca.getId())) {
+                            unidadesUsadas += pecaOS.getQuantidade();
+                        }
+                    }
+                }
+            }
+            
+            // Atualizar apenas as unidades usadas sem disparar o @PreUpdate (updated_at não será alterado)
+            pecaRepository.atualizarUnidadesUsadasSemTriggerUpdate(peca.getId(), unidadesUsadas);
+            
+            if (unidadesUsadas > 0) {
+                logger.info("Peça '" + peca.getNome() + "' tem " + unidadesUsadas + " unidades em OSs não encerradas");
+            }
+        }
+        
+        logger.info("Atualização de unidades usadas concluída");
     }
 }

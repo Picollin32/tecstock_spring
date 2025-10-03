@@ -16,6 +16,7 @@ public class OrdemServicoResumoDTO {
     private Long id;
     private String numeroOS;
     private LocalDateTime dataHora;
+    private LocalDateTime dataHoraEncerramento;
     private String clienteNome;
     private String clienteCpf;
     private String veiculoNome;

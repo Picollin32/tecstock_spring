@@ -156,6 +156,7 @@ public class OrdemServicoController {
                 .id(os.getId())
                 .numeroOS(os.getNumeroOS())
                 .dataHora(os.getDataHora())
+                .dataHoraEncerramento(os.getDataHoraEncerramento())
                 .clienteNome(os.getClienteNome())
                 .clienteCpf(os.getClienteCpf())
                 .veiculoNome(os.getVeiculoNome())

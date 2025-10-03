@@ -27,6 +27,10 @@ public class Servico {
     private Double precoPasseio;
     private Double precoCaminhonete;
     
+    @Column(name = "unidades_usadas_em_os")
+    @Builder.Default
+    private Integer unidadesUsadasEmOS = 0;
+    
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     

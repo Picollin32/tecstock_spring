@@ -31,6 +31,9 @@ public class Peca {
     private double precoFinal;
     private int quantidadeEstoque;
     private int estoqueSeguranca;
+    
+    @Column(name = "unidades_usadas_em_os")
+    private Integer unidadesUsadasEmOS = 0;
 
     @ManyToOne
     @JoinColumn(name = "fabricante_id")

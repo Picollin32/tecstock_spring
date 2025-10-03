@@ -61,4 +61,16 @@ public class PecaController {
         logger.info("Deletando peça com ID: " + id);
         service.deletar(id);
     }
+    
+    @GetMapping("/em-uso")
+    public List<Peca> listarEmUso() {
+        logger.info("Listando peças em uso em OSs não encerradas");
+        return service.listarEmUso();
+    }
+    
+    @PostMapping("/atualizar-unidades-usadas")
+    public void atualizarUnidadesUsadas() {
+        logger.info("Atualizando unidades usadas de todas as peças");
+        service.atualizarUnidadesUsadas();
+    }
 }

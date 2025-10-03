@@ -9,6 +9,10 @@ public interface ServicoService {
     Servico buscarPorId(Long id);
 
     List<Servico> listarTodos();
+    
+    List<Servico> listarComPendentes();
+    
+    void atualizarUnidadesUsadas();
 
     Servico atualizar(Long id, Servico servico);
 

@@ -52,4 +52,16 @@ public class ServicoController {
         logger.info("Deletando serviço no controller. ID: " + id);
         service.deletar(id);
     }
+    
+    @GetMapping("/api/servicos/pendentes")
+    public List<Servico> listarPendentes() {
+        logger.info("Listando serviços pendentes (em uso em OSs não encerradas)");
+        return service.listarComPendentes();
+    }
+    
+    @PostMapping("/api/servicos/atualizar-unidades-usadas")
+    public void atualizarUnidadesUsadas() {
+        logger.info("Atualizando unidades usadas de todos os serviços");
+        service.atualizarUnidadesUsadas();
+    }
 }

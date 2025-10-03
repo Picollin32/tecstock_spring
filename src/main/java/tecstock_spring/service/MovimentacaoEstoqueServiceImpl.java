@@ -62,13 +62,14 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         
         MovimentacaoEstoque movimentacaoSalva = movimentacaoEstoqueRepository.save(movimentacao);
         
-        peca.setQuantidadeEstoque(peca.getQuantidadeEstoque() + quantidade);
-        peca = pecaRepository.save(peca);
+        // Atualizar estoque sem disparar o @PreUpdate (updated_at não será alterado)
+        int novoEstoque = peca.getQuantidadeEstoque() + quantidade;
+        pecaRepository.atualizarEstoqueSemTriggerUpdate(peca.getId(), novoEstoque);
         
         if (precoAlterado) {
             logger.info("Preço da peça atualizado. Novo preço de custo: " + peca.getPrecoUnitario() + ", Novo preço de venda: " + peca.getPrecoFinal());
         }
-        logger.info("Entrada registrada com sucesso. Novo estoque da peça: " + peca.getQuantidadeEstoque());
+        logger.info("Entrada registrada com sucesso. Novo estoque da peça: " + novoEstoque);
         
         return movimentacaoSalva;
     }
@@ -110,10 +111,11 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         
         MovimentacaoEstoque movimentacaoSalva = movimentacaoEstoqueRepository.save(movimentacao);
         
-        peca.setQuantidadeEstoque(peca.getQuantidadeEstoque() - quantidade);
-        pecaRepository.save(peca);
+        // Atualizar estoque sem disparar o @PreUpdate (updated_at não será alterado)
+        int novoEstoque = peca.getQuantidadeEstoque() - quantidade;
+        pecaRepository.atualizarEstoqueSemTriggerUpdate(peca.getId(), novoEstoque);
         
-        logger.info("Saída registrada com sucesso. Novo estoque da peça: " + peca.getQuantidadeEstoque());
+        logger.info("Saída registrada com sucesso. Novo estoque da peça: " + novoEstoque);
         
         return movimentacaoSalva;
     }
@@ -165,8 +167,8 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
 
             int estoqueAnterior = peca.getQuantidadeEstoque();
             int novoEstoque = estoqueAnterior - quantidade;
-            peca.setQuantidadeEstoque(novoEstoque);
-            pecaRepository.save(peca);
+            // Atualizar estoque sem disparar o @PreUpdate (updated_at não será alterado)
+            pecaRepository.atualizarEstoqueSemTriggerUpdate(peca.getId(), novoEstoque);
             logger.info("📉 ESTOQUE ATUALIZADO - Peça: " + peca.getNome() + 
                        " | Estoque anterior: " + estoqueAnterior + 
                        " | Quantidade subtraída: " + quantidade + 
@@ -242,13 +244,14 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         
         MovimentacaoEstoque movimentacaoSalva = movimentacaoEstoqueRepository.save(movimentacao);
         
-        peca.setQuantidadeEstoque(peca.getQuantidadeEstoque() + quantidade);
-        peca = pecaRepository.save(peca);
+        // Atualizar estoque sem disparar o @PreUpdate (updated_at não será alterado)
+        int novoEstoque = peca.getQuantidadeEstoque() + quantidade;
+        pecaRepository.atualizarEstoqueSemTriggerUpdate(peca.getId(), novoEstoque);
         
         if (precoAlterado) {
             logger.info("Preço da peça atualizado. Novo preço de custo: " + peca.getPrecoUnitario() + ", Novo preço de venda: " + peca.getPrecoFinal());
         }
-        logger.info("Entrada registrada com sucesso. Novo estoque da peça: " + peca.getQuantidadeEstoque());
+        logger.info("Entrada registrada com sucesso. Novo estoque da peça: " + novoEstoque);
         
         return movimentacaoSalva;
     }

@@ -29,6 +29,8 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
     
     List<OrdemServico> findByStatusOrderByDataHoraDesc(String status);
     
+    List<OrdemServico> findByStatusNot(String status);
+    
     List<OrdemServico> findByChecklistIdOrderByDataHoraDesc(Long checklistId);
     
     @Query("SELECT os FROM OrdemServico os WHERE os.dataHora BETWEEN :inicio AND :fim ORDER BY os.dataHora DESC")

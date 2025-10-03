@@ -3,8 +3,10 @@ package tecstock_spring.repository;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 import tecstock_spring.model.Peca;
 import tecstock_spring.model.Fabricante;
 import tecstock_spring.model.Fornecedor;
@@ -22,4 +24,16 @@ public interface PecaRepository extends JpaRepository<Peca, Long> {
     
     boolean existsByFabricante(Fabricante fabricante);
     boolean existsByFornecedor(Fornecedor fornecedor);
+    
+    // Atualiza apenas o estoque sem disparar o @PreUpdate (updated_at não será alterado)
+    @Modifying
+    @Transactional
+    @Query("UPDATE Peca p SET p.quantidadeEstoque = :novaQuantidade WHERE p.id = :pecaId")
+    void atualizarEstoqueSemTriggerUpdate(@Param("pecaId") Long pecaId, @Param("novaQuantidade") int novaQuantidade);
+    
+    // Atualiza apenas as unidades usadas em OS sem disparar o @PreUpdate (updated_at não será alterado)
+    @Modifying
+    @Transactional
+    @Query("UPDATE Peca p SET p.unidadesUsadasEmOS = :unidadesUsadas WHERE p.id = :pecaId")
+    void atualizarUnidadesUsadasSemTriggerUpdate(@Param("pecaId") Long pecaId, @Param("unidadesUsadas") int unidadesUsadas);
 }

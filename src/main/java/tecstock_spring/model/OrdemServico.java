@@ -26,6 +26,9 @@ public class OrdemServico {
     @Column(name = "data_hora")
     private LocalDateTime dataHora;
 
+    @Column(name = "data_hora_encerramento")
+    private LocalDateTime dataHoraEncerramento;
+
     @Column(nullable = false)
     private String clienteNome;
     
@@ -93,6 +96,9 @@ public class OrdemServico {
     @Column(nullable = false)
     @Builder.Default
     private Integer garantiaMeses = 3;
+
+    @Column(name = "prazo_fiado_dias")
+    private Integer prazoFiadoDias;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "tipo_pagamento_id")
