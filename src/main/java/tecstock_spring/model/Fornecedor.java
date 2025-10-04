@@ -1,13 +1,10 @@
 package tecstock_spring.model;
 
-import java.util.Set;
 import java.time.LocalDateTime;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Column;
@@ -34,9 +31,6 @@ public class Fornecedor {
     private String telefone;
     private String email;
     private Double margemLucro;
-
-    @OneToMany(mappedBy = "fornecedor", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<FornecedorPeca> pecasComDesconto;
     
     @Column(name = "created_at")
     private LocalDateTime createdAt;

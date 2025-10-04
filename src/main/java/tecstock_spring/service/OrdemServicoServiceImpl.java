@@ -201,8 +201,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         OrdemServico ordemServico = buscarPorId(id);
         ordemServico.setStatus(novoStatus);
         
-        // Se o status for ENCERRADA, registrar a data/hora de encerramento
-        if ("ENCERRADA".equalsIgnoreCase(novoStatus)) {
+        // Se o status for Encerrada, registrar a data/hora de encerramento
+        if ("Encerrada".equalsIgnoreCase(novoStatus)) {
             ordemServico.setDataHoraEncerramento(LocalDateTime.now());
             logger.info("🕐 Registrando data/hora de encerramento: " + LocalDateTime.now());
         }

@@ -109,7 +109,7 @@ public class OrdemServico {
 
     @Column(nullable = false)
     @Builder.Default
-    private String status = "Pendente";
+    private String status = "Aberta";
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -129,7 +129,7 @@ public class OrdemServico {
             this.garantiaMeses = 3;
         }
         if (this.status == null) {
-            this.status = "Pendente";
+            this.status = "Aberta";
         }
     }
     

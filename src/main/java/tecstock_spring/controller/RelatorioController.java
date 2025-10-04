@@ -4,13 +4,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tecstock_spring.dto.RelatorioAgendamentosDTO;
 import tecstock_spring.dto.RelatorioComissaoDTO;
 import tecstock_spring.dto.RelatorioEstoqueDTO;
 import tecstock_spring.dto.RelatorioFiadoDTO;
 import tecstock_spring.dto.RelatorioFinanceiroDTO;
 import tecstock_spring.dto.RelatorioGarantiasDTO;
 import tecstock_spring.dto.RelatorioServicosDTO;
-import tecstock_spring.dto.RelatorioVendasDTO;
 import tecstock_spring.service.RelatorioService;
 
 import java.time.LocalDate;
@@ -23,12 +23,12 @@ public class RelatorioController {
     @Autowired
     private RelatorioService relatorioService;
 
-    @GetMapping("/vendas")
-    public ResponseEntity<RelatorioVendasDTO> gerarRelatorioVendas(
+    @GetMapping("/agendamentos")
+    public ResponseEntity<RelatorioAgendamentosDTO> gerarRelatorioAgendamentos(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
         
-        RelatorioVendasDTO relatorio = relatorioService.gerarRelatorioVendas(dataInicio, dataFim);
+        RelatorioAgendamentosDTO relatorio = relatorioService.gerarRelatorioAgendamentos(dataInicio, dataFim);
         return ResponseEntity.ok(relatorio);
     }
 

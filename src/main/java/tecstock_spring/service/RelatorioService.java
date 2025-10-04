@@ -2,13 +2,13 @@ package tecstock_spring.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import tecstock_spring.dto.RelatorioAgendamentosDTO;
 import tecstock_spring.dto.RelatorioComissaoDTO;
 import tecstock_spring.dto.RelatorioEstoqueDTO;
 import tecstock_spring.dto.RelatorioFiadoDTO;
 import tecstock_spring.dto.RelatorioFinanceiroDTO;
 import tecstock_spring.dto.RelatorioGarantiasDTO;
 import tecstock_spring.dto.RelatorioServicosDTO;
-import tecstock_spring.dto.RelatorioVendasDTO;
 import tecstock_spring.model.*;
 import tecstock_spring.repository.*;
 
@@ -22,9 +22,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class RelatorioService {
-
-    @Autowired
-    private OrcamentoRepository orcamentoRepository;
 
     @Autowired
     private OrdemServicoRepository ordemServicoRepository;
@@ -41,36 +38,64 @@ public class RelatorioService {
     @Autowired
     private FuncionarioRepository funcionarioRepository;
 
-    public RelatorioVendasDTO gerarRelatorioVendas(LocalDate dataInicio, LocalDate dataFim) {
-        List<Orcamento> orcamentos = orcamentoRepository.findAll().stream()
-                .filter(o -> o.getDataHora() != null && 
-                        !o.getDataHora().toLocalDate().isBefore(dataInicio) && 
-                        !o.getDataHora().toLocalDate().isAfter(dataFim))
+    @Autowired
+    private AgendamentoRepository agendamentoRepository;
+
+    public RelatorioAgendamentosDTO gerarRelatorioAgendamentos(LocalDate dataInicio, LocalDate dataFim) {
+        // Buscar todos os agendamentos no período
+        List<Agendamento> agendamentos = agendamentoRepository.findAll().stream()
+                .filter(a -> a.getData() != null &&
+                        !a.getData().isBefore(dataInicio) &&
+                        !a.getData().isAfter(dataFim))
                 .collect(Collectors.toList());
 
-        int totalOrcamentos = orcamentos.size();
-        // Como Orcamento não tem status, vamos considerar todos como pendentes
-        int aprovados = 0;
-        int recusados = 0;
-        int pendentes = totalOrcamentos;
+        int totalAgendamentos = agendamentos.size();
 
-        BigDecimal valorTotal = orcamentos.stream()
-                .map(o -> o.getPrecoTotal() != null ? BigDecimal.valueOf(o.getPrecoTotal()) : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Agrupar agendamentos por dia
+        Map<LocalDate, Long> agendamentosPorDiaMap = agendamentos.stream()
+                .collect(Collectors.groupingBy(
+                        Agendamento::getData,
+                        Collectors.counting()
+                ));
 
-        BigDecimal valorAprovado = BigDecimal.ZERO;
+        List<RelatorioAgendamentosDTO.AgendamentoPorDiaDTO> agendamentosPorDia = agendamentosPorDiaMap.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> new RelatorioAgendamentosDTO.AgendamentoPorDiaDTO(
+                        entry.getKey().toString(),
+                        entry.getValue().intValue()
+                ))
+                .collect(Collectors.toList());
 
-        BigDecimal ticketMedio = totalOrcamentos > 0 
-                ? valorTotal.divide(BigDecimal.valueOf(totalOrcamentos), 2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
+        // Agrupar agendamentos por mecânico
+        Map<String, Long> agendamentosPorMecanicoMap = agendamentos.stream()
+                .filter(a -> a.getNomeMecanico() != null && !a.getNomeMecanico().isEmpty())
+                .collect(Collectors.groupingBy(
+                        Agendamento::getNomeMecanico,
+                        Collectors.counting()
+                ));
 
-        Double taxaConversao = totalOrcamentos > 0 
-                ? (aprovados * 100.0) / totalOrcamentos 
-                : 0.0;
+        List<RelatorioAgendamentosDTO.AgendamentoPorMecanicoDTO> agendamentosPorMecanicoLista = agendamentosPorMecanicoMap.entrySet().stream()
+                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                .map(entry -> new RelatorioAgendamentosDTO.AgendamentoPorMecanicoDTO(
+                        entry.getKey(),
+                        entry.getValue().intValue()
+                ))
+                .collect(Collectors.toList());
 
-        return new RelatorioVendasDTO(
-                dataInicio, dataFim, totalOrcamentos, aprovados, recusados, pendentes,
-                valorTotal, valorAprovado, ticketMedio, taxaConversao
+        // Contar mecânicos únicos que têm agendamentos
+        int mecanicosAtivos = (int) agendamentos.stream()
+                .map(Agendamento::getNomeMecanico)
+                .filter(nome -> nome != null && !nome.isEmpty())
+                .distinct()
+                .count();
+
+        return new RelatorioAgendamentosDTO(
+                dataInicio,
+                dataFim,
+                totalAgendamentos,
+                mecanicosAtivos,
+                agendamentosPorDia,
+                agendamentosPorMecanicoLista
         );
     }
 
@@ -85,13 +110,13 @@ public class RelatorioService {
 
         // === SEÇÃO: ORDEM DE SERVIÇO ===
         int totalOrdens = ordens.size();
-        // Ordens Finalizadas são as ENCERRADAS
+        // Ordens Finalizadas são as Encerradas
         int finalizadas = (int) ordens.stream()
-                .filter(os -> "ENCERRADA".equalsIgnoreCase(os.getStatus()))
+                .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()))
                 .count();
-        // Ordens em Andamento são as ABERTAS
+        // Ordens em Andamento são as Abertas
         int emAndamento = (int) ordens.stream()
-                .filter(os -> "ABERTA".equalsIgnoreCase(os.getStatus()))
+                .filter(os -> "Aberta".equalsIgnoreCase(os.getStatus()))
                 .count();
         // Não contamos mais canceladas
         int canceladas = 0;
@@ -111,7 +136,7 @@ public class RelatorioService {
 
         // 2. Buscar descontos em serviços das ordens encerradas
         BigDecimal descontoServicos = ordens.stream()
-                .filter(os -> "ENCERRADA".equalsIgnoreCase(os.getStatus()))
+                .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()))
                 .map(os -> os.getDescontoServicos() != null ? BigDecimal.valueOf(os.getDescontoServicos()) : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -165,7 +190,7 @@ public class RelatorioService {
 
         // Calcular tempo médio de execução (apenas ordens encerradas)
         List<OrdemServico> ordensFinalizadas = ordens.stream()
-                .filter(os -> "ENCERRADA".equalsIgnoreCase(os.getStatus()) && 
+                .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) && 
                         os.getDataHora() != null && 
                         os.getDataHoraEncerramento() != null)
                 .collect(Collectors.toList());
@@ -334,7 +359,7 @@ public class RelatorioService {
 
         // 4. Pegar descontos em peças e serviços de ordem_servico
         List<OrdemServico> ordensFinalizadas = ordemServicoRepository.findAll().stream()
-                .filter(os -> "ENCERRADA".equalsIgnoreCase(os.getStatus()) && 
+                .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) && 
                         os.getDataHoraEncerramento() != null &&
                         !os.getDataHoraEncerramento().toLocalDate().isBefore(dataInicio) && 
                         !os.getDataHoraEncerramento().toLocalDate().isAfter(dataFim))
@@ -394,9 +419,9 @@ public class RelatorioService {
         
         String mecanicoNome = mecanico.getNome();
 
-        // Buscar todas as ordens de serviço ENCERRADAS no período
+        // Buscar todas as ordens de serviço Encerradas no período
         List<OrdemServico> ordensEncerradas = ordemServicoRepository.findAll().stream()
-                .filter(os -> "ENCERRADA".equalsIgnoreCase(os.getStatus()) &&
+                .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) &&
                         os.getDataHoraEncerramento() != null &&
                         !os.getDataHoraEncerramento().toLocalDate().isBefore(dataInicio) &&
                         !os.getDataHoraEncerramento().toLocalDate().isAfter(dataFim))
@@ -482,7 +507,7 @@ public class RelatorioService {
     public RelatorioGarantiasDTO gerarRelatorioGarantias(LocalDate dataInicio, LocalDate dataFim) {
         // Buscar todas as ordens encerradas (que possuem garantia)
         List<OrdemServico> ordensEncerradas = ordemServicoRepository.findAll().stream()
-                .filter(os -> "ENCERRADA".equalsIgnoreCase(os.getStatus()) &&
+                .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) &&
                         os.getDataHoraEncerramento() != null)
                 .collect(Collectors.toList());
 
@@ -557,7 +582,7 @@ public class RelatorioService {
     public RelatorioFiadoDTO gerarRelatorioFiado(LocalDate dataInicio, LocalDate dataFim) {
         // Buscar todas as ordens encerradas com prazo de fiado configurado
         List<OrdemServico> ordensComFiado = ordemServicoRepository.findAll().stream()
-                .filter(os -> "ENCERRADA".equalsIgnoreCase(os.getStatus()) &&
+                .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) &&
                         os.getDataHoraEncerramento() != null &&
                         os.getPrazoFiadoDias() != null &&
                         os.getPrazoFiadoDias() > 0)
