@@ -42,7 +42,7 @@ public class RelatorioService {
     private AgendamentoRepository agendamentoRepository;
 
     public RelatorioAgendamentosDTO gerarRelatorioAgendamentos(LocalDate dataInicio, LocalDate dataFim) {
-        // Buscar todos os agendamentos no período
+
         List<Agendamento> agendamentos = agendamentoRepository.findAll().stream()
                 .filter(a -> a.getData() != null &&
                         !a.getData().isBefore(dataInicio) &&
@@ -51,7 +51,6 @@ public class RelatorioService {
 
         int totalAgendamentos = agendamentos.size();
 
-        // Agrupar agendamentos por dia
         Map<LocalDate, Long> agendamentosPorDiaMap = agendamentos.stream()
                 .collect(Collectors.groupingBy(
                         Agendamento::getData,
@@ -66,7 +65,6 @@ public class RelatorioService {
                 ))
                 .collect(Collectors.toList());
 
-        // Agrupar agendamentos por mecânico
         Map<String, Long> agendamentosPorMecanicoMap = agendamentos.stream()
                 .filter(a -> a.getNomeMecanico() != null && !a.getNomeMecanico().isEmpty())
                 .collect(Collectors.groupingBy(
@@ -82,7 +80,6 @@ public class RelatorioService {
                 ))
                 .collect(Collectors.toList());
 
-        // Contar mecânicos únicos que têm agendamentos
         int mecanicosAtivos = (int) agendamentos.stream()
                 .map(Agendamento::getNomeMecanico)
                 .filter(nome -> nome != null && !nome.isEmpty())
@@ -100,7 +97,7 @@ public class RelatorioService {
     }
 
     public RelatorioServicosDTO gerarRelatorioServicos(LocalDate dataInicio, LocalDate dataFim) {
-        // Filtrar apenas ordens não canceladas no período
+
         List<OrdemServico> ordens = ordemServicoRepository.findAll().stream()
                 .filter(os -> os.getDataHora() != null && 
                         !os.getDataHora().toLocalDate().isBefore(dataInicio) && 
@@ -108,45 +105,34 @@ public class RelatorioService {
                         !"Cancelada".equalsIgnoreCase(os.getStatus()))
                 .collect(Collectors.toList());
 
-        // === SEÇÃO: ORDEM DE SERVIÇO ===
         int totalOrdens = ordens.size();
-        // Ordens Finalizadas são as Encerradas
         int finalizadas = (int) ordens.stream()
                 .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()))
                 .count();
-        // Ordens em Andamento são as Abertas
         int emAndamento = (int) ordens.stream()
                 .filter(os -> "Aberta".equalsIgnoreCase(os.getStatus()))
                 .count();
-        // Não contamos mais canceladas
         int canceladas = 0;
 
-        // === SEÇÃO: SERVIÇOS REALIZADOS ===
-        // 1. Buscar todos os serviços realizados no período
         List<ServicoOrdemServico> servicosRealizados = servicoOrdemServicoRepository.findAll().stream()
                 .filter(s -> s.getDataRealizacao() != null &&
                         !s.getDataRealizacao().toLocalDate().isBefore(dataInicio) &&
                         !s.getDataRealizacao().toLocalDate().isAfter(dataFim))
                 .collect(Collectors.toList());
 
-        // Valor total dos serviços (sem desconto)
         BigDecimal valorTotalServicos = servicosRealizados.stream()
                 .map(s -> s.getValor() != null ? BigDecimal.valueOf(s.getValor()) : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 2. Buscar descontos em serviços das ordens encerradas
         BigDecimal descontoServicos = ordens.stream()
                 .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()))
                 .map(os -> os.getDescontoServicos() != null ? BigDecimal.valueOf(os.getDescontoServicos()) : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 3. Calcular valor dos serviços realizados (valor - desconto)
         BigDecimal valorServicosRealizados = valorTotalServicos.subtract(descontoServicos);
 
-        // Total de serviços realizados (quantidade)
         int totalServicos = servicosRealizados.size();
 
-        // 4. Serviços mais realizados (top 10)
         Map<Long, Integer> contagemPorServico = new HashMap<>();
         Map<Long, BigDecimal> valorPorServico = new HashMap<>();
         
@@ -168,8 +154,7 @@ public class RelatorioService {
                     Long idServico = entry.getKey();
                     Integer quantidade = entry.getValue();
                     BigDecimal valorTotal = valorPorServico.getOrDefault(idServico, BigDecimal.ZERO);
-                    
-                    // Buscar o serviço para pegar o nome
+
                     Optional<ServicoOrdemServico> sosOpt = servicosRealizados.stream()
                             .filter(s -> s.getServico() != null && s.getServico().getId().equals(idServico))
                             .findFirst();
@@ -183,12 +168,10 @@ public class RelatorioService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        // === CAMPOS ADICIONAIS ===
         BigDecimal valorMedio = totalOrdens > 0 
                 ? valorServicosRealizados.divide(BigDecimal.valueOf(totalOrdens), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
-        // Calcular tempo médio de execução (apenas ordens encerradas)
         List<OrdemServico> ordensFinalizadas = ordens.stream()
                 .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) && 
                         os.getDataHora() != null && 
@@ -246,7 +229,6 @@ public class RelatorioService {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Calcular valor total do estoque atual
         List<Peca> pecas = pecaRepository.findAll();
         BigDecimal valorTotalEstoque = pecas.stream()
                 .map(p -> {
@@ -256,7 +238,6 @@ public class RelatorioService {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Peças mais movimentadas no período
         Map<String, Integer> movimentacoesPorPeca = new HashMap<>();
         for (MovimentacaoEstoque m : movimentacoes) {
             if (m.getCodigoPeca() != null) {
@@ -287,7 +268,7 @@ public class RelatorioService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        // Peças com estoque baixo (menos de 10 unidades)
+
         List<RelatorioEstoqueDTO.ItemEstoqueDTO> pecasEstoqueBaixo = pecas.stream()
                 .filter(p -> p.getQuantidadeEstoque() < 10)
                 .map(p -> new RelatorioEstoqueDTO.ItemEstoqueDTO(
@@ -314,7 +295,7 @@ public class RelatorioService {
     }
 
     public RelatorioFinanceiroDTO gerarRelatorioFinanceiro(LocalDate dataInicio, LocalDate dataFim) {
-        // 1. Pegar "preco_final" de movimentacoes de SAIDA
+
         List<MovimentacaoEstoque> saidas = movimentacaoEstoqueRepository.findAll().stream()
                 .filter(m -> m.getTipoMovimentacao() == MovimentacaoEstoque.TipoMovimentacao.SAIDA &&
                         m.getDataSaida() != null &&
@@ -330,7 +311,6 @@ public class RelatorioService {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 2. Pegar "valor" de servico_ordem_servico
         List<ServicoOrdemServico> servicosRealizados = servicoOrdemServicoRepository.findAll().stream()
                 .filter(s -> s.getDataRealizacao() != null &&
                         !s.getDataRealizacao().toLocalDate().isBefore(dataInicio) &&
@@ -341,7 +321,6 @@ public class RelatorioService {
                 .map(s -> s.getValor() != null ? BigDecimal.valueOf(s.getValor()) : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 3. Pegar "preco_unitario" de movimentacoes de ENTRADA
         List<MovimentacaoEstoque> entradas = movimentacaoEstoqueRepository.findAll().stream()
                 .filter(m -> m.getTipoMovimentacao() == MovimentacaoEstoque.TipoMovimentacao.ENTRADA &&
                         m.getDataEntrada() != null &&
@@ -357,7 +336,6 @@ public class RelatorioService {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 4. Pegar descontos em peças e serviços de ordem_servico
         List<OrdemServico> ordensFinalizadas = ordemServicoRepository.findAll().stream()
                 .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) && 
                         os.getDataHoraEncerramento() != null &&
@@ -374,9 +352,6 @@ public class RelatorioService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal descontosTotal = descontosPecas.add(descontosServicos);
-
-        // 5. Calcular receita total e lucro
-        // Fórmula: preco_final (SAIDA) + valor (servicos) - preco_unitario (ENTRADA) - desconto_pecas - desconto_servicos
         BigDecimal receitaTotal = receitaPecas.add(receitaServicos);
         BigDecimal lucroEstimado = receitaPecas
                 .add(receitaServicos)
@@ -384,7 +359,6 @@ public class RelatorioService {
                 .subtract(descontosPecas)
                 .subtract(descontosServicos);
 
-        // Receita por tipo de pagamento
         Map<String, BigDecimal> receitaPorTipoPagamento = new HashMap<>();
         Map<String, Integer> quantidadePorTipoPagamento = new HashMap<>();
 
@@ -413,13 +387,12 @@ public class RelatorioService {
     }
 
     public RelatorioComissaoDTO gerarRelatorioComissao(LocalDate dataInicio, LocalDate dataFim, Long mecanicoId) {
-        // Buscar o mecânico
+
         Funcionario mecanico = funcionarioRepository.findById(mecanicoId)
                 .orElseThrow(() -> new RuntimeException("Mecânico não encontrado"));
         
         String mecanicoNome = mecanico.getNome();
 
-        // Buscar todas as ordens de serviço Encerradas no período
         List<OrdemServico> ordensEncerradas = ordemServicoRepository.findAll().stream()
                 .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) &&
                         os.getDataHoraEncerramento() != null &&
@@ -427,7 +400,6 @@ public class RelatorioService {
                         !os.getDataHoraEncerramento().toLocalDate().isAfter(dataFim))
                 .collect(Collectors.toList());
 
-        // Calcular totais
         BigDecimal valorTotalServicos = BigDecimal.ZERO;
         BigDecimal descontoServicos = BigDecimal.ZERO;
         int totalServicosRealizados = 0;
@@ -435,20 +407,15 @@ public class RelatorioService {
         List<RelatorioComissaoDTO.OrdemServicoComissaoDTO> ordensComissao = new ArrayList<>();
 
         for (OrdemServico os : ordensEncerradas) {
-            // Buscar serviços realizados desta OS
+
             List<ServicoOrdemServico> servicosOS = servicoOrdemServicoRepository.findByNumeroOSOrderByDataRealizacaoDesc(os.getNumeroOS());
-            
-            // Verificar se algum serviço foi realizado nesta OS
-            // IMPORTANTE: Incluímos a OS se ela tem o mecânico atribuído OU se tem serviços (mesmo sem mecânico específico)
-            // pois queremos considerar TODAS as OSs encerradas no período para este mecânico
+
             boolean osPertenceAoMecanico = os.getMecanico() != null && os.getMecanico().getId().equals(mecanicoId);
             
-            // Se a OS não pertence ao mecânico, pula
             if (!osPertenceAoMecanico) {
                 continue;
             }
             
-            // Se não tem serviços registrados, pula
             if (servicosOS.isEmpty()) {
                 continue;
             }
@@ -463,18 +430,16 @@ public class RelatorioService {
 
             BigDecimal valorFinalOS = valorServicosOS.subtract(descontoOS);
 
-            // Converter serviços para DTO
             List<RelatorioComissaoDTO.ServicoRealizadoDTO> servicosDTO = servicosOS.stream()
                     .map(s -> new RelatorioComissaoDTO.ServicoRealizadoDTO(
                             s.getServico().getId(),
                             s.getServico().getNome(),
                             s.getValor() != null ? BigDecimal.valueOf(s.getValor()) : BigDecimal.ZERO,
-                            BigDecimal.ZERO, // Desconto é aplicado na OS, não em serviços individuais
+                            BigDecimal.ZERO,
                             s.getDataRealizacao()
                     ))
                     .collect(Collectors.toList());
 
-            // Criar DTO da ordem
             ordensComissao.add(new RelatorioComissaoDTO.OrdemServicoComissaoDTO(
                     os.getId(),
                     os.getNumeroOS(),
@@ -494,7 +459,6 @@ public class RelatorioService {
             totalServicosRealizados += servicosOS.size();
         }
 
-        // Calcular comissão (valor total - descontos)
         BigDecimal valorComissao = valorTotalServicos.subtract(descontoServicos);
 
         return new RelatorioComissaoDTO(
@@ -505,7 +469,7 @@ public class RelatorioService {
     }
 
     public RelatorioGarantiasDTO gerarRelatorioGarantias(LocalDate dataInicio, LocalDate dataFim) {
-        // Buscar todas as ordens encerradas (que possuem garantia)
+
         List<OrdemServico> ordensEncerradas = ordemServicoRepository.findAll().stream()
                 .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) &&
                         os.getDataHoraEncerramento() != null)
@@ -514,22 +478,17 @@ public class RelatorioService {
         List<RelatorioGarantiasDTO.GarantiaItemDTO> garantias = new ArrayList<>();
         int garantiasEmAberto = 0;
         int garantiasEncerradas = 0;
-        
-        // Data atual para verificar status da garantia
+
         LocalDate dataAtual = LocalDate.now();
 
         for (OrdemServico os : ordensEncerradas) {
             LocalDate dataInicioGarantia = os.getDataHoraEncerramento().toLocalDate();
             LocalDate dataFimGarantia = dataInicioGarantia.plusMonths(os.getGarantiaMeses());
 
-            // Verifica se a garantia está coberta no período pesquisado
-            // A garantia deve estar ativa em algum momento do período
             boolean garantiaCoberta = !dataFimGarantia.isBefore(dataInicio) && !dataInicioGarantia.isAfter(dataFim);
 
             if (garantiaCoberta) {
-                // Determinar se está em aberto ou encerrada baseado na DATA ATUAL
-                // Em aberto: dataFimGarantia >= dataAtual (garantia ainda está válida)
-                // Encerrada: dataFimGarantia < dataAtual (garantia já expirou)
+
                 boolean emAberto = !dataFimGarantia.isBefore(dataAtual);
                 String statusDescricao = emAberto ? "Em Aberto" : "Encerrada";
 
@@ -566,7 +525,6 @@ public class RelatorioService {
             }
         }
 
-        // Ordenar por data de encerramento (mais recente primeiro)
         garantias.sort((a, b) -> b.getDataEncerramento().compareTo(a.getDataEncerramento()));
 
         return RelatorioGarantiasDTO.builder()
@@ -580,7 +538,6 @@ public class RelatorioService {
     }
 
     public RelatorioFiadoDTO gerarRelatorioFiado(LocalDate dataInicio, LocalDate dataFim) {
-        // Buscar todas as ordens encerradas com prazo de fiado configurado
         List<OrdemServico> ordensComFiado = ordemServicoRepository.findAll().stream()
                 .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) &&
                         os.getDataHoraEncerramento() != null &&
@@ -593,22 +550,16 @@ public class RelatorioService {
         int fiadosVencidos = 0;
         BigDecimal valorNoPrazo = BigDecimal.ZERO;
         BigDecimal valorVencido = BigDecimal.ZERO;
-        
-        // Data atual para verificar status do fiado
+
         LocalDate dataAtual = LocalDate.now();
 
         for (OrdemServico os : ordensComFiado) {
             LocalDate dataInicioFiado = os.getDataHoraEncerramento().toLocalDate();
             LocalDate dataVencimentoFiado = dataInicioFiado.plusDays(os.getPrazoFiadoDias());
-
-            // Verifica se o fiado está no período pesquisado
-            // O fiado deve estar ativo em algum momento do período
             boolean fiadoNoPeriodo = !dataVencimentoFiado.isBefore(dataInicio) && !dataInicioFiado.isAfter(dataFim);
 
             if (fiadoNoPeriodo) {
-                // Determinar se está no prazo ou vencido baseado na DATA ATUAL
-                // No prazo: dataVencimentoFiado >= dataAtual (ainda não venceu)
-                // Vencido: dataVencimentoFiado < dataAtual (já passou do prazo)
+
                 boolean noPrazo = !dataVencimentoFiado.isBefore(dataAtual);
                 String statusDescricao = noPrazo ? "No Prazo" : "Vencido";
 
@@ -651,7 +602,6 @@ public class RelatorioService {
             }
         }
 
-        // Ordenar por data de vencimento (mais próximo primeiro)
         fiados.sort((a, b) -> a.getDataVencimentoFiado().compareTo(b.getDataVencimentoFiado()));
 
         BigDecimal valorTotal = valorNoPrazo.add(valorVencido);

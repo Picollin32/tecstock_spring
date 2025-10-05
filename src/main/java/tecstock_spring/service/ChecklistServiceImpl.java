@@ -67,7 +67,7 @@ public class ChecklistServiceImpl implements ChecklistService {
     public boolean fecharChecklist(Long id) {
         try {
             Checklist checklist = buscarPorId(id);
-            checklist.setStatus("FECHADO");
+            checklist.setStatus("Fechado");
             repository.save(checklist);
             logger.info("Checklist ID " + id + " foi fechado com sucesso");
             return true;

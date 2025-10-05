@@ -25,13 +25,11 @@ public interface PecaRepository extends JpaRepository<Peca, Long> {
     boolean existsByFabricante(Fabricante fabricante);
     boolean existsByFornecedor(Fornecedor fornecedor);
     
-    // Atualiza apenas o estoque sem disparar o @PreUpdate (updated_at não será alterado)
     @Modifying
     @Transactional
     @Query("UPDATE Peca p SET p.quantidadeEstoque = :novaQuantidade WHERE p.id = :pecaId")
     void atualizarEstoqueSemTriggerUpdate(@Param("pecaId") Long pecaId, @Param("novaQuantidade") int novaQuantidade);
     
-    // Atualiza apenas as unidades usadas em OS sem disparar o @PreUpdate (updated_at não será alterado)
     @Modifying
     @Transactional
     @Query("UPDATE Peca p SET p.unidadesUsadasEmOS = :unidadesUsadas WHERE p.id = :pecaId")

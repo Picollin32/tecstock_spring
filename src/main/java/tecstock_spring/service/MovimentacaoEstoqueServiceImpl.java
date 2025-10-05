@@ -61,8 +61,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         movimentacao.setObservacoes(observacoes);
         
         MovimentacaoEstoque movimentacaoSalva = movimentacaoEstoqueRepository.save(movimentacao);
-        
-        // Atualizar estoque sem disparar o @PreUpdate (updated_at não será alterado)
+
         int novoEstoque = peca.getQuantidadeEstoque() + quantidade;
         pecaRepository.atualizarEstoqueSemTriggerUpdate(peca.getId(), novoEstoque);
         
@@ -110,8 +109,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         movimentacao.setObservacoes(observacoes);
         
         MovimentacaoEstoque movimentacaoSalva = movimentacaoEstoqueRepository.save(movimentacao);
-        
-        // Atualizar estoque sem disparar o @PreUpdate (updated_at não será alterado)
+
         int novoEstoque = peca.getQuantidadeEstoque() - quantidade;
         pecaRepository.atualizarEstoqueSemTriggerUpdate(peca.getId(), novoEstoque);
         
@@ -167,7 +165,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
 
             int estoqueAnterior = peca.getQuantidadeEstoque();
             int novoEstoque = estoqueAnterior - quantidade;
-            // Atualizar estoque sem disparar o @PreUpdate (updated_at não será alterado)
+
             pecaRepository.atualizarEstoqueSemTriggerUpdate(peca.getId(), novoEstoque);
             logger.info("📉 ESTOQUE ATUALIZADO - Peça: " + peca.getNome() + 
                        " | Estoque anterior: " + estoqueAnterior + 
@@ -243,8 +241,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         movimentacao.setObservacoes(observacoes);
         
         MovimentacaoEstoque movimentacaoSalva = movimentacaoEstoqueRepository.save(movimentacao);
-        
-        // Atualizar estoque sem disparar o @PreUpdate (updated_at não será alterado)
+
         int novoEstoque = peca.getQuantidadeEstoque() + quantidade;
         pecaRepository.atualizarEstoqueSemTriggerUpdate(peca.getId(), novoEstoque);
         

@@ -105,7 +105,7 @@ public class Checklist {
     
     @Column(nullable = false)
     @Builder.Default
-    private String status = "ABERTO";
+    private String status = "Aberto";
     
     @Column(name = "created_at")
     private LocalDateTime createdAt;

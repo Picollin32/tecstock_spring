@@ -186,7 +186,6 @@ public class PecaServiceImpl implements PecaService {
                 }
             }
             
-            // Atualizar apenas as unidades usadas sem disparar o @PreUpdate (updated_at não será alterado)
             pecaRepository.atualizarUnidadesUsadasSemTriggerUpdate(peca.getId(), unidadesUsadas);
             
             if (unidadesUsadas > 0) {

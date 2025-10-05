@@ -18,13 +18,9 @@ public class RelatorioGarantiasDTO {
     
     private LocalDate dataInicio;
     private LocalDate dataFim;
-    
-    // Estatísticas gerais
     private Integer totalGarantias;
     private Integer garantiasEmAberto;
     private Integer garantiasEncerradas;
-    
-    // Lista de ordens com garantia
     private List<GarantiaItemDTO> garantias;
     
     @Data
@@ -47,9 +43,7 @@ public class RelatorioGarantiasDTO {
         private BigDecimal valorTotal;
         private String mecanicoNome;
         private String consultorNome;
-        
-        // Status da garantia em relação à data pesquisada
-        private Boolean emAberto; // true = verde (garantia coberta), false = vermelho (garantia expirada)
-        private String statusDescricao; // "Em Aberto" ou "Encerrada"
+        private Boolean emAberto;
+        private String statusDescricao;
     }
 }

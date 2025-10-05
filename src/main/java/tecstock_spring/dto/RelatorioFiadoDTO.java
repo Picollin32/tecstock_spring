@@ -18,16 +18,12 @@ public class RelatorioFiadoDTO {
     
     private LocalDate dataInicio;
     private LocalDate dataFim;
-    
-    // Estatísticas gerais
     private Integer totalFiados;
     private Integer fiadosNoPrazo;
     private Integer fiadosVencidos;
     private BigDecimal valorTotalFiado;
     private BigDecimal valorNoPrazo;
     private BigDecimal valorVencido;
-    
-    // Lista de ordens com fiado
     private List<FiadoItemDTO> fiados;
     
     @Data
@@ -51,9 +47,7 @@ public class RelatorioFiadoDTO {
         private String mecanicoNome;
         private String consultorNome;
         private String tipoPagamentoNome;
-        
-        // Status do fiado em relação à data atual
-        private Boolean noPrazo; // true = verde (no prazo), false = vermelho (vencido)
-        private String statusDescricao; // "No Prazo" ou "Vencido"
+        private Boolean noPrazo;
+        private String statusDescricao;
     }
 }
