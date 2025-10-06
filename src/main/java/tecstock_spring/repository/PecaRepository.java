@@ -34,4 +34,30 @@ public interface PecaRepository extends JpaRepository<Peca, Long> {
     @Transactional
     @Query("UPDATE Peca p SET p.unidadesUsadasEmOS = :unidadesUsadas WHERE p.id = :pecaId")
     void atualizarUnidadesUsadasSemTriggerUpdate(@Param("pecaId") Long pecaId, @Param("unidadesUsadas") int unidadesUsadas);
+    
+    /**
+     * Incrementa o estoque de forma atômica (operação thread-safe).
+     * Usado para entrada de peças no estoque.
+     * 
+     * @param pecaId ID da peça
+     * @param quantidade Quantidade a incrementar
+     * @return Número de linhas afetadas (1 se sucesso, 0 se peça não encontrada)
+     */
+    @Modifying
+    @Transactional
+    @Query("UPDATE Peca p SET p.quantidadeEstoque = p.quantidadeEstoque + :quantidade WHERE p.id = :pecaId")
+    int incrementarEstoqueAtomico(@Param("pecaId") Long pecaId, @Param("quantidade") int quantidade);
+    
+    /**
+     * Decrementa o estoque de forma atômica (operação thread-safe).
+     * Só atualiza se houver estoque suficiente, evitando estoque negativo.
+     * 
+     * @param pecaId ID da peça
+     * @param quantidade Quantidade a decrementar
+     * @return Número de linhas afetadas (1 se sucesso, 0 se estoque insuficiente ou peça não encontrada)
+     */
+    @Modifying
+    @Transactional
+    @Query("UPDATE Peca p SET p.quantidadeEstoque = p.quantidadeEstoque - :quantidade WHERE p.id = :pecaId AND p.quantidadeEstoque >= :quantidade")
+    int decrementarEstoqueAtomico(@Param("pecaId") Long pecaId, @Param("quantidade") int quantidade);
 }

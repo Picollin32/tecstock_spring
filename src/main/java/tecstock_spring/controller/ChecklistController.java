@@ -58,4 +58,10 @@ public class ChecklistController {
         logger.info("Fechando checklist no controller. ID: " + id);
         return service.fecharChecklist(id);
     }
+    
+    @PutMapping("/api/checklists/reabrir/{id}")
+    public boolean reabrirChecklist(@PathVariable Long id) {
+        logger.info("Reabrindo checklist no controller. ID: " + id);
+        return service.reabrirChecklist(id);
+    }
 }

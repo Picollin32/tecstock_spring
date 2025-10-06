@@ -3,6 +3,8 @@ package tecstock_spring.controller;
 import lombok.RequiredArgsConstructor;
 import org.apache.log4j.Logger;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tecstock_spring.dto.OrdemServicoResumoDTO;
 import tecstock_spring.model.OrdemServico;
@@ -121,6 +123,40 @@ public class OrdemServicoController {
         return resultado;
     }
     
+    @PatchMapping("/api/ordens-servico/{id}/reabrir")
+    public ResponseEntity<?> reabrirOrdemServico(@PathVariable Long id) {
+        try {
+            logger.info("🔓 CONTROLLER: Recebida solicitação para reabrir OS com ID: " + id);
+            OrdemServico os = service.buscarPorId(id);
+            
+            if (!"Encerrada".equals(os.getStatus())) {
+                logger.warn("⚠️ CONTROLLER: Tentativa de reabrir OS que não está encerrada. Status atual: " + os.getStatus());
+                return ResponseEntity.badRequest()
+                    .body("Apenas ordens de serviço encerradas podem ser reabertas. Status atual: " + os.getStatus());
+            }
+            
+            // Log dos dados antes da reabertura
+            logger.info("📊 Dados da OS antes da reabertura:");
+            logger.info("  - Serviços: " + (os.getServicosRealizados() != null ? os.getServicosRealizados().size() : "null"));
+            logger.info("  - Peças: " + (os.getPecasUtilizadas() != null ? os.getPecasUtilizadas().size() : "null"));
+            
+            // Usar método específico que preserva os dados e reabre o checklist
+            OrdemServico osReaberta = service.reabrirOS(id);
+            
+            // Log dos dados após a reabertura
+            logger.info("📊 Dados da OS após a reabertura:");
+            logger.info("  - Serviços: " + (osReaberta.getServicosRealizados() != null ? osReaberta.getServicosRealizados().size() : "null"));
+            logger.info("  - Peças: " + (osReaberta.getPecasUtilizadas() != null ? osReaberta.getPecasUtilizadas().size() : "null"));
+            
+            logger.info("✅ CONTROLLER: OS reaberta com sucesso - Número: " + osReaberta.getNumeroOS());
+            return ResponseEntity.ok(osReaberta);
+        } catch (Exception e) {
+            logger.error("❌ CONTROLLER: Erro ao reabrir ordem de serviço: " + e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Erro ao reabrir ordem de serviço: " + e.getMessage());
+        }
+    }
+    
     @PatchMapping("/api/ordens-servico/{id}/recalcular-precos")
     public OrdemServico recalcularPrecos(@PathVariable Long id) {
         logger.info("Recalculando preços da OS ID: " + id);
@@ -161,6 +197,17 @@ public class OrdemServicoController {
     public OrdemServico marcarFiadoComoPago(@PathVariable Long id, @RequestParam Boolean pago) {
         logger.info("Marcando fiado ID: " + id + " como " + (pago ? "PAGO" : "NÃO PAGO"));
         return service.marcarFiadoComoPago(id, pago);
+    }
+    
+    @PostMapping("/api/ordens-servico/{id}/desbloquear")
+    public ResponseEntity<?> desbloquearOS(@PathVariable Long id, @RequestHeader(value = "X-User-Level", required = false) Integer userLevel) {
+        if (userLevel == null || userLevel != 0) {
+            logger.warn("Acesso negado ao desbloquear OS. Nível: " + userLevel);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado. Apenas administradores podem desbloquear Ordens de Serviço.");
+        }
+        logger.info("Desbloqueando OS ID: " + id + " para edição");
+        OrdemServico os = service.desbloquearParaEdicao(id);
+        return ResponseEntity.ok(os);
     }
     
     private OrdemServicoResumoDTO converterParaResumo(OrdemServico os) {

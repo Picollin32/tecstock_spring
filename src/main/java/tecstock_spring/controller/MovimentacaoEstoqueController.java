@@ -46,7 +46,7 @@ public class MovimentacaoEstoqueController {
             @RequestParam String codigoPeca,
             @RequestParam Long fornecedorId,
             @RequestParam int quantidade,
-            @RequestParam String numeroNotaFiscal,
+            @RequestParam(required = false) String numeroNotaFiscal,  // ✅ Agora é opcional
             @RequestParam(required = false) String observacoes,
             @RequestParam(required = false) String origem) {
         logger.info("Registrando saída - Código: " + codigoPeca + ", Fornecedor: " + fornecedorId + ", Quantidade: " + quantidade + ", Nota: " + numeroNotaFiscal + ", Origem: " + origem);

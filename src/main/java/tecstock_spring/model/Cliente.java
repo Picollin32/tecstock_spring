@@ -33,6 +33,12 @@ public class Cliente {
     
     private Date dataNascimento;
     
+    private String rua;
+    private String numeroCasa;
+    private String bairro;
+    private String cidade;
+    private String uf;
+    
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     

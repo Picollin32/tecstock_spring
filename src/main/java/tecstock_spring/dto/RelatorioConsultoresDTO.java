@@ -19,6 +19,7 @@ public class RelatorioConsultoresDTO {
     private Integer totalOrcamentosGeral;
     private Integer totalOSGeral;
     private Integer totalChecklistsGeral;
+    private Integer totalAgendamentosGeral;
     private Double valorTotalGeral;
     private Double valorMedioGeral;
     private Double taxaConversaoGeral;

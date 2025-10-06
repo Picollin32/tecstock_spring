@@ -665,13 +665,16 @@ public class RelatorioService {
 
     public RelatorioConsultoresDTO gerarRelatorioConsultores(LocalDate dataInicio, LocalDate dataFim) {
 
-        List<Funcionario> todosConsultores = funcionarioRepository.findAll();
+        List<Funcionario> todosConsultores = funcionarioRepository.findAll().stream()
+                .filter(f -> f.getNivelAcesso() == 1)
+                .collect(Collectors.toList());
         
         List<ConsultorMetricasDTO> consultoresMetricas = new ArrayList<>();
         
         int totalOrcamentosGeral = 0;
         int totalOSGeral = 0;
         int totalChecklistsGeral = 0;
+        int totalAgendamentosGeral = 0;
         double valorTotalGeral = 0.0;
         
         for (Funcionario consultor : todosConsultores) {
@@ -720,6 +723,14 @@ public class RelatorioService {
                                 !c.getCreatedAt().toLocalDate().isAfter(dataFim))
                     .count();
 
+            long totalAgendamentos = agendamentoRepository.findAll().stream()
+                    .filter(a -> a.getNomeConsultor() != null &&
+                                a.getNomeConsultor().equals(consultorNome) &&
+                                a.getData() != null &&
+                                !a.getData().isBefore(dataInicio) &&
+                                !a.getData().isAfter(dataFim))
+                    .count();
+
             double taxaConversao = 0.0;
             if (totalOrcamentos > 0) {
                 taxaConversao = ((double) totalOS / totalOrcamentos) * 100.0;
@@ -728,6 +739,7 @@ public class RelatorioService {
             totalOrcamentosGeral += (int) totalOrcamentos;
             totalOSGeral += (int) totalOS;
             totalChecklistsGeral += (int) totalChecklists;
+            totalAgendamentosGeral += (int) totalAgendamentos;
             valorTotalGeral += valorTotalOS;
 
             ConsultorMetricasDTO consultorDTO = new ConsultorMetricasDTO(
@@ -736,6 +748,7 @@ public class RelatorioService {
                     (int) totalOrcamentos,
                     (int) totalOS,
                     (int) totalChecklists,
+                    (int) totalAgendamentos,
                     Math.round(valorTotalOS * 100.0) / 100.0,
                     Math.round(valorMedioOS * 100.0) / 100.0,
                     Math.round(taxaConversao * 10.0) / 10.0
@@ -762,6 +775,7 @@ public class RelatorioService {
                 totalOrcamentosGeral,
                 totalOSGeral,
                 totalChecklistsGeral,
+                totalAgendamentosGeral,
                 Math.round(valorTotalGeral * 100.0) / 100.0,
                 Math.round(valorMedioGeral * 100.0) / 100.0,
                 taxaConversaoGeral

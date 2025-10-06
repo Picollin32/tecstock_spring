@@ -76,4 +76,18 @@ public class ChecklistServiceImpl implements ChecklistService {
             return false;
         }
     }
+    
+    @Override
+    public boolean reabrirChecklist(Long id) {
+        try {
+            Checklist checklist = buscarPorId(id);
+            checklist.setStatus("Aberto");
+            repository.save(checklist);
+            logger.info("Checklist ID " + id + " foi reaberto com sucesso");
+            return true;
+        } catch (Exception e) {
+            logger.error("Erro ao reabrir checklist ID " + id + ": " + e.getMessage());
+            return false;
+        }
+    }
 }

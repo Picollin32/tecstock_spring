@@ -38,4 +38,8 @@ public interface OrdemServicoService {
     List<OrdemServico> getFiadosEmAberto();
     
     OrdemServico marcarFiadoComoPago(Long id, Boolean pago);
+    
+    OrdemServico desbloquearParaEdicao(Long id);
+    
+    OrdemServico reabrirOS(Long id);
 }

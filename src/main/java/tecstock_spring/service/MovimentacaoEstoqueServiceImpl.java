@@ -2,6 +2,9 @@ package tecstock_spring.service;
 
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.dao.DataIntegrityViolationException;
 import tecstock_spring.model.Fornecedor;
 import tecstock_spring.model.MovimentacaoEstoque;
 import tecstock_spring.model.Peca;
@@ -23,6 +26,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
     private static final Logger logger = Logger.getLogger(MovimentacaoEstoqueServiceImpl.class);
 
     @Override
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public MovimentacaoEstoque registrarEntrada(String codigoPeca, Long fornecedorId, int quantidade, Double precoUnitario, String numeroNotaFiscal, String observacoes, String origem) {
         logger.info("Registrando entrada de estoque - Código: " + codigoPeca + ", Fornecedor ID: " + fornecedorId + ", Quantidade: " + quantidade + ", Preço: " + precoUnitario + ", Nota: " + numeroNotaFiscal);
         if (origem != null && origem.equalsIgnoreCase("ORCAMENTO")) {
@@ -62,18 +66,27 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         
         MovimentacaoEstoque movimentacaoSalva = movimentacaoEstoqueRepository.save(movimentacao);
 
-        int novoEstoque = peca.getQuantidadeEstoque() + quantidade;
-        pecaRepository.atualizarEstoqueSemTriggerUpdate(peca.getId(), novoEstoque);
+        // Operação atômica: incrementa estoque de forma thread-safe
+        int linhasAfetadas = pecaRepository.incrementarEstoqueAtomico(peca.getId(), quantidade);
+        if (linhasAfetadas == 0) {
+            logger.error("Falha ao atualizar estoque da peça ID: " + peca.getId());
+            throw new RuntimeException("Erro ao atualizar estoque da peça. A peça pode ter sido removida.");
+        }
+        
+        // Busca o estoque atualizado para logging
+        Peca pecaAtualizada = pecaRepository.findById(peca.getId())
+                .orElseThrow(() -> new RuntimeException("Peça não encontrada após atualização de estoque"));
         
         if (precoAlterado) {
             logger.info("Preço da peça atualizado. Novo preço de custo: " + peca.getPrecoUnitario() + ", Novo preço de venda: " + peca.getPrecoFinal());
         }
-        logger.info("Entrada registrada com sucesso. Novo estoque da peça: " + novoEstoque);
+        logger.info("Entrada registrada com sucesso. Novo estoque da peça: " + pecaAtualizada.getQuantidadeEstoque());
         
         return movimentacaoSalva;
     }
 
     @Override
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public MovimentacaoEstoque registrarSaida(String codigoPeca, Long fornecedorId, int quantidade, String numeroNotaFiscal, String observacoes, String origem) {
         logger.info("Registrando saída de estoque - Código: " + codigoPeca + ", Fornecedor ID: " + fornecedorId + ", Quantidade: " + quantidade + ", Nota: " + numeroNotaFiscal);
         if (origem != null && origem.equalsIgnoreCase("ORCAMENTO")) {
@@ -81,8 +94,15 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
             throw new RuntimeException("Operação de movimentação de estoque não permitida para orçamentos");
         }
 
-        if (movimentacaoEstoqueRepository.existsByNumeroNotaFiscalAndFornecedorId(numeroNotaFiscal, fornecedorId)) {
-            throw new RuntimeException("O número da nota fiscal '" + numeroNotaFiscal + "' já foi utilizado em outra movimentação para este fornecedor.");
+        // Se nota fiscal não fornecida, gera automaticamente para saídas
+        if (numeroNotaFiscal == null || numeroNotaFiscal.trim().isEmpty()) {
+            numeroNotaFiscal = "SAIDA-" + System.currentTimeMillis() + "-" + codigoPeca;
+            logger.info("Nota fiscal gerada automaticamente para saída: " + numeroNotaFiscal);
+        } else {
+            // Validação de duplicata apenas se nota fiscal foi fornecida manualmente
+            if (movimentacaoEstoqueRepository.existsByNumeroNotaFiscalAndFornecedorId(numeroNotaFiscal, fornecedorId)) {
+                throw new RuntimeException("O número da nota fiscal '" + numeroNotaFiscal + "' já foi utilizado em outra movimentação para este fornecedor.");
+            }
         }
         
         Optional<Peca> pecaOptional = pecaRepository.findByCodigoFabricanteAndFornecedorId(codigoPeca, fornecedorId);
@@ -92,6 +112,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         
         Peca peca = pecaOptional.get();
         
+        // Validação prévia (para mensagem de erro mais clara)
         if (peca.getQuantidadeEstoque() < quantidade) {
             throw new RuntimeException("Estoque insuficiente. Disponível: " + peca.getQuantidadeEstoque() + ", Solicitado: " + quantidade);
         }
@@ -108,12 +129,32 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         movimentacao.setTipoMovimentacao(MovimentacaoEstoque.TipoMovimentacao.SAIDA);
         movimentacao.setObservacoes(observacoes);
         
-        MovimentacaoEstoque movimentacaoSalva = movimentacaoEstoqueRepository.save(movimentacao);
+        MovimentacaoEstoque movimentacaoSalva;
+        try {
+            movimentacaoSalva = movimentacaoEstoqueRepository.save(movimentacao);
+        } catch (DataIntegrityViolationException e) {
+            // Captura violação do constraint UNIQUE (numero_nota_fiscal, fornecedor_id)
+            logger.error("Violação de constraint ao salvar movimentação de saída: " + e.getMessage());
+            throw new RuntimeException("O número da nota fiscal '" + numeroNotaFiscal + 
+                "' já foi utilizado em outra movimentação para este fornecedor. " +
+                "(Validação garantida pelo banco de dados)");
+        }
 
-        int novoEstoque = peca.getQuantidadeEstoque() - quantidade;
-        pecaRepository.atualizarEstoqueSemTriggerUpdate(peca.getId(), novoEstoque);
+        // Operação atômica: decrementa estoque de forma thread-safe com validação
+        int linhasAfetadas = pecaRepository.decrementarEstoqueAtomico(peca.getId(), quantidade);
+        if (linhasAfetadas == 0) {
+            // Busca estoque atual para mensagem de erro precisa
+            Peca pecaAtualizada = pecaRepository.findById(peca.getId())
+                    .orElseThrow(() -> new RuntimeException("Peça não encontrada"));
+            throw new RuntimeException("Estoque insuficiente ou peça removida durante a operação. Disponível: " + 
+                    pecaAtualizada.getQuantidadeEstoque() + ", Solicitado: " + quantidade);
+        }
         
-        logger.info("Saída registrada com sucesso. Novo estoque da peça: " + novoEstoque);
+        // Busca o estoque atualizado para logging
+        Peca pecaAtualizada = pecaRepository.findById(peca.getId())
+                .orElseThrow(() -> new RuntimeException("Peça não encontrada após atualização de estoque"));
+        
+        logger.info("Saída registrada com sucesso. Novo estoque da peça: " + pecaAtualizada.getQuantidadeEstoque());
         
         return movimentacaoSalva;
     }
@@ -140,6 +181,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
     }
 
     @Override
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void processarSaidaPorOrdemServico(String codigoPeca, Long fornecedorId, int quantidade, String numeroOS) {
         logger.info("🎯 MÉTODO CHAMADO: processarSaidaPorOrdemServico");
         logger.info("🔄 INICIANDO processamento de saída - Peça: " + codigoPeca + 
@@ -155,18 +197,31 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
             }
             
             Peca peca = pecaOptional.get();
-            logger.info("📦 Peça encontrada: " + peca.getNome() + " | Estoque atual: " + peca.getQuantidadeEstoque());
+            int estoqueAnterior = peca.getQuantidadeEstoque();
+            logger.info("📦 Peça encontrada: " + peca.getNome() + " | Estoque atual: " + estoqueAnterior);
             
-            if (peca.getQuantidadeEstoque() < quantidade) {
+            // Validação prévia (para mensagem de erro mais clara)
+            if (estoqueAnterior < quantidade) {
                 throw new RuntimeException("Estoque insuficiente para a peça " + peca.getNome() + 
-                                         ". Disponível: " + peca.getQuantidadeEstoque() + 
+                                         ". Disponível: " + estoqueAnterior + 
                                          ", Solicitado: " + quantidade);
             }
 
-            int estoqueAnterior = peca.getQuantidadeEstoque();
-            int novoEstoque = estoqueAnterior - quantidade;
-
-            pecaRepository.atualizarEstoqueSemTriggerUpdate(peca.getId(), novoEstoque);
+            // Operação atômica: decrementa estoque de forma thread-safe com validação
+            int linhasAfetadas = pecaRepository.decrementarEstoqueAtomico(peca.getId(), quantidade);
+            if (linhasAfetadas == 0) {
+                // Busca estoque atual para mensagem de erro precisa
+                Peca pecaAtualizada = pecaRepository.findById(peca.getId())
+                        .orElseThrow(() -> new RuntimeException("Peça não encontrada"));
+                throw new RuntimeException("Estoque insuficiente ou peça removida durante a operação. Disponível: " + 
+                        pecaAtualizada.getQuantidadeEstoque() + ", Solicitado: " + quantidade);
+            }
+            
+            // Busca estoque atualizado para logging
+            Peca pecaAtualizada = pecaRepository.findById(peca.getId())
+                    .orElseThrow(() -> new RuntimeException("Peça não encontrada após atualização"));
+            int novoEstoque = pecaAtualizada.getQuantidadeEstoque();
+            
             logger.info("📉 ESTOQUE ATUALIZADO - Peça: " + peca.getNome() + 
                        " | Estoque anterior: " + estoqueAnterior + 
                        " | Quantidade subtraída: " + quantidade + 
@@ -211,6 +266,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
     }
     
     @Override
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public MovimentacaoEstoque registrarEntradaSemValidacaoNota(String codigoPeca, Long fornecedorId, int quantidade, Double precoUnitario, String numeroNotaFiscal, String observacoes) {
         logger.info("Registrando entrada SEM validação de nota - Código: " + codigoPeca + ", Fornecedor ID: " + fornecedorId + ", Quantidade: " + quantidade);
         
@@ -242,13 +298,21 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         
         MovimentacaoEstoque movimentacaoSalva = movimentacaoEstoqueRepository.save(movimentacao);
 
-        int novoEstoque = peca.getQuantidadeEstoque() + quantidade;
-        pecaRepository.atualizarEstoqueSemTriggerUpdate(peca.getId(), novoEstoque);
+        // Operação atômica: incrementa estoque de forma thread-safe
+        int linhasAfetadas = pecaRepository.incrementarEstoqueAtomico(peca.getId(), quantidade);
+        if (linhasAfetadas == 0) {
+            logger.error("Falha ao atualizar estoque da peça ID: " + peca.getId());
+            throw new RuntimeException("Erro ao atualizar estoque da peça. A peça pode ter sido removida.");
+        }
+        
+        // Busca o estoque atualizado para logging
+        Peca pecaAtualizada = pecaRepository.findById(peca.getId())
+                .orElseThrow(() -> new RuntimeException("Peça não encontrada após atualização de estoque"));
         
         if (precoAlterado) {
             logger.info("Preço da peça atualizado. Novo preço de custo: " + peca.getPrecoUnitario() + ", Novo preço de venda: " + peca.getPrecoFinal());
         }
-        logger.info("Entrada registrada com sucesso. Novo estoque da peça: " + novoEstoque);
+        logger.info("Entrada registrada com sucesso. Novo estoque da peça: " + pecaAtualizada.getQuantidadeEstoque());
         
         return movimentacaoSalva;
     }

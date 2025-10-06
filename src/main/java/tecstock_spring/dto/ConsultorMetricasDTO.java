@@ -15,6 +15,7 @@ public class ConsultorMetricasDTO {
     private Integer totalOrcamentos;
     private Integer totalOS;
     private Integer totalChecklists;
+    private Integer totalAgendamentos;
     private Double valorTotalOS;
     private Double valorMedioOS;
     private Double taxaConversao;

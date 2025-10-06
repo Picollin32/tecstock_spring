@@ -31,6 +31,12 @@ public class Funcionario {
     private Date dataNascimento;
     private int nivelAcesso;
     
+    private String rua;
+    private String numeroCasa;
+    private String bairro;
+    private String cidade;
+    private String uf;
+    
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     

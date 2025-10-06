@@ -4,19 +4,23 @@ import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.BeanUtils;
 import tecstock_spring.controller.PecaController;
+import tecstock_spring.dto.AjusteEstoqueDTO;
 import tecstock_spring.exception.CodigoPecaDuplicadoException;
 import tecstock_spring.exception.PecaComEstoqueException;
 import tecstock_spring.model.Fabricante;
 import tecstock_spring.model.Fornecedor;
+import tecstock_spring.model.MovimentacaoEstoque;
 import tecstock_spring.model.OrdemServico;
 import tecstock_spring.model.Peca;
 import tecstock_spring.model.PecaOrdemServico;
 import tecstock_spring.repository.FabricanteRepository;
 import tecstock_spring.repository.FornecedorRepository;
+import tecstock_spring.repository.MovimentacaoEstoqueRepository;
 import tecstock_spring.repository.OrdemServicoRepository;
 import tecstock_spring.repository.PecaRepository;
 import lombok.RequiredArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -29,6 +33,7 @@ public class PecaServiceImpl implements PecaService {
     private final FabricanteRepository fabricanteRepository; 
     private final FornecedorRepository fornecedorRepository;
     private final OrdemServicoRepository ordemServicoRepository;
+    private final MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
     
     Logger logger = Logger.getLogger(PecaController.class);
 
@@ -155,6 +160,63 @@ public class PecaServiceImpl implements PecaService {
         
         logger.info("Excluindo peça com estoque zero: " + peca.getNome());
         pecaRepository.deleteById(id);
+    }
+    
+    @Override
+    public Peca ajustarEstoque(AjusteEstoqueDTO ajusteDTO) {
+        logger.info("Iniciando ajuste de estoque para peça ID: " + ajusteDTO.getPecaId() + ", ajuste: " + ajusteDTO.getAjuste());
+        
+        // Buscar a peça
+        Peca peca = buscarPorId(ajusteDTO.getPecaId());
+        
+        if (ajusteDTO.getAjuste() == null || ajusteDTO.getAjuste() == 0) {
+            throw new IllegalArgumentException("O valor do ajuste não pode ser zero ou nulo");
+        }
+        
+        // Calcular novo estoque
+        int estoqueAtual = peca.getQuantidadeEstoque();
+        int novoEstoque = estoqueAtual + ajusteDTO.getAjuste();
+        
+        if (novoEstoque < 0) {
+            throw new IllegalArgumentException("O ajuste resultaria em estoque negativo (" + novoEstoque + "). Estoque atual: " + estoqueAtual);
+        }
+        
+        // Atualizar estoque
+        peca.setQuantidadeEstoque(novoEstoque);
+        Peca pecaAtualizada = pecaRepository.save(peca);
+        
+        // Criar movimentação de estoque
+        MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
+        movimentacao.setCodigoPeca(peca.getCodigoFabricante());
+        movimentacao.setFornecedor(peca.getFornecedor());
+        movimentacao.setQuantidade(Math.abs(ajusteDTO.getAjuste()));
+        
+        // Definir tipo e observações
+        String operacao = ajusteDTO.getAjuste() > 0 ? "+" : "-";
+        String observacao = "Reajuste " + operacao + " " + Math.abs(ajusteDTO.getAjuste());
+        if (ajusteDTO.getObservacoes() != null && !ajusteDTO.getObservacoes().isEmpty()) {
+            observacao += " - " + ajusteDTO.getObservacoes();
+        }
+        movimentacao.setObservacoes(observacao);
+        
+        // Número de NF fictício para reajustes
+        String notaFiscal = "REAJUSTE-" + peca.getId() + "-" + System.currentTimeMillis();
+        movimentacao.setNumeroNotaFiscal(notaFiscal);
+        
+        if (ajusteDTO.getAjuste() > 0) {
+            movimentacao.setTipoMovimentacao(MovimentacaoEstoque.TipoMovimentacao.ENTRADA);
+            movimentacao.setDataEntrada(LocalDateTime.now());
+        } else {
+            movimentacao.setTipoMovimentacao(MovimentacaoEstoque.TipoMovimentacao.SAIDA);
+            movimentacao.setDataSaida(LocalDateTime.now());
+        }
+        
+        movimentacaoEstoqueRepository.save(movimentacao);
+        
+        logger.info("Ajuste de estoque concluído. Estoque anterior: " + estoqueAtual + ", novo estoque: " + novoEstoque);
+        logger.info("Movimentação registrada: " + observacao);
+        
+        return pecaAtualizada;
     }
     
     @Override

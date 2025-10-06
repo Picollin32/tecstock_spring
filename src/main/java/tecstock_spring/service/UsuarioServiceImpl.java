@@ -24,21 +24,30 @@ public class UsuarioServiceImpl implements UsuarioService {
     public Usuario salvar(Usuario usuario) {
         validarNomeUsuarioDuplicado(usuario.getNomeUsuario(), null);
 
-        if (usuario.getConsultor() == null || usuario.getConsultor().getId() == null) {
-            throw new RuntimeException("Consultor não informado");
+        // Validar nivelAcesso
+        if (usuario.getNivelAcesso() == null) {
+            throw new RuntimeException("Nível de acesso não informado");
         }
         
-        Funcionario consultor = funcionarioRepository.findById(usuario.getConsultor().getId())
-                .orElseThrow(() -> new RuntimeException("Consultor não encontrado"));
+        if (usuario.getNivelAcesso() != 0 && usuario.getNivelAcesso() != 1) {
+            throw new RuntimeException("Nível de acesso inválido. Use 0 (Admin) ou 1 (Consultor)");
+        }
         
-        if (consultor.getNivelAcesso() != 1) {
-            throw new RuntimeException("O funcionário informado não é um consultor");
+        // Se informou consultor, valida e vincula
+        if (usuario.getConsultor() != null && usuario.getConsultor().getId() != null) {
+            Funcionario consultor = funcionarioRepository.findById(usuario.getConsultor().getId())
+                    .orElseThrow(() -> new RuntimeException("Consultor não encontrado"));
+            
+            if (consultor.getNivelAcesso() != 1) {
+                throw new RuntimeException("O funcionário informado não é um consultor");
+            }
+            
+            usuario.setConsultor(consultor);
         }
 
         String senhaCriptografada = passwordEncoder.encode(usuario.getSenha());
         usuario.setSenha(senhaCriptografada);
         
-        usuario.setConsultor(consultor);
         Usuario usuarioSalvo = repository.save(usuario);
         logger.info("Usuario salvo com sucesso: " + usuarioSalvo);
         return usuarioSalvo;
@@ -68,15 +77,24 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuarioExistente = buscarPorId(id);
         validarNomeUsuarioDuplicado(novoUsuario.getNomeUsuario(), id);
 
-        if (novoUsuario.getConsultor() == null || novoUsuario.getConsultor().getId() == null) {
-            throw new RuntimeException("Consultor não informado");
+        // Validar nivelAcesso se fornecido
+        if (novoUsuario.getNivelAcesso() != null) {
+            if (novoUsuario.getNivelAcesso() != 0 && novoUsuario.getNivelAcesso() != 1) {
+                throw new RuntimeException("Nível de acesso inválido. Use 0 (Admin) ou 1 (Consultor)");
+            }
+            usuarioExistente.setNivelAcesso(novoUsuario.getNivelAcesso());
         }
         
-        Funcionario consultor = funcionarioRepository.findById(novoUsuario.getConsultor().getId())
-                .orElseThrow(() -> new RuntimeException("Consultor não encontrado"));
-        
-        if (consultor.getNivelAcesso() != 1) {
-            throw new RuntimeException("O funcionário informado não é um consultor");
+        // Atualizar consultor se fornecido
+        if (novoUsuario.getConsultor() != null && novoUsuario.getConsultor().getId() != null) {
+            Funcionario consultor = funcionarioRepository.findById(novoUsuario.getConsultor().getId())
+                    .orElseThrow(() -> new RuntimeException("Consultor não encontrado"));
+            
+            if (consultor.getNivelAcesso() != 1) {
+                throw new RuntimeException("O funcionário informado não é um consultor");
+            }
+            
+            usuarioExistente.setConsultor(consultor);
         }
 
         if (novoUsuario.getSenha() != null && !novoUsuario.getSenha().isEmpty()) {
@@ -90,7 +108,10 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
 
         usuarioExistente.setNomeUsuario(novoUsuario.getNomeUsuario());
-        usuarioExistente.setConsultor(consultor);
+        
+        if (novoUsuario.getNomeCompleto() != null) {
+            usuarioExistente.setNomeCompleto(novoUsuario.getNomeCompleto());
+        }
         
         return repository.save(usuarioExistente);
     }

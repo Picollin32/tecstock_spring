@@ -31,8 +31,13 @@ public class Usuario {
     @Column(nullable = false)
     private String senha;
     
+    private String nomeCompleto; // Nome completo do usuário (usado quando não tem consultor vinculado)
+    
+    @Column(nullable = false)
+    private Integer nivelAcesso; // 0 = Admin, 1 = Consultor
+    
     @ManyToOne
-    @JoinColumn(name = "consultor_id", nullable = false)
+    @JoinColumn(name = "consultor_id", nullable = true) // Opcional - admin não precisa de consultor
     private Funcionario consultor;
     
     @Column(name = "created_at")
