@@ -34,4 +34,8 @@ public interface OrdemServicoService {
     void deletar(Long id);
     
     void processarEstoquePecas(OrdemServico ordemServico, boolean isNovaOS);
+    
+    List<OrdemServico> getFiadosEmAberto();
+    
+    OrdemServico marcarFiadoComoPago(Long id, Boolean pago);
 }

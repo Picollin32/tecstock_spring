@@ -20,7 +20,7 @@ public class OrdemServico {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(name = "numeroos", unique = true, nullable = false)
     private String numeroOS;
 
     @Column(name = "data_hora")
@@ -100,12 +100,21 @@ public class OrdemServico {
     @Column(name = "prazo_fiado_dias")
     private Integer prazoFiadoDias;
 
+    @Column(name = "fiado_pago")
+    private Boolean fiadoPago;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "tipo_pagamento_id")
     private TipoPagamento tipoPagamento;
 
     @Column(length = 2000)
     private String observacoes;
+
+    @Column(name = "orcamento_origem_id")
+    private Long orcamentoOrigemId;
+    
+    @Column(name = "numero_orcamento_origem")
+    private String numeroOrcamentoOrigem;
 
     @Column(nullable = false)
     @Builder.Default
@@ -131,11 +140,20 @@ public class OrdemServico {
         if (this.status == null) {
             this.status = "Aberta";
         }
+        if (this.prazoFiadoDias != null && this.prazoFiadoDias > 0 && this.fiadoPago == null) {
+            this.fiadoPago = false;
+        }
     }
     
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+        if (this.prazoFiadoDias != null && this.prazoFiadoDias > 0 && this.fiadoPago == null) {
+            this.fiadoPago = false;
+        }
+        if (this.prazoFiadoDias == null || this.prazoFiadoDias == 0) {
+            this.fiadoPago = null;
+        }
     }
 
     public Double calcularPrecoTotalServicos() {

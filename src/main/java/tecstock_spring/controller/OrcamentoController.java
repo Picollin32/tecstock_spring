@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import tecstock_spring.model.Orcamento;
+import tecstock_spring.model.OrdemServico;
 import tecstock_spring.service.OrcamentoService;
 
 import java.time.LocalDateTime;
@@ -114,5 +115,18 @@ public class OrcamentoController {
         maxDescontos.put("maxDescontoPecas", orcamento.calcularMaxDescontoPecas());
         
         return maxDescontos;
+    }
+    
+    @PostMapping("/api/orcamentos/{id}/transformar-em-os")
+    public OrdemServico transformarEmOrdemServico(@PathVariable Long id) {
+        logger.info("Transformando orçamento ID: " + id + " em Ordem de Serviço");
+        try {
+            OrdemServico os = service.transformarEmOrdemServico(id);
+            logger.info("Orçamento transformado com sucesso. OS criada: " + os.getNumeroOS());
+            return os;
+        } catch (Exception e) {
+            logger.error("ERRO ao transformar orçamento ID " + id + ": " + e.getMessage(), e);
+            throw e;
+        }
     }
 }

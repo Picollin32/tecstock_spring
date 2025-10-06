@@ -386,4 +386,20 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             }
         }
     }
+    
+    @Override
+    public List<OrdemServico> getFiadosEmAberto() {
+        logger.info("Buscando fiados em aberto (OSs encerradas com prazo de fiado definido)");
+        List<OrdemServico> fiados = repository.findByStatusAndPrazoFiadoDiasIsNotNullOrderByDataHoraEncerramentoAsc("Encerrada");
+        logger.info("Encontrados " + fiados.size() + " fiados em aberto");
+        return fiados;
+    }
+    
+    @Override
+    public OrdemServico marcarFiadoComoPago(Long id, Boolean pago) {
+        OrdemServico ordemServico = buscarPorId(id);
+        ordemServico.setFiadoPago(pago);
+        logger.info("Marcando fiado OS " + ordemServico.getNumeroOS() + " como " + (pago ? "PAGO" : "NÃO PAGO"));
+        return repository.save(ordemServico);
+    }
 }

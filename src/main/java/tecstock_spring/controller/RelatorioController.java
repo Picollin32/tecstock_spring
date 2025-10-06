@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tecstock_spring.dto.RelatorioAgendamentosDTO;
 import tecstock_spring.dto.RelatorioComissaoDTO;
+import tecstock_spring.dto.RelatorioConsultoresDTO;
 import tecstock_spring.dto.RelatorioEstoqueDTO;
 import tecstock_spring.dto.RelatorioFiadoDTO;
 import tecstock_spring.dto.RelatorioFinanceiroDTO;
@@ -84,6 +85,15 @@ public class RelatorioController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
         
         RelatorioFiadoDTO relatorio = relatorioService.gerarRelatorioFiado(dataInicio, dataFim);
+        return ResponseEntity.ok(relatorio);
+    }
+
+    @GetMapping("/consultores")
+    public ResponseEntity<RelatorioConsultoresDTO> gerarRelatorioConsultores(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+        
+        RelatorioConsultoresDTO relatorio = relatorioService.gerarRelatorioConsultores(dataInicio, dataFim);
         return ResponseEntity.ok(relatorio);
     }
 }

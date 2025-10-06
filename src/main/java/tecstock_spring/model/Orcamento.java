@@ -99,6 +99,13 @@ public class Orcamento {
     @Column(length = 2000)
     private String observacoes;
 
+    @Column(name = "transformado_em_os")
+    @Builder.Default
+    private Boolean transformadoEmOS = false;
+    
+    @Column(name = "numero_os_gerado")
+    private String numeroOSGerado;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
@@ -115,6 +122,9 @@ public class Orcamento {
         }
         if (this.garantiaMeses == null) {
             this.garantiaMeses = 3;
+        }
+        if (this.transformadoEmOS == null) {
+            this.transformadoEmOS = false;
         }
     }
     

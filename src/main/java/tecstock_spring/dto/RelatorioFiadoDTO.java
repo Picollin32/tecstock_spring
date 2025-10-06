@@ -21,9 +21,17 @@ public class RelatorioFiadoDTO {
     private Integer totalFiados;
     private Integer fiadosNoPrazo;
     private Integer fiadosVencidos;
+    private Integer fiadosPagos;
+    private Integer fiadosNaoPagos;
+    private Integer fiadosNoPrazoPagos;
+    private Integer fiadosNoPrazoNaoPagos;
+    private Integer fiadosAtrasadosPagos;
+    private Integer fiadosAtrasadosNaoPagos;
     private BigDecimal valorTotalFiado;
     private BigDecimal valorNoPrazo;
     private BigDecimal valorVencido;
+    private BigDecimal valorPago;
+    private BigDecimal valorNaoPago;
     private List<FiadoItemDTO> fiados;
     
     @Data
@@ -48,6 +56,7 @@ public class RelatorioFiadoDTO {
         private String consultorNome;
         private String tipoPagamentoNome;
         private Boolean noPrazo;
+        private Boolean fiadoPago;
         private String statusDescricao;
     }
 }

@@ -151,6 +151,18 @@ public class OrdemServicoController {
                 .collect(Collectors.toList());
     }
     
+    @GetMapping("/api/ordens-servico/fiados-em-aberto")
+    public List<OrdemServico> getFiadosEmAberto() {
+        logger.info("Buscando fiados em aberto");
+        return service.getFiadosEmAberto();
+    }
+    
+    @PatchMapping("/api/ordens-servico/{id}/fiado-pago")
+    public OrdemServico marcarFiadoComoPago(@PathVariable Long id, @RequestParam Boolean pago) {
+        logger.info("Marcando fiado ID: " + id + " como " + (pago ? "PAGO" : "NÃO PAGO"));
+        return service.marcarFiadoComoPago(id, pago);
+    }
+    
     private OrdemServicoResumoDTO converterParaResumo(OrdemServico os) {
         return OrdemServicoResumoDTO.builder()
                 .id(os.getId())

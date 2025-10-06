@@ -1,0 +1,128 @@
+package tecstock_spring.service;
+
+import java.util.List;
+import org.apache.log4j.Logger;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import tecstock_spring.exception.UsuarioDuplicadoException;
+import tecstock_spring.model.Usuario;
+import tecstock_spring.model.Funcionario;
+import tecstock_spring.repository.UsuarioRepository;
+import tecstock_spring.repository.FuncionarioRepository;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class UsuarioServiceImpl implements UsuarioService {
+
+    private final UsuarioRepository repository;
+    private final FuncionarioRepository funcionarioRepository;
+    private final PasswordEncoder passwordEncoder;
+    Logger logger = Logger.getLogger(UsuarioServiceImpl.class);
+
+    @Override
+    public Usuario salvar(Usuario usuario) {
+        validarNomeUsuarioDuplicado(usuario.getNomeUsuario(), null);
+
+        if (usuario.getConsultor() == null || usuario.getConsultor().getId() == null) {
+            throw new RuntimeException("Consultor não informado");
+        }
+        
+        Funcionario consultor = funcionarioRepository.findById(usuario.getConsultor().getId())
+                .orElseThrow(() -> new RuntimeException("Consultor não encontrado"));
+        
+        if (consultor.getNivelAcesso() != 1) {
+            throw new RuntimeException("O funcionário informado não é um consultor");
+        }
+
+        String senhaCriptografada = passwordEncoder.encode(usuario.getSenha());
+        usuario.setSenha(senhaCriptografada);
+        
+        usuario.setConsultor(consultor);
+        Usuario usuarioSalvo = repository.save(usuario);
+        logger.info("Usuario salvo com sucesso: " + usuarioSalvo);
+        return usuarioSalvo;
+    }
+
+    @Override
+    public Usuario buscarPorId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario não encontrado"));
+    }
+
+    @Override
+    public List<Usuario> listarTodos() {
+        List<Usuario> usuarios = repository.findAll();
+        if (usuarios != null && usuarios.isEmpty()) {
+            logger.info("Nenhum usuario cadastrado: " + usuarios);
+            System.out.println("Nenhum usuario cadastrado: " + usuarios);
+        } else if (usuarios != null && !usuarios.isEmpty()) {
+            logger.info(usuarios.size() + " usuarios encontrados.");
+            System.out.println(usuarios.size() + " usuarios encontrados.");
+        }
+        return usuarios;
+    }
+
+    @Override
+    public Usuario atualizar(Long id, Usuario novoUsuario) {
+        Usuario usuarioExistente = buscarPorId(id);
+        validarNomeUsuarioDuplicado(novoUsuario.getNomeUsuario(), id);
+
+        if (novoUsuario.getConsultor() == null || novoUsuario.getConsultor().getId() == null) {
+            throw new RuntimeException("Consultor não informado");
+        }
+        
+        Funcionario consultor = funcionarioRepository.findById(novoUsuario.getConsultor().getId())
+                .orElseThrow(() -> new RuntimeException("Consultor não encontrado"));
+        
+        if (consultor.getNivelAcesso() != 1) {
+            throw new RuntimeException("O funcionário informado não é um consultor");
+        }
+
+        if (novoUsuario.getSenha() != null && !novoUsuario.getSenha().isEmpty()) {
+
+            if (!novoUsuario.getSenha().matches("^\\$2[ayb]\\$.{56}$")) {
+                String senhaCriptografada = passwordEncoder.encode(novoUsuario.getSenha());
+                usuarioExistente.setSenha(senhaCriptografada);
+            } else {
+                usuarioExistente.setSenha(novoUsuario.getSenha());
+            }
+        }
+
+        usuarioExistente.setNomeUsuario(novoUsuario.getNomeUsuario());
+        usuarioExistente.setConsultor(consultor);
+        
+        return repository.save(usuarioExistente);
+    }
+
+    @Override
+    public void deletar(Long id) {
+        repository.deleteById(id);
+    }
+    
+    private void validarNomeUsuarioDuplicado(String nomeUsuario, Long idExcluir) {
+        logger.info("Validando Nome de Usuario duplicado: " + nomeUsuario + " (excluindo ID: " + idExcluir + ")");
+        
+        if (nomeUsuario == null || nomeUsuario.trim().isEmpty()) {
+            logger.warn("Nome de Usuario é nulo ou vazio");
+            return;
+        }
+        
+        boolean exists;
+        if (idExcluir != null) {
+            exists = repository.existsByNomeUsuarioAndIdNot(nomeUsuario, idExcluir);
+            logger.info("Verificação para atualização - Existe outro usuario com nome " + nomeUsuario + " (excluindo ID " + idExcluir + "): " + exists);
+        } else {
+            exists = repository.existsByNomeUsuario(nomeUsuario);
+            logger.info("Verificação para criação - Existe usuario com nome " + nomeUsuario + ": " + exists);
+        }
+        
+        if (exists) {
+            String mensagem = "Nome de usuário já cadastrado";
+            logger.error(mensagem + ": " + nomeUsuario);
+            throw new UsuarioDuplicadoException(mensagem);
+        }
+        
+        logger.info("Validação de Nome de Usuario concluída com sucesso para: " + nomeUsuario);
+    }
+}

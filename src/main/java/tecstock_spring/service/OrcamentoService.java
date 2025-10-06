@@ -1,6 +1,7 @@
 package tecstock_spring.service;
 
 import tecstock_spring.model.Orcamento;
+import tecstock_spring.model.OrdemServico;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,4 +26,6 @@ public interface OrcamentoService {
     Orcamento atualizar(Long id, Orcamento orcamento);
 
     void deletar(Long id);
+    
+    OrdemServico transformarEmOrdemServico(Long orcamentoId);
 }

@@ -39,4 +39,6 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
     List<OrdemServico> findByPrecoTotalGreaterThanEqualOrderByPrecoTotalDesc(Double precoMinimo);
     
     List<OrdemServico> findAllByOrderByCreatedAtDesc();
+    
+    List<OrdemServico> findByStatusAndPrazoFiadoDiasIsNotNullOrderByDataHoraEncerramentoAsc(String status);
 }

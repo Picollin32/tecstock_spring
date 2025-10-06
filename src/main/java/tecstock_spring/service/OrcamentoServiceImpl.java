@@ -4,10 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 import tecstock_spring.exception.OrcamentoNotFoundException;
-import tecstock_spring.model.Orcamento;
+import tecstock_spring.model.*;
 import tecstock_spring.repository.OrcamentoRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -15,6 +16,7 @@ import java.util.List;
 public class OrcamentoServiceImpl implements OrcamentoService {
 
     private final OrcamentoRepository repository;
+    private final OrdemServicoService ordemServicoService;
     private static final Logger logger = Logger.getLogger(OrcamentoServiceImpl.class);
 
     @Override
@@ -126,5 +128,70 @@ public class OrcamentoServiceImpl implements OrcamentoService {
         Orcamento orcamento = buscarPorId(id);
         repository.delete(orcamento);
         logger.info("Orçamento deletado: " + orcamento.getNumeroOrcamento());
+    }
+    
+    @Override
+    public OrdemServico transformarEmOrdemServico(Long orcamentoId) {
+        Orcamento orcamento = buscarPorId(orcamentoId);
+        
+        if (Boolean.TRUE.equals(orcamento.getTransformadoEmOS())) {
+            throw new IllegalStateException("Este orçamento já foi transformado em OS: " + orcamento.getNumeroOSGerado());
+        }
+        
+        logger.info("Transformando orçamento " + orcamento.getNumeroOrcamento() + " em Ordem de Serviço");
+
+        OrdemServico ordemServico = OrdemServico.builder()
+                .dataHora(LocalDateTime.now())
+                .clienteNome(orcamento.getClienteNome())
+                .clienteCpf(orcamento.getClienteCpf())
+                .clienteTelefone(orcamento.getClienteTelefone())
+                .clienteEmail(orcamento.getClienteEmail())
+                .veiculoNome(orcamento.getVeiculoNome())
+                .veiculoMarca(orcamento.getVeiculoMarca())
+                .veiculoAno(orcamento.getVeiculoAno())
+                .veiculoCor(orcamento.getVeiculoCor())
+                .veiculoPlaca(orcamento.getVeiculoPlaca())
+                .veiculoQuilometragem(orcamento.getVeiculoQuilometragem())
+                .veiculoCategoria(orcamento.getVeiculoCategoria())
+                .queixaPrincipal(orcamento.getQueixaPrincipal())
+                .mecanico(orcamento.getMecanico())
+                .consultor(orcamento.getConsultor())
+                .numeroParcelas(orcamento.getNumeroParcelas())
+                .servicosRealizados(new ArrayList<>())
+                .pecasUtilizadas(new ArrayList<>())
+                .descontoServicos(orcamento.getDescontoServicos())
+                .descontoPecas(orcamento.getDescontoPecas())
+                .garantiaMeses(orcamento.getGarantiaMeses())
+                .tipoPagamento(orcamento.getTipoPagamento())
+                .observacoes(orcamento.getObservacoes())
+                .orcamentoOrigemId(orcamento.getId())
+                .numeroOrcamentoOrigem(orcamento.getNumeroOrcamento())
+                .status("Aberta")
+                .build();
+        
+        if (orcamento.getServicosOrcados() != null) {
+            ordemServico.getServicosRealizados().addAll(orcamento.getServicosOrcados());
+        }
+
+        if (orcamento.getPecasOrcadas() != null) {
+            for (PecaOrcamento pecaOrc : orcamento.getPecasOrcadas()) {
+                PecaOrdemServico pecaOS = new PecaOrdemServico();
+                pecaOS.setPeca(pecaOrc.getPeca());
+                pecaOS.setQuantidade(pecaOrc.getQuantidade());
+                pecaOS.setValorUnitario(pecaOrc.getValorUnitario());
+                pecaOS.setValorTotal(pecaOrc.getValorTotal());
+                ordemServico.getPecasUtilizadas().add(pecaOS);
+            }
+        }
+
+        OrdemServico osSalva = ordemServicoService.salvar(ordemServico);
+        logger.info("Ordem de Serviço criada: " + osSalva.getNumeroOS() + " a partir do orçamento: " + orcamento.getNumeroOrcamento());
+
+        orcamento.setTransformadoEmOS(true);
+        orcamento.setNumeroOSGerado(osSalva.getNumeroOS());
+        repository.save(orcamento);
+        logger.info("Orçamento " + orcamento.getNumeroOrcamento() + " marcado como transformado");
+        
+        return osSalva;
     }
 }

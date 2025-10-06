@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tecstock_spring.dto.RelatorioAgendamentosDTO;
 import tecstock_spring.dto.RelatorioComissaoDTO;
+import tecstock_spring.dto.RelatorioConsultoresDTO;
+import tecstock_spring.dto.ConsultorMetricasDTO;
 import tecstock_spring.dto.RelatorioEstoqueDTO;
 import tecstock_spring.dto.RelatorioFiadoDTO;
 import tecstock_spring.dto.RelatorioFinanceiroDTO;
@@ -40,6 +42,12 @@ public class RelatorioService {
 
     @Autowired
     private AgendamentoRepository agendamentoRepository;
+
+    @Autowired
+    private OrcamentoRepository orcamentoRepository;
+
+    @Autowired
+    private ChecklistRepository checklistRepository;
 
     public RelatorioAgendamentosDTO gerarRelatorioAgendamentos(LocalDate dataInicio, LocalDate dataFim) {
 
@@ -546,10 +554,14 @@ public class RelatorioService {
                 .collect(Collectors.toList());
 
         List<RelatorioFiadoDTO.FiadoItemDTO> fiados = new ArrayList<>();
-        int fiadosNoPrazo = 0;
-        int fiadosVencidos = 0;
-        BigDecimal valorNoPrazo = BigDecimal.ZERO;
-        BigDecimal valorVencido = BigDecimal.ZERO;
+        int fiadosNoPrazoPagos = 0;
+        int fiadosNoPrazoNaoPagos = 0;
+        int fiadosAtrasadosPagos = 0;
+        int fiadosAtrasadosNaoPagos = 0;
+        BigDecimal valorNoPrazoPago = BigDecimal.ZERO;
+        BigDecimal valorNoPrazoNaoPago = BigDecimal.ZERO;
+        BigDecimal valorAtrasadoPago = BigDecimal.ZERO;
+        BigDecimal valorAtrasadoNaoPago = BigDecimal.ZERO;
 
         LocalDate dataAtual = LocalDate.now();
 
@@ -561,16 +573,29 @@ public class RelatorioService {
             if (fiadoNoPeriodo) {
 
                 boolean noPrazo = !dataVencimentoFiado.isBefore(dataAtual);
-                String statusDescricao = noPrazo ? "No Prazo" : "Vencido";
+                boolean pago = os.getFiadoPago() != null && os.getFiadoPago();
+                
+                String statusDescricao;
+                if (pago) {
+                    statusDescricao = noPrazo ? "No Prazo - Pago" : "Atrasado - Pago";
+                } else {
+                    statusDescricao = noPrazo ? "No Prazo - Não Pago" : "Atrasado - Não Pago";
+                }
 
                 BigDecimal valorTotal = os.getPrecoTotal() != null ? BigDecimal.valueOf(os.getPrecoTotal()) : BigDecimal.ZERO;
 
-                if (noPrazo) {
-                    fiadosNoPrazo++;
-                    valorNoPrazo = valorNoPrazo.add(valorTotal);
+                if (noPrazo && pago) {
+                    fiadosNoPrazoPagos++;
+                    valorNoPrazoPago = valorNoPrazoPago.add(valorTotal);
+                } else if (noPrazo && !pago) {
+                    fiadosNoPrazoNaoPagos++;
+                    valorNoPrazoNaoPago = valorNoPrazoNaoPago.add(valorTotal);
+                } else if (!noPrazo && pago) {
+                    fiadosAtrasadosPagos++;
+                    valorAtrasadoPago = valorAtrasadoPago.add(valorTotal);
                 } else {
-                    fiadosVencidos++;
-                    valorVencido = valorVencido.add(valorTotal);
+                    fiadosAtrasadosNaoPagos++;
+                    valorAtrasadoNaoPago = valorAtrasadoNaoPago.add(valorTotal);
                 }
 
                 String mecanicoNome = os.getMecanico() != null ? os.getMecanico().getNome() : null;
@@ -595,6 +620,7 @@ public class RelatorioService {
                         .consultorNome(consultorNome)
                         .tipoPagamentoNome(tipoPagamentoNome)
                         .noPrazo(noPrazo)
+                        .fiadoPago(pago)
                         .statusDescricao(statusDescricao)
                         .build();
 
@@ -604,18 +630,141 @@ public class RelatorioService {
 
         fiados.sort((a, b) -> a.getDataVencimentoFiado().compareTo(b.getDataVencimentoFiado()));
 
+        int totalFiados = fiados.size();
+        int fiadosNoPrazo = fiadosNoPrazoPagos + fiadosNoPrazoNaoPagos;
+        int fiadosVencidos = fiadosAtrasadosPagos + fiadosAtrasadosNaoPagos;
+        int fiadosPagos = fiadosNoPrazoPagos + fiadosAtrasadosPagos;
+        int fiadosNaoPagos = fiadosNoPrazoNaoPagos + fiadosAtrasadosNaoPagos;
+        
+        BigDecimal valorNoPrazo = valorNoPrazoPago.add(valorNoPrazoNaoPago);
+        BigDecimal valorVencido = valorAtrasadoPago.add(valorAtrasadoNaoPago);
+        BigDecimal valorPago = valorNoPrazoPago.add(valorAtrasadoPago);
+        BigDecimal valorNaoPago = valorNoPrazoNaoPago.add(valorAtrasadoNaoPago);
         BigDecimal valorTotal = valorNoPrazo.add(valorVencido);
 
         return RelatorioFiadoDTO.builder()
                 .dataInicio(dataInicio)
                 .dataFim(dataFim)
-                .totalFiados(fiados.size())
+                .totalFiados(totalFiados)
                 .fiadosNoPrazo(fiadosNoPrazo)
                 .fiadosVencidos(fiadosVencidos)
+                .fiadosPagos(fiadosPagos)
+                .fiadosNaoPagos(fiadosNaoPagos)
+                .fiadosNoPrazoPagos(fiadosNoPrazoPagos)
+                .fiadosNoPrazoNaoPagos(fiadosNoPrazoNaoPagos)
+                .fiadosAtrasadosPagos(fiadosAtrasadosPagos)
+                .fiadosAtrasadosNaoPagos(fiadosAtrasadosNaoPagos)
                 .valorTotalFiado(valorTotal)
                 .valorNoPrazo(valorNoPrazo)
                 .valorVencido(valorVencido)
+                .valorPago(valorPago)
+                .valorNaoPago(valorNaoPago)
                 .fiados(fiados)
                 .build();
+    }
+
+    public RelatorioConsultoresDTO gerarRelatorioConsultores(LocalDate dataInicio, LocalDate dataFim) {
+
+        List<Funcionario> todosConsultores = funcionarioRepository.findAll();
+        
+        List<ConsultorMetricasDTO> consultoresMetricas = new ArrayList<>();
+        
+        int totalOrcamentosGeral = 0;
+        int totalOSGeral = 0;
+        int totalChecklistsGeral = 0;
+        double valorTotalGeral = 0.0;
+        
+        for (Funcionario consultor : todosConsultores) {
+            Long consultorId = consultor.getId();
+            String consultorNome = consultor.getNome();
+
+            long totalOrcamentos = orcamentoRepository.findAll().stream()
+                    .filter(o -> o.getConsultor() != null && 
+                                o.getConsultor().getId().equals(consultorId) &&
+                                o.getDataHora() != null &&
+                                !o.getDataHora().toLocalDate().isBefore(dataInicio) &&
+                                !o.getDataHora().toLocalDate().isAfter(dataFim))
+                    .count();
+
+            List<OrdemServico> ordensServico = ordemServicoRepository.findAll().stream()
+                    .filter(os -> os.getConsultor() != null && 
+                                 os.getConsultor().getId().equals(consultorId) &&
+                                 os.getDataHora() != null &&
+                                 !os.getDataHora().toLocalDate().isBefore(dataInicio) &&
+                                 !os.getDataHora().toLocalDate().isAfter(dataFim))
+                    .collect(Collectors.toList());
+            
+            long totalOS = ordensServico.size();
+
+            double valorTotalOS = 0.0;
+            for (OrdemServico os : ordensServico) {
+                double valorServicos = os.getPrecoTotalServicos() != null ? os.getPrecoTotalServicos() : 0.0;
+                double valorPecas = os.getPrecoTotalPecas() != null ? os.getPrecoTotalPecas() : 0.0;
+                double descontoServicos = os.getDescontoServicos() != null ? os.getDescontoServicos() : 0.0;
+                double descontoPecas = os.getDescontoPecas() != null ? os.getDescontoPecas() : 0.0;
+                
+                double valorOS = valorServicos + valorPecas - descontoServicos - descontoPecas;
+                valorTotalOS += valorOS;
+            }
+
+            double valorMedioOS = 0.0;
+            if (totalOS > 0) {
+                valorMedioOS = valorTotalOS / totalOS;
+            }
+
+            long totalChecklists = checklistRepository.findAll().stream()
+                    .filter(c -> c.getConsultor() != null && 
+                                c.getConsultor().getId().equals(consultorId) &&
+                                c.getCreatedAt() != null &&
+                                !c.getCreatedAt().toLocalDate().isBefore(dataInicio) &&
+                                !c.getCreatedAt().toLocalDate().isAfter(dataFim))
+                    .count();
+
+            double taxaConversao = 0.0;
+            if (totalOrcamentos > 0) {
+                taxaConversao = ((double) totalOS / totalOrcamentos) * 100.0;
+            }
+
+            totalOrcamentosGeral += (int) totalOrcamentos;
+            totalOSGeral += (int) totalOS;
+            totalChecklistsGeral += (int) totalChecklists;
+            valorTotalGeral += valorTotalOS;
+
+            ConsultorMetricasDTO consultorDTO = new ConsultorMetricasDTO(
+                    consultorId,
+                    consultorNome,
+                    (int) totalOrcamentos,
+                    (int) totalOS,
+                    (int) totalChecklists,
+                    Math.round(valorTotalOS * 100.0) / 100.0,
+                    Math.round(valorMedioOS * 100.0) / 100.0,
+                    Math.round(taxaConversao * 10.0) / 10.0
+            );
+            
+            consultoresMetricas.add(consultorDTO);
+        }
+
+        double valorMedioGeral = 0.0;
+        if (totalOSGeral > 0) {
+            valorMedioGeral = valorTotalGeral / totalOSGeral;
+        }
+        
+        double taxaConversaoGeral = 0.0;
+        if (totalOrcamentosGeral > 0) {
+            taxaConversaoGeral = ((double) totalOSGeral / totalOrcamentosGeral) * 100.0;
+            taxaConversaoGeral = Math.round(taxaConversaoGeral * 10.0) / 10.0;
+        }
+        
+        return new RelatorioConsultoresDTO(
+                dataInicio,
+                dataFim,
+                consultoresMetricas,
+                totalOrcamentosGeral,
+                totalOSGeral,
+                totalChecklistsGeral,
+                Math.round(valorTotalGeral * 100.0) / 100.0,
+                Math.round(valorMedioGeral * 100.0) / 100.0,
+                taxaConversaoGeral
+        );
     }
 }
