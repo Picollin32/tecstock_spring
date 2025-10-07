@@ -23,62 +23,41 @@ public class AuditoriaService {
     
     @PersistenceContext
     private EntityManager entityManager;
-    
-    /**
-     * Busca todos os logs de auditoria com paginação
-     */
+
     public Page<AuditoriaLog> buscarTodosLogs(int page, int size, String sortBy, String sortDir) {
         Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
         return auditoriaLogRepository.findAll(pageable);
     }
     
-    /**
-     * Busca logs por usuário específico
-     */
     public Page<AuditoriaLog> buscarLogsPorUsuario(String usuario, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return auditoriaLogRepository.findByUsuarioOrderByDataHoraDesc(usuario, pageable);
     }
     
-    /**
-     * Busca logs por tipo de entidade (Cliente, Veiculo, etc)
-     */
     public Page<AuditoriaLog> buscarLogsPorEntidade(String entidade, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return auditoriaLogRepository.findByEntidadeOrderByDataHoraDesc(entidade, pageable);
     }
-    
-    /**
-     * Busca histórico completo de uma entidade específica
-     */
+ 
     public List<AuditoriaLog> buscarHistoricoEntidade(String entidade, Long entidadeId) {
         return auditoriaLogRepository.findByEntidadeAndEntidadeIdOrderByDataHoraDesc(entidade, entidadeId);
     }
-    
-    /**
-     * Busca logs por tipo de operação (CREATE, UPDATE, DELETE)
-     */
+
     public Page<AuditoriaLog> buscarLogsPorOperacao(String operacao, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return auditoriaLogRepository.findByOperacaoOrderByDataHoraDesc(operacao, pageable);
     }
     
-    /**
-     * Busca logs por período de tempo
-     */
     public Page<AuditoriaLog> buscarLogsPorPeriodo(LocalDateTime dataInicio, LocalDateTime dataFim, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return auditoriaLogRepository.findByPeriodo(dataInicio, dataFim, pageable);
     }
     
-    /**
-     * Busca logs com múltiplos filtros
-     */
     public Page<AuditoriaLog> buscarLogsComFiltros(String usuario, String entidade, String operacao,
                                                    Long entidadeId, LocalDateTime dataInicio, LocalDateTime dataFim,
                                                    int page, int size, String sortBy, String sortDir) {
-        // Converter nome da propriedade Java para nome da coluna SQL se necessário
+
         String sortColumn = sortBy;
         if ("dataHora".equals(sortBy)) {
             sortColumn = "data_hora";
@@ -90,16 +69,12 @@ public class AuditoriaService {
         Pageable pageable = PageRequest.of(page, size, sort);
         return auditoriaLogRepository.findComFiltros(usuario, entidade, operacao, entidadeId, dataInicio, dataFim, pageable);
     }
-    
-    /**
-     * Gera relatório de atividades por usuário
-     */
+
     public Map<String, Object> gerarRelatorioUsuario(String usuario) {
         Map<String, Object> relatorio = new HashMap<>();
         relatorio.put("usuario", usuario);
         relatorio.put("totalOperacoes", auditoriaLogRepository.countByUsuario(usuario));
-        
-        // Busca últimas 100 operações do usuário
+
         Page<AuditoriaLog> logs = auditoriaLogRepository.findByUsuarioOrderByDataHoraDesc(usuario, PageRequest.of(0, 100));
         
         Map<String, Long> operacoesPorTipo = logs.getContent().stream()
@@ -114,10 +89,7 @@ public class AuditoriaService {
         
         return relatorio;
     }
-    
-    /**
-     * Gera relatório geral de auditoria
-     */
+
     public Map<String, Object> gerarRelatorioGeral() {
         Map<String, Object> relatorio = new HashMap<>();
         
@@ -134,7 +106,7 @@ public class AuditoriaService {
         Map<String, Long> operacoesPorUsuario = todosLogs.stream()
             .collect(Collectors.groupingBy(AuditoriaLog::getUsuario, Collectors.counting()));
         
-        // Últimas 50 operações
+
         List<AuditoriaLog> ultimasOperacoes = todosLogs.stream()
             .sorted(Comparator.comparing(AuditoriaLog::getDataHora).reversed())
             .limit(50)
@@ -147,10 +119,7 @@ public class AuditoriaService {
         
         return relatorio;
     }
-    
-    /**
-     * Busca atividades recentes (últimas 24 horas)
-     */
+
     public List<AuditoriaLog> buscarAtividadesRecentes() {
         LocalDateTime agora = LocalDateTime.now();
         LocalDateTime ontem = agora.minusHours(24);
@@ -158,10 +127,7 @@ public class AuditoriaService {
         Page<AuditoriaLog> logs = auditoriaLogRepository.findByPeriodo(ontem, agora, PageRequest.of(0, 100));
         return logs.getContent();
     }
-    
-    /**
-     * Lista todas as entidades auditadas disponíveis
-     */
+
     public List<String> listarEntidadesAuditadas() {
         return auditoriaLogRepository.findAll().stream()
             .map(AuditoriaLog::getEntidade)
@@ -169,10 +135,7 @@ public class AuditoriaService {
             .sorted()
             .collect(Collectors.toList());
     }
-    
-    /**
-     * Lista todos os usuários que realizaram operações
-     */
+
     public List<String> listarUsuariosAtivos() {
         return auditoriaLogRepository.findAll().stream()
             .map(AuditoriaLog::getUsuario)

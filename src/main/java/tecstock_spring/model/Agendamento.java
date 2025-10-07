@@ -55,13 +55,13 @@ public class Agendamento {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
-        // Garante que updatedAt fica null na criação
+
         updatedAt = null;
     }
     
     @PreUpdate
     protected void onUpdate() {
-        // Sempre atualiza o updatedAt quando editar
+
         updatedAt = LocalDateTime.now();
     }
 }

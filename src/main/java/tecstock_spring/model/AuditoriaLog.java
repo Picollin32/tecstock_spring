@@ -19,26 +19,26 @@ public class AuditoriaLog {
     private Long id;
     
     @Column(nullable = false)
-    private String entidade; // Nome da entidade (Cliente, Veiculo, etc)
+    private String entidade;
     
     @Column(nullable = false)
-    private Long entidadeId; // ID da entidade afetada
+    private Long entidadeId;
     
     @Column(nullable = false)
-    private String operacao; // CREATE, UPDATE, DELETE
+    private String operacao;
     
     @Column(nullable = false)
-    private String usuario; // Email/username do usuário que fez a alteração
+    private String usuario;
     
     @Column(nullable = false)
     private LocalDateTime dataHora;
     
     @Column(columnDefinition = "TEXT")
-    private String valoresAntigos; // JSON com valores antes da alteração
+    private String valoresAntigos;
     
     @Column(columnDefinition = "TEXT")
-    private String valoresNovos; // JSON com valores depois da alteração
+    private String valoresNovos;
     
     @Column(columnDefinition = "TEXT")
-    private String descricao; // Descrição amigável da alteração
+    private String descricao;
 }

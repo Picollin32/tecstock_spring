@@ -52,9 +52,7 @@ public class AuditListener {
         try {
             Long entidadeId = obterIdEntidade(entity);
             if (entidadeId == null) return;
-            
-            // Para UPDATE, vamos capturar o estado anterior via query
-            // mas salvar apenas no PostUpdate com o novo estado
+
             AuditListener self = getSelfBean();
             if (self != null) {
                 String estadoAnterior = self.buscarEstadoAnterior(entity, entidadeId);
@@ -152,8 +150,7 @@ public class AuditListener {
                 
                 if (valorAntigo == null && valorNovo == null) continue;
                 if (valorAntigo != null && valorAntigo.equals(valorNovo)) continue;
-                
-                // Ignora campos de auditoria
+
                 if (chave.equals("createdAt") || chave.equals("updatedAt")) continue;
                 
                 if (!primeiraAlteracao) {
@@ -194,11 +191,19 @@ public class AuditListener {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public String buscarEstadoAnterior(Object entity, Long entidadeId) {
         try {
-            // Busca diretamente do banco antes da atualização
-            // Mas como já estamos em uma transação, não temos como fazer isso de forma confiável
-            // Melhor retornar null e confiar no Hibernate Envers para o histórico
+
+            EntityManager em = applicationContext.getBean(EntityManager.class);
+            
+            Object entidadeAnterior = em.find(entity.getClass(), entidadeId);
+            
+            if (entidadeAnterior != null) {
+                return converterParaJson(entidadeAnterior);
+            }
+            
             return null;
         } catch (Exception e) {
+            System.err.println("Erro ao buscar estado anterior: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }
@@ -220,8 +225,7 @@ public class AuditListener {
         
         repository.save(log);
     }
-    
-    // Classe auxiliar para ThreadLocal
+
     private static class ThreadLocalAuditContext {
         private static final ThreadLocal<String> estadoAnterior = new ThreadLocal<>();
         

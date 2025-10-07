@@ -24,7 +24,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     public Usuario salvar(Usuario usuario) {
         validarNomeUsuarioDuplicado(usuario.getNomeUsuario(), null);
 
-        // Validar nivelAcesso
         if (usuario.getNivelAcesso() == null) {
             throw new RuntimeException("Nível de acesso não informado");
         }
@@ -32,8 +31,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (usuario.getNivelAcesso() != 0 && usuario.getNivelAcesso() != 1) {
             throw new RuntimeException("Nível de acesso inválido. Use 0 (Admin) ou 1 (Consultor)");
         }
-        
-        // Se informou consultor, valida e vincula
         if (usuario.getConsultor() != null && usuario.getConsultor().getId() != null) {
             Funcionario consultor = funcionarioRepository.findById(usuario.getConsultor().getId())
                     .orElseThrow(() -> new RuntimeException("Consultor não encontrado"));
@@ -77,15 +74,13 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuarioExistente = buscarPorId(id);
         validarNomeUsuarioDuplicado(novoUsuario.getNomeUsuario(), id);
 
-        // Validar nivelAcesso se fornecido
         if (novoUsuario.getNivelAcesso() != null) {
             if (novoUsuario.getNivelAcesso() != 0 && novoUsuario.getNivelAcesso() != 1) {
                 throw new RuntimeException("Nível de acesso inválido. Use 0 (Admin) ou 1 (Consultor)");
             }
             usuarioExistente.setNivelAcesso(novoUsuario.getNivelAcesso());
         }
-        
-        // Atualizar consultor se fornecido
+
         if (novoUsuario.getConsultor() != null && novoUsuario.getConsultor().getId() != null) {
             Funcionario consultor = funcionarioRepository.findById(novoUsuario.getConsultor().getId())
                     .orElseThrow(() -> new RuntimeException("Consultor não encontrado"));

@@ -147,13 +147,11 @@ public class OrdemServico {
         if (this.prazoFiadoDias != null && this.prazoFiadoDias > 0 && this.fiadoPago == null) {
             this.fiadoPago = false;
         }
-        // Garante que updatedAt fica null na criação
         this.updatedAt = null;
     }
     
     @PreUpdate
     protected void onUpdate() {
-        // Sempre atualiza o updatedAt quando editar
         this.updatedAt = LocalDateTime.now();
         if (this.prazoFiadoDias != null && this.prazoFiadoDias > 0 && this.fiadoPago == null) {
             this.fiadoPago = false;

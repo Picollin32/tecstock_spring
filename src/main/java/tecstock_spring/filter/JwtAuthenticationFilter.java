@@ -47,7 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 final Long userId = jwtUtil.extractUserId(jwt);
                 final Long consultorId = jwtUtil.extractConsultorId(jwt);
 
-                // Criar autoridade baseada no nível de acesso
+
                 String role = nivelAcesso == 0 ? "ROLE_ADMIN" : "ROLE_CONSULTOR";
                 SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
                 
@@ -59,10 +59,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         Collections.singletonList(authority)
                 );
 
-                // Adicionar informações adicionais aos detalhes
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                
-                // Adicionar atributos customizados à requisição
+
                 request.setAttribute("userId", userId);
                 request.setAttribute("nivelAcesso", nivelAcesso);
                 request.setAttribute("consultorId", consultorId);

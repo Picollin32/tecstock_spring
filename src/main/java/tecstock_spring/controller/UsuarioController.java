@@ -25,7 +25,6 @@ public class UsuarioController {
     private final UsuarioService service;
     Logger logger = Logger.getLogger(UsuarioController.class);
 
-    // Proteção feita via Spring Security (SecurityConfig) - apenas ROLE_ADMIN pode acessar
     @PostMapping("/api/usuarios/salvar")
     public ResponseEntity<?> salvar(@RequestBody Usuario usuario) {
         logger.info("Salvando usuario: " + usuario.getNomeUsuario() + " no controller.");
@@ -33,14 +32,12 @@ public class UsuarioController {
         return ResponseEntity.ok(convertToDTO(usuarioSalvo));
     }
 
-    // Proteção feita via Spring Security (SecurityConfig) - apenas ROLE_ADMIN pode acessar
     @GetMapping("/api/usuarios/buscar/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
         Usuario usuario = service.buscarPorId(id);
         return ResponseEntity.ok(convertToDTO(usuario));
     }
 
-    // Proteção feita via Spring Security (SecurityConfig) - apenas ROLE_ADMIN pode acessar
     @GetMapping("/api/usuarios/listarTodos")
     public ResponseEntity<?> listarTodos() {
         logger.info("Listando usuarios no controller.");
@@ -50,7 +47,6 @@ public class UsuarioController {
                 .collect(Collectors.toList()));
     }
 
-    // Proteção feita via Spring Security (SecurityConfig) - apenas ROLE_ADMIN pode acessar
     @PutMapping("/api/usuarios/atualizar/{id}")
     public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody Usuario usuario) {
         logger.info("Atualizando usuario no controller. ID: " + id + ", usuario: " + usuario.getNomeUsuario());
@@ -58,7 +54,6 @@ public class UsuarioController {
         return ResponseEntity.ok(convertToDTO(usuarioAtualizado));
     }
 
-    // Proteção feita via Spring Security (SecurityConfig) - apenas ROLE_ADMIN pode acessar
     @DeleteMapping("/api/usuarios/deletar/{id}")
     public ResponseEntity<?> deletar(@PathVariable Long id) {
         logger.info("Deletando usuario no controller. ID: " + id);

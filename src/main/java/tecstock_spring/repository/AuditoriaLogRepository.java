@@ -13,29 +13,22 @@ import java.util.List;
 
 @Repository
 public interface AuditoriaLogRepository extends JpaRepository<AuditoriaLog, Long> {
-    
-    // Buscar todos os logs ordenados por data (mais recente primeiro)
+
     Page<AuditoriaLog> findAllByOrderByDataHoraDesc(Pageable pageable);
-    
-    // Buscar logs por usuário
+
     Page<AuditoriaLog> findByUsuarioOrderByDataHoraDesc(String usuario, Pageable pageable);
-    
-    // Buscar logs por entidade
+
     Page<AuditoriaLog> findByEntidadeOrderByDataHoraDesc(String entidade, Pageable pageable);
-    
-    // Buscar logs por entidade e ID específico
+
     List<AuditoriaLog> findByEntidadeAndEntidadeIdOrderByDataHoraDesc(String entidade, Long entidadeId);
-    
-    // Buscar logs por operação (CREATE, UPDATE, DELETE)
+
     Page<AuditoriaLog> findByOperacaoOrderByDataHoraDesc(String operacao, Pageable pageable);
-    
-    // Buscar logs por período
+
     @Query("SELECT a FROM AuditoriaLog a WHERE a.dataHora BETWEEN :dataInicio AND :dataFim ORDER BY a.dataHora DESC")
     Page<AuditoriaLog> findByPeriodo(@Param("dataInicio") LocalDateTime dataInicio, 
                                      @Param("dataFim") LocalDateTime dataFim, 
                                      Pageable pageable);
-    
-    // Buscar logs com filtros múltiplos
+
     @Query(value = "SELECT * FROM auditoria_log a WHERE " +
            "(CAST(:usuario AS TEXT) IS NULL OR :usuario = '' OR a.usuario = :usuario) AND " +
            "(CAST(:entidade AS TEXT) IS NULL OR :entidade = '' OR a.entidade = :entidade) AND " +
@@ -52,9 +45,7 @@ public interface AuditoriaLogRepository extends JpaRepository<AuditoriaLog, Long
                                       @Param("dataFim") LocalDateTime dataFim,
                                       Pageable pageable);
     
-    // Contar logs por usuário
     Long countByUsuario(String usuario);
-    
-    // Contar logs por entidade
+
     Long countByEntidade(String entidade);
 }

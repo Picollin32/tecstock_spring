@@ -10,7 +10,6 @@ public class CustomRevisionListener implements RevisionListener {
     public void newRevision(Object revisionEntity) {
         CustomRevisionEntity customRevisionEntity = (CustomRevisionEntity) revisionEntity;
         
-        // Captura o usuário logado do contexto de segurança
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         
         if (authentication != null && authentication.isAuthenticated() 

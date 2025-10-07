@@ -25,9 +25,6 @@ public class RateLimitService {
     private static final int BLOCK_DURATION_MINUTES = 15;
     private static final int RESET_MINUTES = 30;
 
-    /**
-     * Verifica se o usuário está bloqueado por excesso de tentativas
-     */
     public boolean isBlocked(String username) {
         LoginAttempt attempt = loginAttempts.get(username);
         if (attempt == null) {
@@ -38,7 +35,6 @@ public class RateLimitService {
             return true;
         }
 
-        // Se passou o período de bloqueio, reseta
         if (attempt.blockedUntil != null && LocalDateTime.now().isAfter(attempt.blockedUntil)) {
             loginAttempts.remove(username);
             return false;
@@ -47,13 +43,9 @@ public class RateLimitService {
         return false;
     }
 
-    /**
-     * Registra uma tentativa de login falhada
-     */
     public void recordFailedAttempt(String username) {
         LoginAttempt attempt = loginAttempts.computeIfAbsent(username, k -> new LoginAttempt());
         
-        // Se passou muito tempo desde a última tentativa, reseta o contador
         if (LocalDateTime.now().isAfter(attempt.lastAttempt.plusMinutes(RESET_MINUTES))) {
             attempt.attempts = 1;
         } else {
@@ -62,22 +54,15 @@ public class RateLimitService {
         
         attempt.lastAttempt = LocalDateTime.now();
 
-        // Se excedeu o limite, bloqueia
         if (attempt.attempts >= MAX_ATTEMPTS) {
             attempt.blockedUntil = LocalDateTime.now().plusMinutes(BLOCK_DURATION_MINUTES);
         }
     }
 
-    /**
-     * Limpa as tentativas após um login bem-sucedido
-     */
     public void resetAttempts(String username) {
         loginAttempts.remove(username);
     }
 
-    /**
-     * Retorna o tempo restante de bloqueio em minutos
-     */
     public long getBlockedMinutesRemaining(String username) {
         LoginAttempt attempt = loginAttempts.get(username);
         if (attempt == null || attempt.blockedUntil == null) {
@@ -92,9 +77,6 @@ public class RateLimitService {
         return 0;
     }
 
-    /**
-     * Retorna o número de tentativas restantes antes do bloqueio
-     */
     public int getRemainingAttempts(String username) {
         LoginAttempt attempt = loginAttempts.get(username);
         if (attempt == null) {

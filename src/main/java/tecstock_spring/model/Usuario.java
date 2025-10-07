@@ -36,13 +36,13 @@ public class Usuario {
     @Column(nullable = false)
     private String senha;
     
-    private String nomeCompleto; // Nome completo do usuário (usado quando não tem consultor vinculado)
+    private String nomeCompleto;
     
     @Column(nullable = false)
-    private Integer nivelAcesso; // 0 = Admin, 1 = Consultor
+    private Integer nivelAcesso;
     
     @ManyToOne
-    @JoinColumn(name = "consultor_id", nullable = true) // Opcional - admin não precisa de consultor
+    @JoinColumn(name = "consultor_id", nullable = true)
     private Funcionario consultor;
     
     @Column(name = "created_at")
@@ -56,13 +56,12 @@ public class Usuario {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
-        // Garante que updatedAt fica null na criação
+
         updatedAt = null;
     }
     
     @PreUpdate
     protected void onUpdate() {
-        // Sempre atualiza o updatedAt quando editar
         updatedAt = LocalDateTime.now();
     }
 }

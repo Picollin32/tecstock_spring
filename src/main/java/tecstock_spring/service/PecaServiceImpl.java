@@ -165,41 +165,34 @@ public class PecaServiceImpl implements PecaService {
     @Override
     public Peca ajustarEstoque(AjusteEstoqueDTO ajusteDTO) {
         logger.info("Iniciando ajuste de estoque para peça ID: " + ajusteDTO.getPecaId() + ", ajuste: " + ajusteDTO.getAjuste());
-        
-        // Buscar a peça
+
         Peca peca = buscarPorId(ajusteDTO.getPecaId());
         
         if (ajusteDTO.getAjuste() == null || ajusteDTO.getAjuste() == 0) {
             throw new IllegalArgumentException("O valor do ajuste não pode ser zero ou nulo");
         }
-        
-        // Calcular novo estoque
+
         int estoqueAtual = peca.getQuantidadeEstoque();
         int novoEstoque = estoqueAtual + ajusteDTO.getAjuste();
         
         if (novoEstoque < 0) {
             throw new IllegalArgumentException("O ajuste resultaria em estoque negativo (" + novoEstoque + "). Estoque atual: " + estoqueAtual);
         }
-        
-        // Atualizar estoque
-        peca.setQuantidadeEstoque(novoEstoque);
+                peca.setQuantidadeEstoque(novoEstoque);
         Peca pecaAtualizada = pecaRepository.save(peca);
-        
-        // Criar movimentação de estoque
+
         MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
         movimentacao.setCodigoPeca(peca.getCodigoFabricante());
         movimentacao.setFornecedor(peca.getFornecedor());
         movimentacao.setQuantidade(Math.abs(ajusteDTO.getAjuste()));
-        
-        // Definir tipo e observações
+
         String operacao = ajusteDTO.getAjuste() > 0 ? "+" : "-";
         String observacao = "Reajuste " + operacao + " " + Math.abs(ajusteDTO.getAjuste());
         if (ajusteDTO.getObservacoes() != null && !ajusteDTO.getObservacoes().isEmpty()) {
             observacao += " - " + ajusteDTO.getObservacoes();
         }
         movimentacao.setObservacoes(observacao);
-        
-        // Número de NF fictício para reajustes
+
         String notaFiscal = "REAJUSTE-" + peca.getId() + "-" + System.currentTimeMillis();
         movimentacao.setNumeroNotaFiscal(notaFiscal);
         

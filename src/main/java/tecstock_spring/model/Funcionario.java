@@ -53,7 +53,6 @@ public class Funcionario {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
-        // updatedAt permanece null naturalmente
     }
     
     @PreUpdate

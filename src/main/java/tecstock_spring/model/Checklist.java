@@ -123,13 +123,13 @@ public class Checklist {
         if (this.createdAt == null) {
             this.createdAt = LocalDateTime.now();
         }
-        // Garante que updatedAt fica null na criação
+
         this.updatedAt = null;
     }
     
     @PreUpdate
     protected void onUpdate() {
-        // Sempre atualiza o updatedAt quando editar
+
         this.updatedAt = LocalDateTime.now();
     }
 }

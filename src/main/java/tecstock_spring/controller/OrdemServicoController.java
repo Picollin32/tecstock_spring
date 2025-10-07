@@ -134,16 +134,13 @@ public class OrdemServicoController {
                 return ResponseEntity.badRequest()
                     .body("Apenas ordens de serviço encerradas podem ser reabertas. Status atual: " + os.getStatus());
             }
-            
-            // Log dos dados antes da reabertura
+
             logger.info("📊 Dados da OS antes da reabertura:");
             logger.info("  - Serviços: " + (os.getServicosRealizados() != null ? os.getServicosRealizados().size() : "null"));
             logger.info("  - Peças: " + (os.getPecasUtilizadas() != null ? os.getPecasUtilizadas().size() : "null"));
-            
-            // Usar método específico que preserva os dados e reabre o checklist
+
             OrdemServico osReaberta = service.reabrirOS(id);
-            
-            // Log dos dados após a reabertura
+
             logger.info("📊 Dados da OS após a reabertura:");
             logger.info("  - Serviços: " + (osReaberta.getServicosRealizados() != null ? osReaberta.getServicosRealizados().size() : "null"));
             logger.info("  - Peças: " + (osReaberta.getPecasUtilizadas() != null ? osReaberta.getPecasUtilizadas().size() : "null"));

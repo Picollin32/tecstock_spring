@@ -41,10 +41,8 @@ public class FornecedorServiceImpl implements FornecedorService {
         List<Fornecedor> fornecedores = repository.findAll();
         if (fornecedores != null && fornecedores.isEmpty()) {
             logger.info("Nenhum fornecedor cadastrado: " + fornecedores);
-            System.out.println("Nenhum fornecedor cadastrado: " + fornecedores);
         } else if (fornecedores != null && !fornecedores.isEmpty()) {
             logger.info(fornecedores.size() + " fornecedores encontrados.");
-            System.out.println(fornecedores.size() + " fornecedores encontrados.");
         }
         return fornecedores;
     }

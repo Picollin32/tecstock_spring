@@ -285,7 +285,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     logger.info("🎉 Ordem de Serviço encerrada com sucesso: " + ordemServicoSalva.getNumeroOS() + 
                    " | Status final: " + ordemServicoSalva.getStatus());
 
-        // Fechar checklist vinculado se existir
         if (ordemServicoSalva.getChecklistId() != null) {
             try {
                 logger.info("🔒 Fechando checklist vinculado ID: " + ordemServicoSalva.getChecklistId());
@@ -297,7 +296,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                 }
             } catch (Exception e) {
                 logger.error("❌ Erro ao fechar checklist vinculado: " + e.getMessage());
-                // Continua com o encerramento da OS mesmo se houver erro no checklist
+
             }
         }
 
@@ -424,13 +423,10 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     public OrdemServico desbloquearParaEdicao(Long id) {
         OrdemServico ordemServico = buscarPorId(id);
         logger.info("Desbloqueando OS " + ordemServico.getNumeroOS() + " para edição. Status anterior: " + ordemServico.getStatus());
-        
-        // Log dos dados antes do desbloqueio
         logger.info("📊 Dados da OS antes do desbloqueio:");
         logger.info("  - Serviços: " + (ordemServico.getServicosRealizados() != null ? ordemServico.getServicosRealizados().size() : "null"));
         logger.info("  - Peças: " + (ordemServico.getPecasUtilizadas() != null ? ordemServico.getPecasUtilizadas().size() : "null"));
         
-        // Se a OS estava encerrada, devolver peças ao estoque
         if ("Encerrada".equals(ordemServico.getStatus())) {
             logger.info("📦 OS estava encerrada. Devolvendo peças ao estoque...");
             if (ordemServico.getPecasUtilizadas() != null && !ordemServico.getPecasUtilizadas().isEmpty()) {
@@ -446,7 +442,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                             logger.info("  ↩️ Devolvendo peça " + pecaOS.getPeca().getNome() + 
                                        " (Código: " + codigoFabricante + "): " + quantidade + " unidades");
                             
-                            // Registra entrada no estoque (devolução) - usando método sem validação de nota fiscal
                             String numeroNotaFiscal = "OS-" + ordemServico.getNumeroOS() + "-ENTRADA-" + codigoFabricante;
                             movimentacaoEstoqueService.registrarEntradaSemValidacaoNota(
                                 codigoFabricante,
@@ -469,8 +464,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                 logger.info("📦 Nenhuma peça para devolver ao estoque");
             }
         }
-        
-        // Reabrir checklist vinculado se existir
+
         if (ordemServico.getChecklistId() != null) {
             try {
                 logger.info("🔓 Reabrindo checklist vinculado ID: " + ordemServico.getChecklistId());
@@ -482,17 +476,14 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                 }
             } catch (Exception e) {
                 logger.error("❌ Erro ao reabrir checklist vinculado: " + e.getMessage());
-                // Continua com o desbloqueio da OS mesmo se houver erro no checklist
             }
         }
         
-        // Muda o status para "Em Andamento" para permitir edição
         ordemServico.setStatus("Em Andamento");
         ordemServico.setDataHoraEncerramento(null);
         
         OrdemServico osSalva = repository.save(ordemServico);
-        
-        // Log dos dados após o desbloqueio
+
         logger.info("📊 Dados da OS após o desbloqueio:");
         logger.info("  - Serviços: " + (osSalva.getServicosRealizados() != null ? osSalva.getServicosRealizados().size() : "null"));
         logger.info("  - Peças: " + (osSalva.getPecasUtilizadas() != null ? osSalva.getPecasUtilizadas().size() : "null"));
@@ -505,16 +496,12 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     public OrdemServico reabrirOS(Long id) {
         OrdemServico ordemServico = buscarPorId(id);
         logger.info("🔓 Reabrindo OS " + ordemServico.getNumeroOS() + ". Status anterior: " + ordemServico.getStatus());
-        
-        // Log dos dados ANTES de reabrir
         logger.info("📊 Dados PRESERVADOS da OS:");
         logger.info("  - Serviços: " + (ordemServico.getServicosRealizados() != null ? ordemServico.getServicosRealizados().size() : "null"));
         logger.info("  - Peças: " + (ordemServico.getPecasUtilizadas() != null ? ordemServico.getPecasUtilizadas().size() : "null"));
         logger.info("  - Preço Total: R$ " + ordemServico.getPrecoTotal());
         logger.info("  - Desconto Serviços: R$ " + ordemServico.getDescontoServicos());
         logger.info("  - Desconto Peças: R$ " + ordemServico.getDescontoPecas());
-        
-        // Devolver peças ao estoque (reverter saída que ocorreu no fechamento)
         logger.info("📦 Devolvendo peças ao estoque...");
         if (ordemServico.getPecasUtilizadas() != null && !ordemServico.getPecasUtilizadas().isEmpty()) {
             for (tecstock_spring.model.PecaOrdemServico pecaOS : ordemServico.getPecasUtilizadas()) {
@@ -528,8 +515,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                         
                         logger.info("  ↩️ Devolvendo peça " + pecaOS.getPeca().getNome() + 
                                    " (Código: " + codigoFabricante + "): " + quantidade + " unidades");
-                        
-                        // Registra entrada no estoque (devolução) - usando método sem validação de nota fiscal
+
                         String numeroNotaFiscal = "OS-" + ordemServico.getNumeroOS() + "-ENTRADA-" + codigoFabricante;
                         movimentacaoEstoqueService.registrarEntradaSemValidacaoNota(
                             codigoFabricante,
@@ -551,13 +537,10 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         } else {
             logger.info("📦 Nenhuma peça para devolver ao estoque");
         }
-        
-        // Apenas muda o status e limpa a data de encerramento
-        // NÃO chama atualizar() para preservar serviços e peças
+
         ordemServico.setStatus("Aberta");
         ordemServico.setDataHoraEncerramento(null);
         
-        // Reabrir checklist vinculado se existir
         if (ordemServico.getChecklistId() != null) {
             try {
                 logger.info("🔓 Reabrindo checklist vinculado ID: " + ordemServico.getChecklistId());
@@ -569,14 +552,12 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                 }
             } catch (Exception e) {
                 logger.error("❌ Erro ao reabrir checklist vinculado: " + e.getMessage());
-                // Continua com a reabertura da OS mesmo se houver erro no checklist
+
             }
         }
-        
-        // Salva diretamente sem usar atualizar() que limpa as listas
+
         OrdemServico osSalva = repository.save(ordemServico);
-        
-        // Log dos dados APÓS reabrir
+
         logger.info("📊 Dados da OS APÓS reabertura:");
         logger.info("  - Serviços: " + (osSalva.getServicosRealizados() != null ? osSalva.getServicosRealizados().size() : "null"));
         logger.info("  - Peças: " + (osSalva.getPecasUtilizadas() != null ? osSalva.getPecasUtilizadas().size() : "null"));

@@ -21,12 +21,7 @@ public class AuditoriaController {
     @Autowired
     private AuditoriaService auditoriaService;
     
-    /**
-     * Buscar todos os logs de auditoria (paginado)
-     * Acesso apenas para ADMIN
-     * @param sortBy Campo para ordenação: dataHora, usuario, entidade, operacao (padrão: dataHora)
-     * @param sortDir Direção: asc ou desc (padrão: desc)
-     */
+
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<AuditoriaLog>> buscarTodosLogs(
@@ -37,11 +32,7 @@ public class AuditoriaController {
         Page<AuditoriaLog> logs = auditoriaService.buscarTodosLogs(page, size, sortBy, sortDir);
         return ResponseEntity.ok(logs);
     }
-    
-    /**
-     * Buscar logs por usuário específico
-     * Acesso apenas para ADMIN
-     */
+
     @GetMapping("/usuario/{usuario}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<AuditoriaLog>> buscarLogsPorUsuario(
@@ -51,11 +42,7 @@ public class AuditoriaController {
         Page<AuditoriaLog> logs = auditoriaService.buscarLogsPorUsuario(usuario, page, size);
         return ResponseEntity.ok(logs);
     }
-    
-    /**
-     * Buscar logs por tipo de entidade (Cliente, Veiculo, etc)
-     * Acesso apenas para ADMIN
-     */
+
     @GetMapping("/entidade/{entidade}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<AuditoriaLog>> buscarLogsPorEntidade(
@@ -65,12 +52,7 @@ public class AuditoriaController {
         Page<AuditoriaLog> logs = auditoriaService.buscarLogsPorEntidade(entidade, page, size);
         return ResponseEntity.ok(logs);
     }
-    
-    /**
-     * Buscar histórico completo de uma entidade específica
-     * Exemplo: GET /api/auditoria/historico/Cliente/123
-     * Acesso apenas para ADMIN
-     */
+
     @GetMapping("/historico/{entidade}/{entidadeId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<AuditoriaLog>> buscarHistoricoEntidade(
@@ -79,11 +61,7 @@ public class AuditoriaController {
         List<AuditoriaLog> historico = auditoriaService.buscarHistoricoEntidade(entidade, entidadeId);
         return ResponseEntity.ok(historico);
     }
-    
-    /**
-     * Buscar logs por tipo de operação (CREATE, UPDATE, DELETE)
-     * Acesso apenas para ADMIN
-     */
+
     @GetMapping("/operacao/{operacao}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<AuditoriaLog>> buscarLogsPorOperacao(
@@ -93,13 +71,7 @@ public class AuditoriaController {
         Page<AuditoriaLog> logs = auditoriaService.buscarLogsPorOperacao(operacao, page, size);
         return ResponseEntity.ok(logs);
     }
-    
-    /**
-     * Buscar logs por período
-     * Formato: yyyy-MM-dd'T'HH:mm:ss
-     * Exemplo: ?dataInicio=2024-01-01T00:00:00&dataFim=2024-12-31T23:59:59
-     * Acesso apenas para ADMIN
-     */
+
     @GetMapping("/periodo")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<AuditoriaLog>> buscarLogsPorPeriodo(
@@ -110,13 +82,7 @@ public class AuditoriaController {
         Page<AuditoriaLog> logs = auditoriaService.buscarLogsPorPeriodo(dataInicio, dataFim, page, size);
         return ResponseEntity.ok(logs);
     }
-    
-    /**
-     * Buscar logs com múltiplos filtros
-     * Acesso apenas para ADMIN
-     * @param sortBy Campo para ordenação: dataHora, usuario, entidade, operacao, entidadeId (padrão: dataHora)
-     * @param sortDir Direção: asc ou desc (padrão: desc)
-     */
+
     @GetMapping("/filtros")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<AuditoriaLog>> buscarLogsComFiltros(
@@ -134,11 +100,7 @@ public class AuditoriaController {
             usuario, entidade, operacao, entidadeId, dataInicio, dataFim, page, size, sortBy, sortDir);
         return ResponseEntity.ok(logs);
     }
-    
-    /**
-     * Gerar relatório de atividades por usuário
-     * Acesso apenas para ADMIN
-     */
+
     @GetMapping("/relatorio/usuario/{usuario}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> gerarRelatorioUsuario(@PathVariable String usuario) {
@@ -146,21 +108,13 @@ public class AuditoriaController {
         return ResponseEntity.ok(relatorio);
     }
     
-    /**
-     * Gerar relatório geral de auditoria
-     * Acesso apenas para ADMIN
-     */
     @GetMapping("/relatorio/geral")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> gerarRelatorioGeral() {
         Map<String, Object> relatorio = auditoriaService.gerarRelatorioGeral();
         return ResponseEntity.ok(relatorio);
     }
-    
-    /**
-     * Buscar atividades recentes (últimas 24 horas)
-     * Acesso apenas para ADMIN
-     */
+
     @GetMapping("/recentes")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<AuditoriaLog>> buscarAtividadesRecentes() {
@@ -168,10 +122,6 @@ public class AuditoriaController {
         return ResponseEntity.ok(logs);
     }
     
-    /**
-     * Listar todas as entidades auditadas
-     * Acesso apenas para ADMIN
-     */
     @GetMapping("/entidades")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<String>> listarEntidadesAuditadas() {
@@ -179,10 +129,6 @@ public class AuditoriaController {
         return ResponseEntity.ok(entidades);
     }
     
-    /**
-     * Listar todos os usuários que realizaram operações
-     * Acesso apenas para ADMIN
-     */
     @GetMapping("/usuarios")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<String>> listarUsuariosAtivos() {

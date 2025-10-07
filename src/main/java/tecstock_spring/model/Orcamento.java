@@ -133,13 +133,11 @@ public class Orcamento {
         if (this.transformadoEmOS == null) {
             this.transformadoEmOS = false;
         }
-        // Garante que updatedAt fica null na criação
         this.updatedAt = null;
     }
     
     @PreUpdate
     protected void onUpdate() {
-        // Sempre atualiza o updatedAt quando editar
         this.updatedAt = LocalDateTime.now();
     }
     

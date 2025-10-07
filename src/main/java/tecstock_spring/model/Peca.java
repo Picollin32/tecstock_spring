@@ -64,13 +64,11 @@ public class Peca {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
-        // updatedAt permanece null naturalmente (não precisa setar)
         calcularPrecoFinal();
     }
     
     @PreUpdate
     protected void onUpdate() {
-        // Sempre atualiza o updatedAt quando editar
         updatedAt = LocalDateTime.now();
         calcularPrecoFinal();
     }
