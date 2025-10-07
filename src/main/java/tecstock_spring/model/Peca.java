@@ -1,7 +1,11 @@
 package tecstock_spring.model;
 
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -14,12 +18,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.envers.Audited;
+import tecstock_spring.util.AuditListener;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Audited
+@EntityListeners(AuditListener.class)
 public class Peca {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,10 +45,12 @@ public class Peca {
 
     @ManyToOne
     @JoinColumn(name = "fabricante_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Fabricante fabricante;
 
     @ManyToOne
     @JoinColumn(name = "fornecedor_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Fornecedor fornecedor;
     
     @Column(name = "created_at")
@@ -54,11 +64,13 @@ public class Peca {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
+        // updatedAt permanece null naturalmente (não precisa setar)
         calcularPrecoFinal();
     }
     
     @PreUpdate
     protected void onUpdate() {
+        // Sempre atualiza o updatedAt quando editar
         updatedAt = LocalDateTime.now();
         calcularPrecoFinal();
     }

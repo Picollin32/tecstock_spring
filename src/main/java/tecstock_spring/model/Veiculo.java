@@ -2,6 +2,7 @@ package tecstock_spring.model;
 
 import java.time.LocalDateTime;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -13,12 +14,16 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.envers.Audited;
+import tecstock_spring.util.AuditListener;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Audited
+@EntityListeners(AuditListener.class)
 public class Veiculo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,10 +54,13 @@ public class Veiculo {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
+        // Garante que updatedAt fica null na criação
+        updatedAt = null;
     }
     
     @PreUpdate
     protected void onUpdate() {
+        // Sempre atualiza o updatedAt quando editar
         updatedAt = LocalDateTime.now();
     }
 }

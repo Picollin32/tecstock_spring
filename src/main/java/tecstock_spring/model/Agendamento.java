@@ -3,6 +3,7 @@ package tecstock_spring.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -10,6 +11,8 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.envers.Audited;
+import tecstock_spring.util.AuditListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,6 +21,8 @@ import java.time.LocalTime;
 @Entity
 @Getter
 @Setter
+@Audited
+@EntityListeners(AuditListener.class)
 public class Agendamento {
 
     @Id
@@ -50,10 +55,13 @@ public class Agendamento {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
+        // Garante que updatedAt fica null na criação
+        updatedAt = null;
     }
     
     @PreUpdate
     protected void onUpdate() {
+        // Sempre atualiza o updatedAt quando editar
         updatedAt = LocalDateTime.now();
     }
 }

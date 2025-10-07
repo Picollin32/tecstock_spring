@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.envers.Audited;
+import tecstock_spring.util.AuditListener;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,6 +16,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Audited
+@EntityListeners(AuditListener.class)
 public class OrdemServico {
     
     @Id
@@ -143,10 +147,13 @@ public class OrdemServico {
         if (this.prazoFiadoDias != null && this.prazoFiadoDias > 0 && this.fiadoPago == null) {
             this.fiadoPago = false;
         }
+        // Garante que updatedAt fica null na criação
+        this.updatedAt = null;
     }
     
     @PreUpdate
     protected void onUpdate() {
+        // Sempre atualiza o updatedAt quando editar
         this.updatedAt = LocalDateTime.now();
         if (this.prazoFiadoDias != null && this.prazoFiadoDias > 0 && this.fiadoPago == null) {
             this.fiadoPago = false;

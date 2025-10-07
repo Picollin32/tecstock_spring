@@ -4,11 +4,15 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.envers.Audited;
+import tecstock_spring.util.AuditListener;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Audited
+@EntityListeners(AuditListener.class)
 @Table(name = "peca_orcamento")
 public class PecaOrcamento {
     

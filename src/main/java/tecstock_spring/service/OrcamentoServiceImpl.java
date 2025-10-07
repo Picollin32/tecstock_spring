@@ -162,6 +162,7 @@ public class OrcamentoServiceImpl implements OrcamentoService {
                 .descontoServicos(orcamento.getDescontoServicos())
                 .descontoPecas(orcamento.getDescontoPecas())
                 .garantiaMeses(orcamento.getGarantiaMeses())
+                .prazoFiadoDias(orcamento.getPrazoFiadoDias())
                 .tipoPagamento(orcamento.getTipoPagamento())
                 .observacoes(orcamento.getObservacoes())
                 .orcamentoOrigemId(orcamento.getId())
