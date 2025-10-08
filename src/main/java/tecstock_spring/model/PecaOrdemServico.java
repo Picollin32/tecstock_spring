@@ -36,9 +36,11 @@ public class PecaOrdemServico {
     @PrePersist
     protected void calculateValuesOnCreate() {
         if (peca != null) {
+
             if (this.valorUnitario == null) {
                 this.valorUnitario = peca.getPrecoFinal();
             }
+
             if (this.valorTotal == null) {
                 this.valorTotal = this.valorUnitario * this.quantidade;
             }
@@ -47,6 +49,7 @@ public class PecaOrdemServico {
     
     @PreUpdate  
     protected void recalculateOnUpdate() {
+
         if (this.valorUnitario != null && this.quantidade != null) {
             this.valorTotal = this.valorUnitario * this.quantidade;
         }

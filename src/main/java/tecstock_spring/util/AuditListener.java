@@ -144,6 +144,7 @@ public class AuditListener {
             descricao.append(String.format("Usuário %s alterou %s (ID: %d): ", usuario, nomeEntidade, entidadeId));
             
             boolean primeiraAlteracao = true;
+            
             for (String chave : novos.keySet()) {
                 Object valorAntigo = antigos.get(chave);
                 Object valorNovo = novos.get(chave);
@@ -153,12 +154,28 @@ public class AuditListener {
 
                 if (chave.equals("createdAt") || chave.equals("updatedAt")) continue;
                 
+                // Em MovimentacaoEstoque, não mostra precoAnterior/precoNovo separadamente
+                // pois essa informação já está nas observações
+                if (nomeEntidade.equals("MovimentacaoEstoque") && 
+                    (chave.equals("precoAnterior") || chave.equals("precoNovo"))) {
+                    continue;
+                }
+                
                 if (!primeiraAlteracao) {
                     descricao.append(", ");
                 }
                 
-                descricao.append(String.format("%s de \"%s\" para \"%s\"", 
-                    chave, valorAntigo, valorNovo));
+                // Formatação especial para campos monetários
+                if (chave.equals("precoUnitario") || chave.equals("precoFinal") || 
+                    chave.equals("valorUnitario") || chave.equals("valorTotal")) {
+                    descricao.append(String.format("%s de R$ %.2f para R$ %.2f", 
+                        chave, 
+                        valorAntigo != null ? ((Number)valorAntigo).doubleValue() : 0.0,
+                        valorNovo != null ? ((Number)valorNovo).doubleValue() : 0.0));
+                } else {
+                    descricao.append(String.format("%s de \"%s\" para \"%s\"", 
+                        chave, valorAntigo, valorNovo));
+                }
                 primeiraAlteracao = false;
             }
             

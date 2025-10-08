@@ -13,4 +13,5 @@ public class AjusteEstoqueDTO {
     private Long pecaId;
     private Integer ajuste;
     private String observacoes;
+    private Double novoPrecoUnitario;
 }

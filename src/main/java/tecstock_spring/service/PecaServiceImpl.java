@@ -178,7 +178,21 @@ public class PecaServiceImpl implements PecaService {
         if (novoEstoque < 0) {
             throw new IllegalArgumentException("O ajuste resultaria em estoque negativo (" + novoEstoque + "). Estoque atual: " + estoqueAtual);
         }
-                peca.setQuantidadeEstoque(novoEstoque);
+        
+        peca.setQuantidadeEstoque(novoEstoque);
+
+        double precoAnterior = peca.getPrecoUnitario();
+        Double precoNovo = null;
+        
+        if (ajusteDTO.getNovoPrecoUnitario() != null) {
+            if (ajusteDTO.getNovoPrecoUnitario() < 0) {
+                throw new IllegalArgumentException("O preço unitário não pode ser negativo");
+            }
+            logger.info("Atualizando preço unitário de " + precoAnterior + " para " + ajusteDTO.getNovoPrecoUnitario());
+            peca.setPrecoUnitario(ajusteDTO.getNovoPrecoUnitario());
+            precoNovo = ajusteDTO.getNovoPrecoUnitario();
+        }
+        
         Peca pecaAtualizada = pecaRepository.save(peca);
 
         MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
@@ -187,22 +201,24 @@ public class PecaServiceImpl implements PecaService {
         movimentacao.setQuantidade(Math.abs(ajusteDTO.getAjuste()));
 
         String operacao = ajusteDTO.getAjuste() > 0 ? "+" : "-";
-        String observacao = "Reajuste " + operacao + " " + Math.abs(ajusteDTO.getAjuste());
+        String observacao = "Ajuste de estoque " + operacao + " " + Math.abs(ajusteDTO.getAjuste());
         if (ajusteDTO.getObservacoes() != null && !ajusteDTO.getObservacoes().isEmpty()) {
             observacao += " - " + ajusteDTO.getObservacoes();
         }
+
+        if (precoNovo != null) {
+            observacao += String.format(" | Preço reajustado: R$ %.2f → R$ %.2f", precoAnterior, precoNovo);
+            movimentacao.setPrecoAnterior(precoAnterior);
+            movimentacao.setPrecoNovo(precoNovo);
+        }
+        
         movimentacao.setObservacoes(observacao);
 
         String notaFiscal = "REAJUSTE-" + peca.getId() + "-" + System.currentTimeMillis();
         movimentacao.setNumeroNotaFiscal(notaFiscal);
-        
-        if (ajusteDTO.getAjuste() > 0) {
-            movimentacao.setTipoMovimentacao(MovimentacaoEstoque.TipoMovimentacao.ENTRADA);
-            movimentacao.setDataEntrada(LocalDateTime.now());
-        } else {
-            movimentacao.setTipoMovimentacao(MovimentacaoEstoque.TipoMovimentacao.SAIDA);
-            movimentacao.setDataSaida(LocalDateTime.now());
-        }
+
+        movimentacao.setTipoMovimentacao(MovimentacaoEstoque.TipoMovimentacao.REAJUSTE);
+        movimentacao.setDataEntrada(LocalDateTime.now());
         
         movimentacaoEstoqueRepository.save(movimentacao);
         

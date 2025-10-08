@@ -154,16 +154,19 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                 tecstock_spring.model.PecaOrdemServico novaPecaOS = new tecstock_spring.model.PecaOrdemServico();
 
                 if (pecaNova.getId() != null) {
+
                     java.util.Optional<tecstock_spring.model.PecaOrdemServico> pecaExistente = 
                         pecaOrdemServicoRepository.findById(pecaNova.getId());
                     if (pecaExistente.isPresent()) {
                         novaPecaOS = pecaExistente.get();
                         novaPecaOS.setQuantidade(pecaNova.getQuantidade());
-                        if (novaPecaOS.getValorUnitario() == null) {
+                        
+                        if (novaPecaOS.getValorUnitario() == null && pecaNova.getValorUnitario() != null) {
                             novaPecaOS.setValorUnitario(pecaNova.getValorUnitario());
                         }
-                        if (novaPecaOS.getValorTotal() == null) {
-                            novaPecaOS.setValorTotal(pecaNova.getValorTotal());
+
+                        if (novaPecaOS.getValorUnitario() != null) {
+                            novaPecaOS.setValorTotal(novaPecaOS.getValorUnitario() * novaPecaOS.getQuantidade());
                         }
                     }
                 } else {
@@ -510,7 +513,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                         String codigoFabricante = pecaOS.getPeca().getCodigoFabricante();
                         Long fornecedorId = pecaOS.getPeca().getFornecedor().getId();
                         int quantidade = pecaOS.getQuantidade();
-                        Double precoUnitario = pecaOS.getValorUnitario();
                         String observacoes = "Devolução por reabertura de OS " + ordemServico.getNumeroOS();
                         
                         logger.info("  ↩️ Devolvendo peça " + pecaOS.getPeca().getNome() + 
@@ -521,7 +523,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                             codigoFabricante,
                             fornecedorId,
                             quantidade,
-                            precoUnitario,
+                            null,
                             numeroNotaFiscal,
                             observacoes
                         );

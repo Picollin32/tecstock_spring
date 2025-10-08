@@ -62,10 +62,17 @@ public class MovimentacaoEstoque {
     
     @Column(name = "preco_final")
     private Double precoFinal;
+    
+    @Column(name = "preco_anterior")
+    private Double precoAnterior;
+    
+    @Column(name = "preco_novo")
+    private Double precoNovo;
 
     public enum TipoMovimentacao {
         ENTRADA,
-        SAIDA
+        SAIDA,
+        REAJUSTE
     }
 
     @PrePersist
@@ -77,10 +84,15 @@ public class MovimentacaoEstoque {
                 dataEntrada = agora;
             }
         }
-
         else if (tipoMovimentacao == TipoMovimentacao.SAIDA) {
             if (dataSaida == null) {
                 dataSaida = agora;
+            }
+        }
+        else if (tipoMovimentacao == TipoMovimentacao.REAJUSTE) {
+
+            if (dataEntrada == null) {
+                dataEntrada = agora;
             }
         }
         calcularPrecoFinal();
