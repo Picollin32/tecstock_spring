@@ -31,8 +31,15 @@ public class ServicoOrdemServicoServiceImpl implements ServicoOrdemServicoServic
             logger.info("Nenhum serviço para registrar na OS: " + ordemServico.getNumeroOS());
             return;
         }
+        
+        List<ServicoOrdemServico> servicosAntigos = repository.findByNumeroOSOrderByDataRealizacaoDesc(ordemServico.getNumeroOS());
+        if (!servicosAntigos.isEmpty()) {
+            logger.info("Removendo " + servicosAntigos.size() + " registros antigos de serviços da OS: " + ordemServico.getNumeroOS());
+            repository.deleteAll(servicosAntigos);
+            logger.info("Registros antigos removidos com sucesso");
+        }
 
-        logger.info("🔧 Registrando " + ordemServico.getServicosRealizados().size() + 
+        logger.info("Registrando " + ordemServico.getServicosRealizados().size() + 
                    " serviços realizados na OS: " + ordemServico.getNumeroOS());
 
         int servicosRegistrados = 0;
@@ -51,17 +58,17 @@ public class ServicoOrdemServicoServiceImpl implements ServicoOrdemServicoServic
                 repository.save(servicoOS);
                 servicosRegistrados++;
                 
-                logger.info("✅ Serviço '" + servico.getNome() + "' registrado com sucesso - Valor: R$ " + 
+                logger.info("Serviço '" + servico.getNome() + "' registrado com sucesso - Valor: R$ " + 
                            valorServico + " | Categoria: " + ordemServico.getVeiculoCategoria());
                 
             } catch (Exception e) {
-                logger.error("❌ Erro ao registrar serviço '" + servico.getNome() + 
+                logger.error("Erro ao registrar serviço '" + servico.getNome() + 
                            "' para OS " + ordemServico.getNumeroOS() + ": " + e.getMessage());
                 logger.error("Stack trace:", e);
             }
         }
 
-        logger.info("📊 Registro de serviços concluído: " + servicosRegistrados + "/" + 
+        logger.info("Registro de serviços concluído: " + servicosRegistrados + "/" + 
                    ordemServico.getServicosRealizados().size() + 
                    " serviços registrados para OS " + ordemServico.getNumeroOS());
     }

@@ -32,13 +32,22 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.deny())
+                        .xssProtection(xss -> xss.headerValue(org.springframework.security.web.header.writers.XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
+                        .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; frame-ancestors 'none'; form-action 'self'"))
+                        .contentTypeOptions(contentTypeOptions -> contentTypeOptions.disable())
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(31536000)
+                        )
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/usuarios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/usuarios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/pecas/atualizar/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/pecas/ajustar-estoque").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/ordens-servico/desbloquear/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/tipos-pagamento/**").hasRole("ADMIN")

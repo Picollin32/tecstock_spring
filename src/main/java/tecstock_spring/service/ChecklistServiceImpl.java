@@ -40,12 +40,19 @@ public class ChecklistServiceImpl implements ChecklistService {
     @Override
     public List<Checklist> listarTodos() {
         List<Checklist> checklists = repository.findAll();
-        if (checklists != null && checklists.isEmpty()) {
-            logger.info("Nenhuma checklist cadastrada: " + checklists);
-            System.out.println("Nenhuma checklist cadastrada: " + checklists);
-        } else if (checklists != null && !checklists.isEmpty()) {
-            logger.info(checklists.size() + " checklists encontrados.");
-            System.out.println(checklists.size() + " checklists encontrados.");
+
+        if (checklists != null && !checklists.isEmpty()) {
+            checklists.sort((a, b) -> {
+                if (a.getCreatedAt() == null && b.getCreatedAt() == null) return 0;
+                if (a.getCreatedAt() == null) return 1;
+                if (b.getCreatedAt() == null) return -1;
+                return a.getCreatedAt().compareTo(b.getCreatedAt());
+            });
+            logger.info(checklists.size() + " checklists encontrados (ordenados por createdAt crescente).");
+            System.out.println(checklists.size() + " checklists encontrados (ordenados por createdAt crescente).");
+        } else {
+            logger.info("Nenhuma checklist cadastrada");
+            System.out.println("Nenhuma checklist cadastrada");
         }
         return checklists;
     }

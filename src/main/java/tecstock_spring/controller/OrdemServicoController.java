@@ -116,9 +116,9 @@ public class OrdemServicoController {
     
     @PostMapping("/api/ordens-servico/{id}/fechar")
     public OrdemServico fecharOrdemServico(@PathVariable Long id) {
-        logger.info("🔥 CONTROLLER: Recebida solicitação para fechar OS com ID: " + id);
+        logger.info("CONTROLLER: Recebida solicitação para fechar OS com ID: " + id);
         OrdemServico resultado = service.fecharOrdemServico(id);
-        logger.info("🎉 CONTROLLER: OS encerrada com sucesso - Número: " + resultado.getNumeroOS() + 
+        logger.info("CONTROLLER: OS encerrada com sucesso - Número: " + resultado.getNumeroOS() + 
                    " | Status: " + resultado.getStatus());
         return resultado;
     }
@@ -126,29 +126,29 @@ public class OrdemServicoController {
     @PatchMapping("/api/ordens-servico/{id}/reabrir")
     public ResponseEntity<?> reabrirOrdemServico(@PathVariable Long id) {
         try {
-            logger.info("🔓 CONTROLLER: Recebida solicitação para reabrir OS com ID: " + id);
+            logger.info("CONTROLLER: Recebida solicitação para reabrir OS com ID: " + id);
             OrdemServico os = service.buscarPorId(id);
             
             if (!"Encerrada".equals(os.getStatus())) {
-                logger.warn("⚠️ CONTROLLER: Tentativa de reabrir OS que não está encerrada. Status atual: " + os.getStatus());
+                logger.warn("CONTROLLER: Tentativa de reabrir OS que não está encerrada. Status atual: " + os.getStatus());
                 return ResponseEntity.badRequest()
                     .body("Apenas ordens de serviço encerradas podem ser reabertas. Status atual: " + os.getStatus());
             }
 
-            logger.info("📊 Dados da OS antes da reabertura:");
+            logger.info("Dados da OS antes da reabertura:");
             logger.info("  - Serviços: " + (os.getServicosRealizados() != null ? os.getServicosRealizados().size() : "null"));
             logger.info("  - Peças: " + (os.getPecasUtilizadas() != null ? os.getPecasUtilizadas().size() : "null"));
 
             OrdemServico osReaberta = service.reabrirOS(id);
 
-            logger.info("📊 Dados da OS após a reabertura:");
+            logger.info("Dados da OS após a reabertura:");
             logger.info("  - Serviços: " + (osReaberta.getServicosRealizados() != null ? osReaberta.getServicosRealizados().size() : "null"));
             logger.info("  - Peças: " + (osReaberta.getPecasUtilizadas() != null ? osReaberta.getPecasUtilizadas().size() : "null"));
             
-            logger.info("✅ CONTROLLER: OS reaberta com sucesso - Número: " + osReaberta.getNumeroOS());
+            logger.info("CONTROLLER: OS reaberta com sucesso - Número: " + osReaberta.getNumeroOS());
             return ResponseEntity.ok(osReaberta);
         } catch (Exception e) {
-            logger.error("❌ CONTROLLER: Erro ao reabrir ordem de serviço: " + e.getMessage(), e);
+            logger.error("CONTROLLER: Erro ao reabrir ordem de serviço: " + e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Erro ao reabrir ordem de serviço: " + e.getMessage());
         }

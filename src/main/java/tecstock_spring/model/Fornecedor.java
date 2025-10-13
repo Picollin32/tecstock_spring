@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Column;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -34,8 +35,17 @@ public class Fornecedor {
     private String cnpj;
     
     private String telefone;
+    
+    @Email(message = "Email inválido")
     private String email;
+    
     private Double margemLucro;
+    
+    private String rua;
+    private String numeroCasa;
+    private String bairro;
+    private String cidade;
+    private String uf;
     
     @Column(name = "created_at")
     private LocalDateTime createdAt;

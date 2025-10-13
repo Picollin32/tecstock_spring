@@ -205,7 +205,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
         if ("Encerrada".equalsIgnoreCase(novoStatus)) {
             ordemServico.setDataHoraEncerramento(LocalDateTime.now());
-            logger.info("🕐 Registrando data/hora de encerramento: " + LocalDateTime.now());
+            logger.info("Registrando data/hora de encerramento: " + LocalDateTime.now());
         }
         
         logger.info("Atualizando apenas status da OS ID: " + id + " para: " + novoStatus);
@@ -215,47 +215,49 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Override
     @Transactional
     public OrdemServico fecharOrdemServico(Long id) {
-        logger.info("🔥 INICIANDO FECHAMENTO DA OS - ID: " + id);
+        logger.info("INICIANDO FECHAMENTO DA OS - ID: " + id);
         
         OrdemServico ordemServico = buscarPorId(id);
-        logger.info("📋 OS encontrada - Número: " + ordemServico.getNumeroOS() + 
+        logger.info("OS encontrada - Número: " + ordemServico.getNumeroOS() + 
                    " | Status atual: " + ordemServico.getStatus() +
                    " | Peças utilizadas: " + (ordemServico.getPecasUtilizadas() != null ? ordemServico.getPecasUtilizadas().size() : "0"));
         
         if ("Encerrada".equals(ordemServico.getStatus())) {
-            logger.warn("⚠️ Tentativa de fechar OS já encerrada: " + ordemServico.getNumeroOS());
+            logger.warn("Tentativa de fechar OS já encerrada: " + ordemServico.getNumeroOS());
             return ordemServico;
         }
         
-        logger.info("✅ OS válida para fechamento. Prosseguindo...");
+        logger.info("OS válida para fechamento. Prosseguindo...");
 
         ordemServico.setStatus("Encerrada");
         ordemServico.setDataHoraEncerramento(LocalDateTime.now());
-        logger.info("📝 Status da OS alterado para 'Encerrada'");
-        logger.info("🕐 Data/hora de encerramento registrada: " + LocalDateTime.now());
-        logger.info("🔧 Iniciando registro dos serviços realizados na OS: " + ordemServico.getNumeroOS());
+        logger.info("Status da OS alterado para 'Encerrada'");
+        logger.info("Data/hora de encerramento registrada: " + LocalDateTime.now());
+        logger.info("Iniciando registro dos serviços realizados na OS: " + ordemServico.getNumeroOS());
         servicoOrdemServicoService.registrarServicosRealizados(ordemServico);
-        logger.info("✅ Serviços registrados com sucesso");
+        logger.info("Serviços registrados com sucesso");
+        logger.info("Verificando e removendo movimentações antigas de estoque da OS: " + ordemServico.getNumeroOS());
+        movimentacaoEstoqueService.removerSaidasDeOrdemServico(ordemServico.getNumeroOS());
 
         if (ordemServico.getPecasUtilizadas() != null && !ordemServico.getPecasUtilizadas().isEmpty()) {
-            logger.info("🚀 Iniciando processamento de saída para " + ordemServico.getPecasUtilizadas().size() + 
+            logger.info("Iniciando processamento de saída para " + ordemServico.getPecasUtilizadas().size() + 
                        " peças da OS " + ordemServico.getNumeroOS());
 
             if (movimentacaoEstoqueService == null) {
-                logger.error("❌ ERRO CRÍTICO: MovimentacaoEstoqueService é NULO!");
+                logger.error("ERRO CRÍTICO: MovimentacaoEstoqueService é NULO!");
                 throw new RuntimeException("Serviço de movimentação de estoque não foi injetado");
             }
-            logger.info("✅ MovimentacaoEstoqueService injetado corretamente");
+            logger.info("MovimentacaoEstoqueService injetado corretamente");
             
             int pecasProcessadas = 0;
             for (tecstock_spring.model.PecaOrdemServico pecaOS : ordemServico.getPecasUtilizadas()) {
                 if (pecaOS.getPeca() != null) {
                     try {
-                        logger.info("🔄 Processando peça " + (pecasProcessadas + 1) + "/" + ordemServico.getPecasUtilizadas().size() + 
+                        logger.info("Processando peça " + (pecasProcessadas + 1) + "/" + ordemServico.getPecasUtilizadas().size() + 
                                    ": " + pecaOS.getPeca().getNome() + " (Código: " + pecaOS.getPeca().getCodigoFabricante() + 
                                    ", Quantidade: " + pecaOS.getQuantidade() + ")");
 
-                        logger.info("📞 Chamando movimentacaoEstoqueService.processarSaidaPorOrdemServico...");
+                        logger.info("Chamando movimentacaoEstoqueService.processarSaidaPorOrdemServico...");
                         movimentacaoEstoqueService.processarSaidaPorOrdemServico(
                             pecaOS.getPeca().getCodigoFabricante(),
                             pecaOS.getPeca().getFornecedor().getId(),
@@ -264,41 +266,41 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                         );
                         
                         pecasProcessadas++;
-                        logger.info("✅ Peça " + pecaOS.getPeca().getNome() + " processada com sucesso " +
+                        logger.info("Peça " + pecaOS.getPeca().getNome() + " processada com sucesso " +
                                    "(quantidade: " + pecaOS.getQuantidade() + ") para OS " + ordemServico.getNumeroOS());
                     } catch (Exception e) {
-                        logger.error("❌ Erro ao processar saída da peça " + pecaOS.getPeca().getNome() + 
+                        logger.error("Erro ao processar saída da peça " + pecaOS.getPeca().getNome() + 
                                    " para OS " + ordemServico.getNumeroOS() + ": " + e.getMessage());
-                        logger.error("❌ Stack trace:", e);
+                        logger.error("Stack trace:", e);
 
                     }
                 } else {
-                    logger.warn("⚠️ Peça nula encontrada na posição " + (pecasProcessadas + 1) + " da OS " + ordemServico.getNumeroOS());
+                    logger.warn("Peça nula encontrada na posição " + (pecasProcessadas + 1) + " da OS " + ordemServico.getNumeroOS());
                 }
             }
             
-            logger.info("📊 Processamento de saída concluído: " + pecasProcessadas + "/" + ordemServico.getPecasUtilizadas().size() + 
+            logger.info("Processamento de saída concluído: " + pecasProcessadas + "/" + ordemServico.getPecasUtilizadas().size() + 
                        " peças processadas com sucesso para OS " + ordemServico.getNumeroOS());
         } else {
-            logger.info("ℹ️ Nenhuma peça encontrada para processar saída na OS " + ordemServico.getNumeroOS());
+            logger.info("Nenhuma peça encontrada para processar saída na OS " + ordemServico.getNumeroOS());
         }
         
-    logger.info("💾 Salvando OS com status 'Encerrada'...");
+    logger.info("Salvando OS com status 'Encerrada'...");
         OrdemServico ordemServicoSalva = repository.save(ordemServico);
-    logger.info("🎉 Ordem de Serviço encerrada com sucesso: " + ordemServicoSalva.getNumeroOS() + 
+    logger.info("Ordem de Serviço encerrada com sucesso: " + ordemServicoSalva.getNumeroOS() + 
                    " | Status final: " + ordemServicoSalva.getStatus());
 
         if (ordemServicoSalva.getChecklistId() != null) {
             try {
-                logger.info("🔒 Fechando checklist vinculado ID: " + ordemServicoSalva.getChecklistId());
+                logger.info("Fechando checklist vinculado ID: " + ordemServicoSalva.getChecklistId());
                 boolean checklistFechado = checklistService.fecharChecklist(ordemServicoSalva.getChecklistId());
                 if (checklistFechado) {
-                    logger.info("✅ Checklist " + ordemServicoSalva.getChecklistId() + " fechado com sucesso");
+                    logger.info("Checklist " + ordemServicoSalva.getChecklistId() + " fechado com sucesso");
                 } else {
-                    logger.warn("⚠️ Não foi possível fechar o checklist " + ordemServicoSalva.getChecklistId());
+                    logger.warn("Não foi possível fechar o checklist " + ordemServicoSalva.getChecklistId());
                 }
             } catch (Exception e) {
-                logger.error("❌ Erro ao fechar checklist vinculado: " + e.getMessage());
+                logger.error("Erro ao fechar checklist vinculado: " + e.getMessage());
 
             }
         }
@@ -426,12 +428,12 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     public OrdemServico desbloquearParaEdicao(Long id) {
         OrdemServico ordemServico = buscarPorId(id);
         logger.info("Desbloqueando OS " + ordemServico.getNumeroOS() + " para edição. Status anterior: " + ordemServico.getStatus());
-        logger.info("📊 Dados da OS antes do desbloqueio:");
+        logger.info("Dados da OS antes do desbloqueio:");
         logger.info("  - Serviços: " + (ordemServico.getServicosRealizados() != null ? ordemServico.getServicosRealizados().size() : "null"));
         logger.info("  - Peças: " + (ordemServico.getPecasUtilizadas() != null ? ordemServico.getPecasUtilizadas().size() : "null"));
         
         if ("Encerrada".equals(ordemServico.getStatus())) {
-            logger.info("📦 OS estava encerrada. Devolvendo peças ao estoque...");
+            logger.info("OS estava encerrada. Devolvendo peças ao estoque...");
             if (ordemServico.getPecasUtilizadas() != null && !ordemServico.getPecasUtilizadas().isEmpty()) {
                 for (tecstock_spring.model.PecaOrdemServico pecaOS : ordemServico.getPecasUtilizadas()) {
                     if (pecaOS.getPeca() != null && pecaOS.getPeca().getFornecedor() != null) {
@@ -442,7 +444,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                             Double precoUnitario = pecaOS.getValorUnitario();
                             String observacoes = "Devolução por desbloqueio de OS " + ordemServico.getNumeroOS();
                             
-                            logger.info("  ↩️ Devolvendo peça " + pecaOS.getPeca().getNome() + 
+                            logger.info("  Devolvendo peça " + pecaOS.getPeca().getNome() + 
                                        " (Código: " + codigoFabricante + "): " + quantidade + " unidades");
                             
                             String numeroNotaFiscal = "OS-" + ordemServico.getNumeroOS() + "-ENTRADA-" + codigoFabricante;
@@ -455,30 +457,30 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                                 observacoes
                             );
                             
-                            logger.info("  ✅ Peça devolvida ao estoque com sucesso");
+                            logger.info("  Peça devolvida ao estoque com sucesso");
                         } catch (Exception e) {
-                            logger.error("  ❌ Erro ao devolver peça " + pecaOS.getPeca().getNome() + 
+                            logger.error("  Erro ao devolver peça " + pecaOS.getPeca().getNome() + 
                                        " ao estoque: " + e.getMessage(), e);
                         }
                     }
                 }
-                logger.info("📦 Processo de devolução concluído");
+                logger.info("Processo de devolução concluído");
             } else {
-                logger.info("📦 Nenhuma peça para devolver ao estoque");
+                logger.info("Nenhuma peça para devolver ao estoque");
             }
         }
 
         if (ordemServico.getChecklistId() != null) {
             try {
-                logger.info("🔓 Reabrindo checklist vinculado ID: " + ordemServico.getChecklistId());
+                logger.info("Reabrindo checklist vinculado ID: " + ordemServico.getChecklistId());
                 boolean checklistReaberto = checklistService.reabrirChecklist(ordemServico.getChecklistId());
                 if (checklistReaberto) {
-                    logger.info("✅ Checklist " + ordemServico.getChecklistId() + " reaberto com sucesso");
+                    logger.info("Checklist " + ordemServico.getChecklistId() + " reaberto com sucesso");
                 } else {
-                    logger.warn("⚠️ Não foi possível reabrir o checklist " + ordemServico.getChecklistId());
+                    logger.warn("Não foi possível reabrir o checklist " + ordemServico.getChecklistId());
                 }
             } catch (Exception e) {
-                logger.error("❌ Erro ao reabrir checklist vinculado: " + e.getMessage());
+                logger.error("Erro ao reabrir checklist vinculado: " + e.getMessage());
             }
         }
         
@@ -487,7 +489,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         
         OrdemServico osSalva = repository.save(ordemServico);
 
-        logger.info("📊 Dados da OS após o desbloqueio:");
+        logger.info("Dados da OS após o desbloqueio:");
         logger.info("  - Serviços: " + (osSalva.getServicosRealizados() != null ? osSalva.getServicosRealizados().size() : "null"));
         logger.info("  - Peças: " + (osSalva.getPecasUtilizadas() != null ? osSalva.getPecasUtilizadas().size() : "null"));
         
@@ -498,14 +500,14 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Override
     public OrdemServico reabrirOS(Long id) {
         OrdemServico ordemServico = buscarPorId(id);
-        logger.info("🔓 Reabrindo OS " + ordemServico.getNumeroOS() + ". Status anterior: " + ordemServico.getStatus());
-        logger.info("📊 Dados PRESERVADOS da OS:");
+        logger.info("Reabrindo OS " + ordemServico.getNumeroOS() + ". Status anterior: " + ordemServico.getStatus());
+        logger.info("Dados PRESERVADOS da OS:");
         logger.info("  - Serviços: " + (ordemServico.getServicosRealizados() != null ? ordemServico.getServicosRealizados().size() : "null"));
         logger.info("  - Peças: " + (ordemServico.getPecasUtilizadas() != null ? ordemServico.getPecasUtilizadas().size() : "null"));
         logger.info("  - Preço Total: R$ " + ordemServico.getPrecoTotal());
         logger.info("  - Desconto Serviços: R$ " + ordemServico.getDescontoServicos());
         logger.info("  - Desconto Peças: R$ " + ordemServico.getDescontoPecas());
-        logger.info("📦 Devolvendo peças ao estoque...");
+        logger.info("Devolvendo peças ao estoque...");
         if (ordemServico.getPecasUtilizadas() != null && !ordemServico.getPecasUtilizadas().isEmpty()) {
             for (tecstock_spring.model.PecaOrdemServico pecaOS : ordemServico.getPecasUtilizadas()) {
                 if (pecaOS.getPeca() != null && pecaOS.getPeca().getFornecedor() != null) {
@@ -515,7 +517,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                         int quantidade = pecaOS.getQuantidade();
                         String observacoes = "Devolução por reabertura de OS " + ordemServico.getNumeroOS();
                         
-                        logger.info("  ↩️ Devolvendo peça " + pecaOS.getPeca().getNome() + 
+                        logger.info("  Devolvendo peça " + pecaOS.getPeca().getNome() + 
                                    " (Código: " + codigoFabricante + "): " + quantidade + " unidades");
 
                         String numeroNotaFiscal = "OS-" + ordemServico.getNumeroOS() + "-ENTRADA-" + codigoFabricante;
@@ -528,16 +530,16 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                             observacoes
                         );
                         
-                        logger.info("  ✅ Peça devolvida ao estoque com sucesso");
+                        logger.info("  Peça devolvida ao estoque com sucesso");
                     } catch (Exception e) {
-                        logger.error("  ❌ Erro ao devolver peça " + pecaOS.getPeca().getNome() + 
+                        logger.error("  Erro ao devolver peça " + pecaOS.getPeca().getNome() + 
                                    " ao estoque: " + e.getMessage(), e);
                     }
                 }
             }
-            logger.info("📦 Processo de devolução concluído");
+            logger.info("Processo de devolução concluído");
         } else {
-            logger.info("📦 Nenhuma peça para devolver ao estoque");
+            logger.info("Nenhuma peça para devolver ao estoque");
         }
 
         ordemServico.setStatus("Aberta");
@@ -545,29 +547,29 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         
         if (ordemServico.getChecklistId() != null) {
             try {
-                logger.info("🔓 Reabrindo checklist vinculado ID: " + ordemServico.getChecklistId());
+                logger.info("Reabrindo checklist vinculado ID: " + ordemServico.getChecklistId());
                 boolean checklistReaberto = checklistService.reabrirChecklist(ordemServico.getChecklistId());
                 if (checklistReaberto) {
-                    logger.info("✅ Checklist " + ordemServico.getChecklistId() + " reaberto com sucesso");
+                    logger.info("Checklist " + ordemServico.getChecklistId() + " reaberto com sucesso");
                 } else {
-                    logger.warn("⚠️ Não foi possível reabrir o checklist " + ordemServico.getChecklistId());
+                    logger.warn("Não foi possível reabrir o checklist " + ordemServico.getChecklistId());
                 }
             } catch (Exception e) {
-                logger.error("❌ Erro ao reabrir checklist vinculado: " + e.getMessage());
+                logger.error("Erro ao reabrir checklist vinculado: " + e.getMessage());
 
             }
         }
 
         OrdemServico osSalva = repository.save(ordemServico);
 
-        logger.info("📊 Dados da OS APÓS reabertura:");
+        logger.info("Dados da OS APÓS reabertura:");
         logger.info("  - Serviços: " + (osSalva.getServicosRealizados() != null ? osSalva.getServicosRealizados().size() : "null"));
         logger.info("  - Peças: " + (osSalva.getPecasUtilizadas() != null ? osSalva.getPecasUtilizadas().size() : "null"));
         logger.info("  - Preço Total: R$ " + osSalva.getPrecoTotal());
         logger.info("  - Desconto Serviços: R$ " + osSalva.getDescontoServicos());
         logger.info("  - Desconto Peças: R$ " + osSalva.getDescontoPecas());
         
-        logger.info("✅ OS " + osSalva.getNumeroOS() + " reaberta com sucesso. Novo status: " + osSalva.getStatus());
+        logger.info("OS " + osSalva.getNumeroOS() + " reaberta com sucesso. Novo status: " + osSalva.getStatus());
         return osSalva;
     }
 }

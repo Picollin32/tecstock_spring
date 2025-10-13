@@ -3,6 +3,7 @@ package tecstock_spring.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import jakarta.validation.Valid;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,21 +27,22 @@ public class UsuarioController {
     Logger logger = Logger.getLogger(UsuarioController.class);
 
     @PostMapping("/api/usuarios/salvar")
-    public ResponseEntity<?> salvar(@RequestBody Usuario usuario) {
-        logger.info("Salvando usuario: " + usuario.getNomeUsuario() + " no controller.");
+    public ResponseEntity<?> salvar(@Valid @RequestBody Usuario usuario) {
+        logger.info("Salvando novo usuario no controller.");
         Usuario usuarioSalvo = service.salvar(usuario);
         return ResponseEntity.ok(convertToDTO(usuarioSalvo));
     }
 
     @GetMapping("/api/usuarios/buscar/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
+        logger.info("Buscando usuario por ID: " + id);
         Usuario usuario = service.buscarPorId(id);
         return ResponseEntity.ok(convertToDTO(usuario));
     }
 
     @GetMapping("/api/usuarios/listarTodos")
     public ResponseEntity<?> listarTodos() {
-        logger.info("Listando usuarios no controller.");
+        logger.info("Listando todos os usuarios no controller.");
         List<Usuario> usuarios = service.listarTodos();
         return ResponseEntity.ok(usuarios.stream()
                 .map(this::convertToDTO)
@@ -48,8 +50,8 @@ public class UsuarioController {
     }
 
     @PutMapping("/api/usuarios/atualizar/{id}")
-    public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody Usuario usuario) {
-        logger.info("Atualizando usuario no controller. ID: " + id + ", usuario: " + usuario.getNomeUsuario());
+    public ResponseEntity<?> atualizar(@PathVariable Long id, @Valid @RequestBody Usuario usuario) {
+        logger.info("Atualizando usuario no controller. ID: " + id);
         Usuario usuarioAtualizado = service.atualizar(id, usuario);
         return ResponseEntity.ok(convertToDTO(usuarioAtualizado));
     }

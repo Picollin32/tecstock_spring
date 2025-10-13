@@ -153,9 +153,7 @@ public class AuditListener {
                 if (valorAntigo != null && valorAntigo.equals(valorNovo)) continue;
 
                 if (chave.equals("createdAt") || chave.equals("updatedAt")) continue;
-                
-                // Em MovimentacaoEstoque, não mostra precoAnterior/precoNovo separadamente
-                // pois essa informação já está nas observações
+
                 if (nomeEntidade.equals("MovimentacaoEstoque") && 
                     (chave.equals("precoAnterior") || chave.equals("precoNovo"))) {
                     continue;
@@ -164,8 +162,7 @@ public class AuditListener {
                 if (!primeiraAlteracao) {
                     descricao.append(", ");
                 }
-                
-                // Formatação especial para campos monetários
+
                 if (chave.equals("precoUnitario") || chave.equals("precoFinal") || 
                     chave.equals("valorUnitario") || chave.equals("valorTotal")) {
                     descricao.append(String.format("%s de R$ %.2f para R$ %.2f", 

@@ -24,7 +24,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginResponseDTO login(LoginRequestDTO loginRequest) {
         String username = loginRequest.getNomeUsuario();
-        logger.info("Tentativa de login para usuário");
+        logger.info("Tentativa de login recebida");
 
         if (rateLimitService.isBlocked(username)) {
             long minutesRemaining = rateLimitService.getBlockedMinutesRemaining(username);
@@ -66,12 +66,12 @@ public class AuthServiceImpl implements AuthService {
                     .nivelAcesso(Integer.valueOf(usuario.getConsultor().getNivelAcesso()))
                     .build();
             
-            logger.info("Usuário vinculado ao consultor ID: " + usuario.getConsultor().getId());
+            logger.info("Usuário ID " + usuario.getId() + " vinculado ao consultor ID: " + usuario.getConsultor().getId());
         } else {
 
             nomeCompleto = usuario.getNomeCompleto() != null ? usuario.getNomeCompleto() : usuario.getNomeUsuario();
             nivelAcesso = usuario.getNivelAcesso();
-            logger.info("Usuário admin sem consultor vinculado");
+            logger.info("Usuário ID " + usuario.getId() + " admin sem consultor vinculado");
         }
 
         String token = jwtUtil.generateToken(usuario.getId(), usuario.getNomeUsuario(), nivelAcesso, consultorId);

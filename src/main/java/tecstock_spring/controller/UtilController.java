@@ -21,7 +21,7 @@ public class UtilController {
 
     @GetMapping("/gerar-senha")
     public String gerarSenhaCriptografada(@RequestParam String senha) {
-        logger.warn("⚠️ ATENÇÃO: Gerando senha criptografada para: " + senha);
+        logger.warn("ATENÇÃO: Gerando senha criptografada para: " + senha);
         String senhaCriptografada = passwordEncoder.encode(senha);
         logger.info("Senha criptografada gerada com sucesso");
         return senhaCriptografada;

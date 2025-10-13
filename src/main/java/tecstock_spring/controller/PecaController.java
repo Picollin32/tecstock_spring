@@ -2,6 +2,7 @@ package tecstock_spring.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import tecstock_spring.dto.AjusteEstoqueDTO;
@@ -45,6 +47,12 @@ public class PecaController {
         logger.info("Buscando peça com código: " + codigo);
         return service.buscarPorCodigo(codigo);
     }
+    
+    @GetMapping("/buscarPorCodigo")
+    public Peca buscarPorCodigoParam(@RequestParam("codigo") String codigo) {
+        logger.info("Buscando peça com código: " + codigo);
+        return service.buscarPorCodigo(codigo);
+    }
 
     @GetMapping("/listarTodas")
     public List<Peca> listarTodos() {
@@ -53,17 +61,23 @@ public class PecaController {
     }
 
     @PutMapping("/atualizar/{id}")
-    public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody Peca peca, @RequestHeader(value = "X-User-Level", required = false) Integer userLevel) {
-        if (userLevel == null || userLevel != 0) {
-            logger.warn("Acesso negado ao editar peça. Nível: " + userLevel);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado. Apenas administradores podem editar peças.");
+    public ResponseEntity<?> atualizar(
+            @PathVariable Long id, 
+            @RequestBody Peca peca, 
+            @RequestHeader(value = "X-User-Level", required = false) Integer userLevel) {
+
+        Peca pecaExistente = service.buscarPorId(id);
+        if (userLevel != null && userLevel != 0) {
+            if (pecaExistente.getQuantidadeEstoque() > 0) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado. Apenas administradores podem editar peças com estoque.");
+            }
         }
-        logger.info("Atualizando peça com ID: " + id);
+        
         return ResponseEntity.ok(service.atualizar(id, peca));
     }
     
     @PostMapping("/ajustar-estoque")
-    public ResponseEntity<?> ajustarEstoque(@RequestBody AjusteEstoqueDTO ajusteDTO, @RequestHeader(value = "X-User-Level", required = false) Integer userLevel) {
+    public ResponseEntity<?> ajustarEstoque(@Valid @RequestBody AjusteEstoqueDTO ajusteDTO, @RequestHeader(value = "X-User-Level", required = false) Integer userLevel) {
         if (userLevel == null || userLevel != 0) {
             logger.warn("Acesso negado ao ajustar estoque. Nível: " + userLevel);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado. Apenas administradores podem ajustar estoque.");

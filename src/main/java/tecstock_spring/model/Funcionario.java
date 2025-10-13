@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Column;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,7 +32,10 @@ public class Funcionario {
 
     private String nome;
     private String telefone;
+    
+    @Email(message = "Email inválido")
     private String email;
+    
     private String cpf;
     private Date dataNascimento;
     private int nivelAcesso;

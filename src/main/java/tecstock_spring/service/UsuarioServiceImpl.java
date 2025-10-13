@@ -93,13 +93,8 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
 
         if (novoUsuario.getSenha() != null && !novoUsuario.getSenha().isEmpty()) {
-
-            if (!novoUsuario.getSenha().matches("^\\$2[ayb]\\$.{56}$")) {
-                String senhaCriptografada = passwordEncoder.encode(novoUsuario.getSenha());
-                usuarioExistente.setSenha(senhaCriptografada);
-            } else {
-                usuarioExistente.setSenha(novoUsuario.getSenha());
-            }
+            String senhaCriptografada = passwordEncoder.encode(novoUsuario.getSenha());
+            usuarioExistente.setSenha(senhaCriptografada);
         }
 
         usuarioExistente.setNomeUsuario(novoUsuario.getNomeUsuario());
@@ -117,7 +112,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
     
     private void validarNomeUsuarioDuplicado(String nomeUsuario, Long idExcluir) {
-        logger.info("Validando Nome de Usuario duplicado: " + nomeUsuario + " (excluindo ID: " + idExcluir + ")");
+        logger.info("Validando Nome de Usuario duplicado (ID excluindo: " + idExcluir + ")");
         
         if (nomeUsuario == null || nomeUsuario.trim().isEmpty()) {
             logger.warn("Nome de Usuario é nulo ou vazio");
@@ -127,18 +122,18 @@ public class UsuarioServiceImpl implements UsuarioService {
         boolean exists;
         if (idExcluir != null) {
             exists = repository.existsByNomeUsuarioAndIdNot(nomeUsuario, idExcluir);
-            logger.info("Verificação para atualização - Existe outro usuario com nome " + nomeUsuario + " (excluindo ID " + idExcluir + "): " + exists);
+            logger.info("Verificação para atualização - Existe outro usuario (excluindo ID " + idExcluir + "): " + exists);
         } else {
             exists = repository.existsByNomeUsuario(nomeUsuario);
-            logger.info("Verificação para criação - Existe usuario com nome " + nomeUsuario + ": " + exists);
+            logger.info("Verificação para criação - Existe usuario: " + exists);
         }
         
         if (exists) {
             String mensagem = "Nome de usuário já cadastrado";
-            logger.error(mensagem + ": " + nomeUsuario);
+            logger.error(mensagem);
             throw new UsuarioDuplicadoException(mensagem);
         }
         
-        logger.info("Validação de Nome de Usuario concluída com sucesso para: " + nomeUsuario);
+        logger.info("Validação de Nome de Usuario concluída com sucesso");
     }
 }

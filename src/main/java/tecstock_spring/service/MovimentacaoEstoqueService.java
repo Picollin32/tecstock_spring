@@ -27,6 +27,8 @@ public interface MovimentacaoEstoqueService {
     
     void processarSaidaPorOrdemServico(String codigoPeca, Long fornecedorId, int quantidade, String numeroOS);
     
+    void removerSaidasDeOrdemServico(String numeroOS);
+    
     List<MovimentacaoEstoque> listarPorOrdemServico(String numeroOS);
     
     boolean verificarNotaFiscalJaUtilizada(String numeroNotaFiscal, Long fornecedorId);

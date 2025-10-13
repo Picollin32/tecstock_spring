@@ -1,5 +1,6 @@
 package tecstock_spring.controller;
 
+import jakarta.validation.Valid;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class AuthController {
     private static final Logger logger = Logger.getLogger(AuthController.class);
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginRequest) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
         try {
             logger.info("Tentativa de login recebida");
             LoginResponseDTO response = authService.login(loginRequest);

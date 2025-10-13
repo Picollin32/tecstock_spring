@@ -178,8 +178,8 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void processarSaidaPorOrdemServico(String codigoPeca, Long fornecedorId, int quantidade, String numeroOS) {
-        logger.info("🎯 MÉTODO CHAMADO: processarSaidaPorOrdemServico");
-        logger.info("🔄 INICIANDO processamento de saída - Peça: " + codigoPeca + 
+        logger.info("MÉTODO CHAMADO: processarSaidaPorOrdemServico");
+        logger.info("INICIANDO processamento de saída - Peça: " + codigoPeca + 
                    " | Quantidade: " + quantidade + " | OS: " + numeroOS + " | Fornecedor ID: " + fornecedorId);
         
         try {
@@ -193,7 +193,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
             
             Peca peca = pecaOptional.get();
             int estoqueAnterior = peca.getQuantidadeEstoque();
-            logger.info("📦 Peça encontrada: " + peca.getNome() + " | Estoque atual: " + estoqueAnterior);
+            logger.info("Peça encontrada: " + peca.getNome() + " | Estoque atual: " + estoqueAnterior);
 
             if (estoqueAnterior < quantidade) {
                 throw new RuntimeException("Estoque insuficiente para a peça " + peca.getNome() + 
@@ -214,7 +214,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
                     .orElseThrow(() -> new RuntimeException("Peça não encontrada após atualização"));
             int novoEstoque = pecaAtualizada.getQuantidadeEstoque();
             
-            logger.info("📉 ESTOQUE ATUALIZADO - Peça: " + peca.getNome() + 
+            logger.info("ESTOQUE ATUALIZADO - Peça: " + peca.getNome() + 
                        " | Estoque anterior: " + estoqueAnterior + 
                        " | Quantidade subtraída: " + quantidade + 
                        " | Novo estoque: " + novoEstoque);
@@ -231,18 +231,18 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
 
             
             MovimentacaoEstoque movimentacaoSalva = movimentacaoEstoqueRepository.save(movimentacaoSaida);
-            logger.info("📝 MOVIMENTAÇÃO REGISTRADA - ID: " + movimentacaoSalva.getId() + 
+            logger.info("MOVIMENTAÇÃO REGISTRADA - ID: " + movimentacaoSalva.getId() + 
                        " | Tipo: SAIDA | Peça: " + codigoPeca + 
                        " | Quantidade: " + quantidade + 
                        " | Preço Unitário: R$ " + String.format("%.2f", peca.getPrecoUnitario()) +
                        " | Nota Fiscal: " + numeroNotaFiscal + 
                        " | OS: " + numeroOS);
             
-            logger.info("✅ SUCESSO - Saída processada completamente para peça " + peca.getNome() + 
+            logger.info("SUCESSO - Saída processada completamente para peça " + peca.getNome() + 
                        " (OS: " + numeroOS + ")");
             
         } catch (Exception e) {
-            logger.error("❌ ERRO ao processar saída da peça " + codigoPeca + " (OS: " + numeroOS + "): " + e.getMessage());
+            logger.error("ERRO ao processar saída da peça " + codigoPeca + " (OS: " + numeroOS + "): " + e.getMessage());
             throw new RuntimeException("Erro ao processar saída da peça: " + e.getMessage());
         }
     }
@@ -250,6 +250,48 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
     @Override
     public List<MovimentacaoEstoque> listarPorOrdemServico(String numeroOS) {
         return movimentacaoEstoqueRepository.findByObservacoesContainingOrderByDataEntradaDesc("OS " + numeroOS);
+    }
+    
+    @Override
+    @Transactional
+    public void removerSaidasDeOrdemServico(String numeroOS) {
+        logger.info("Removendo movimentações de saída antigas da OS: " + numeroOS);
+
+        List<MovimentacaoEstoque> movimentacoes = movimentacaoEstoqueRepository.findAll().stream()
+            .filter(m -> m.getTipoMovimentacao() == MovimentacaoEstoque.TipoMovimentacao.SAIDA &&
+                        m.getObservacoes() != null && 
+                        m.getObservacoes().contains("OS " + numeroOS))
+            .toList();
+        
+        if (!movimentacoes.isEmpty()) {
+            logger.info("Encontradas " + movimentacoes.size() + " movimentações antigas. Devolvendo peças ao estoque...");
+
+            for (MovimentacaoEstoque mov : movimentacoes) {
+                Optional<Peca> pecaOpt = pecaRepository.findByCodigoFabricanteAndFornecedorId(
+                    mov.getCodigoPeca(), 
+                    mov.getFornecedor().getId()
+                );
+                
+                if (pecaOpt.isPresent()) {
+                    Peca peca = pecaOpt.get();
+                    int estoqueAnterior = peca.getQuantidadeEstoque();
+                    
+                    pecaRepository.incrementarEstoqueAtomico(peca.getId(), mov.getQuantidade());
+                    
+                    Peca pecaAtualizada = pecaRepository.findById(peca.getId())
+                        .orElseThrow(() -> new RuntimeException("Peça não encontrada"));
+                    
+                    logger.info("  Devolvida peça " + peca.getNome() + 
+                               " | Qtd: " + mov.getQuantidade() + 
+                               " | Estoque: " + estoqueAnterior + " -> " + pecaAtualizada.getQuantidadeEstoque());
+                }
+            }
+
+            movimentacaoEstoqueRepository.deleteAll(movimentacoes);
+            logger.info("Movimentações antigas removidas e estoque restaurado");
+        } else {
+            logger.info("Nenhuma movimentação antiga encontrada para a OS " + numeroOS);
+        }
     }
     
     @Override

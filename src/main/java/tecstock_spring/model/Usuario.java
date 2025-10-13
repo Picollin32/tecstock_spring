@@ -11,6 +11,9 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Column;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,14 +33,18 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Nome de usuário é obrigatório")
+    @Size(min = 3, max = 50, message = "Nome de usuário deve ter entre 3 e 50 caracteres")
     @Column(unique = true, nullable = false)
     private String nomeUsuario;
     
+    @NotBlank(message = "Senha é obrigatória")
     @Column(nullable = false)
     private String senha;
     
     private String nomeCompleto;
     
+    @NotNull(message = "Nível de acesso é obrigatório")
     @Column(nullable = false)
     private Integer nivelAcesso;
     
