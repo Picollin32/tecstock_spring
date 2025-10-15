@@ -1,5 +1,6 @@
 package tecstock_spring.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -75,9 +76,21 @@ public class Peca {
     
     public void calcularPrecoFinal() {
         if (fornecedor != null && fornecedor.getMargemLucro() != null) {
-            double margemLucro = fornecedor.getMargemLucro();
-            double margemDecimal = margemLucro > 1 ? margemLucro / 100 : margemLucro;
-            this.precoFinal = precoUnitario * (1 + margemDecimal);
+            BigDecimal margemLucro = fornecedor.getMargemLucro();
+            // Se a margem for maior que 1, assume que está em percentual e divide por 100
+            BigDecimal margemDecimal = margemLucro.compareTo(BigDecimal.ONE) > 0 
+                ? margemLucro.divide(new BigDecimal("100"), 4, java.math.RoundingMode.HALF_UP) 
+                : margemLucro;
+            
+            // Converte precoUnitario para BigDecimal para cálculo preciso
+            BigDecimal precoUnitarioBD = BigDecimal.valueOf(precoUnitario);
+            // Calcula: precoUnitario * (1 + margemDecimal)
+            BigDecimal um = BigDecimal.ONE;
+            BigDecimal multiplicador = um.add(margemDecimal);
+            BigDecimal precoFinalBD = precoUnitarioBD.multiply(multiplicador);
+            
+            // Arredonda para 2 casas decimais e converte para double
+            this.precoFinal = precoFinalBD.setScale(2, java.math.RoundingMode.HALF_UP).doubleValue();
         } else {
             this.precoFinal = precoUnitario;
         }

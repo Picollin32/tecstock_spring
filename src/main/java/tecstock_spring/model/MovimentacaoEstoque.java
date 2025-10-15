@@ -1,5 +1,6 @@
 package tecstock_spring.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -110,9 +111,12 @@ public class MovimentacaoEstoque {
         }
 
         if (fornecedor != null && fornecedor.getMargemLucro() != null) {
-            double margemLucro = fornecedor.getMargemLucro();
-            double margemDecimal = margemLucro > 1 ? margemLucro / 100.0 : margemLucro;
-            this.precoFinal = this.precoUnitario * (1 + margemDecimal);
+            BigDecimal margemLucro = fornecedor.getMargemLucro();
+            // Se a margem for maior que 1, assume que está em percentual e divide por 100
+            BigDecimal margemDecimal = margemLucro.compareTo(BigDecimal.ONE) > 0 
+                ? margemLucro.divide(new BigDecimal("100.0")) 
+                : margemLucro;
+            this.precoFinal = this.precoUnitario * (1 + margemDecimal.doubleValue());
         } else {
             this.precoFinal = this.precoUnitario;
         }

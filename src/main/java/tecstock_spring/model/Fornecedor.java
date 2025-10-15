@@ -1,5 +1,6 @@
 package tecstock_spring.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -39,7 +40,8 @@ public class Fornecedor {
     @Email(message = "Email inválido")
     private String email;
     
-    private Double margemLucro;
+    @Column(precision = 10, scale = 4)
+    private BigDecimal margemLucro;
     
     private String rua;
     private String numeroCasa;
