@@ -170,6 +170,32 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(ClienteEmUsoException.class)
+    public ResponseEntity<Map<String, Object>> handleClienteEmUsoException(
+            ClienteEmUsoException ex, WebRequest request) {
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        body.put("error", "Cliente em Uso");
+        
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(FuncionarioEmUsoException.class)
+    public ResponseEntity<Map<String, Object>> handleFuncionarioEmUsoException(
+            FuncionarioEmUsoException ex, WebRequest request) {
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        body.put("error", "Funcionário em Uso");
+        
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(OrdemServicoNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleOrdemServicoNotFoundException(
             OrdemServicoNotFoundException ex, WebRequest request) {

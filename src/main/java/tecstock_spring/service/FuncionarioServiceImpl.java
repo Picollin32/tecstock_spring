@@ -77,38 +77,23 @@ public class FuncionarioServiceImpl implements FuncionarioService {
         boolean emChecklistComoConsultor = checklistRepository.existsByConsultorId(id);
 
         if (emOrdemComoMecanico) {
-            String motivo = ordemServicoRepository.findFirstByMecanicoIdOrderByDataHoraDesc(id)
-                    .map(os -> "OS nº " + os.getNumeroOS())
-                    .orElse("uma Ordem de Serviço");
-            throw new FuncionarioEmUsoException("Funcionário não pode ser excluído: está em uso como mecânico em " + motivo + ".");
+            throw new FuncionarioEmUsoException("Funcionário não pode ser excluído pois está vinculado como mecânico em uma Ordem de Serviço");
         }
 
         if (emOrdemComoConsultor) {
-            String motivo = ordemServicoRepository.findFirstByConsultorIdOrderByDataHoraDesc(id)
-                    .map(os -> "OS nº " + os.getNumeroOS())
-                    .orElse("uma Ordem de Serviço");
-            throw new FuncionarioEmUsoException("Funcionário não pode ser excluído: está em uso como consultor em " + motivo + ".");
+            throw new FuncionarioEmUsoException("Funcionário não pode ser excluído pois está vinculado como consultor em uma Ordem de Serviço");
         }
 
         if (emChecklistComoConsultor) {
-            String motivo = checklistRepository.findFirstByConsultorIdOrderByCreatedAtDesc(id)
-                    .map(c -> "Checklist id " + c.getId())
-                    .orElse("um Checklist");
-            throw new FuncionarioEmUsoException("Funcionário não pode ser excluído: está em uso como consultor em " + motivo + ".");
+            throw new FuncionarioEmUsoException("Funcionário não pode ser excluído pois está vinculado como consultor em um Checklist");
         }
 
         if (emOrcamentoComoMecanico) {
-            String motivo = orcamentoRepository.findFirstByMecanicoIdOrderByDataHoraDesc(id)
-                    .map(o -> "Orçamento nº " + o.getNumeroOrcamento())
-                    .orElse("um Orçamento");
-            throw new FuncionarioEmUsoException("Funcionário não pode ser excluído: está em uso como mecânico em " + motivo + ".");
+            throw new FuncionarioEmUsoException("Funcionário não pode ser excluído pois está vinculado como mecânico em um Orçamento");
         }
 
         if (emOrcamentoComoConsultor) {
-            String motivo = orcamentoRepository.findFirstByConsultorIdOrderByDataHoraDesc(id)
-                    .map(o -> "Orçamento nº " + o.getNumeroOrcamento())
-                    .orElse("um Orçamento");
-            throw new FuncionarioEmUsoException("Funcionário não pode ser excluído: está em uso como consultor em " + motivo + ".");
+            throw new FuncionarioEmUsoException("Funcionário não pode ser excluído pois está vinculado como consultor em um Orçamento");
         }
 
         repository.deleteById(id);

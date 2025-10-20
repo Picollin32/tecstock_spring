@@ -75,24 +75,15 @@ public class ClienteServiceImpl implements ClienteService {
         boolean temChecklist = checklistRepository.existsByClienteCpf(cpf);
 
         if (temOrdem) {
-            String motivo = ordemServicoRepository.findFirstByClienteCpfOrderByDataHoraDesc(cpf)
-                    .map(os -> "OS nº " + os.getNumeroOS())
-                    .orElse("uma Ordem de Serviço");
-            throw new ClienteEmUsoException("Cliente não pode ser excluído: está em uso em " + motivo + " (CPF: " + cpf + ")");
+            throw new ClienteEmUsoException("Cliente não pode ser excluído pois está vinculado a uma Ordem de Serviço");
         }
 
         if (temChecklist) {
-            String motivo = checklistRepository.findFirstByClienteCpfOrderByCreatedAtDesc(cpf)
-                    .map(c -> "Checklist id " + c.getId())
-                    .orElse("um Checklist");
-            throw new ClienteEmUsoException("Cliente não pode ser excluído: está em uso em " + motivo + " (CPF: " + cpf + ")");
+            throw new ClienteEmUsoException("Cliente não pode ser excluído pois está vinculado a um Checklist");
         }
 
         if (temOrcamento) {
-            String motivo = orcamentoRepository.findFirstByClienteCpfOrderByDataHoraDesc(cpf)
-                    .map(o -> "Orçamento nº " + o.getNumeroOrcamento())
-                    .orElse("um Orçamento");
-            throw new ClienteEmUsoException("Cliente não pode ser excluído: está em uso em " + motivo + " (CPF: " + cpf + ")");
+            throw new ClienteEmUsoException("Cliente não pode ser excluído pois está vinculado a um Orçamento");
         }
 
         repository.deleteById(id);
