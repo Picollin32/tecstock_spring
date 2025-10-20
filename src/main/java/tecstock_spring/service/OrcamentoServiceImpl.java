@@ -97,6 +97,7 @@ public class OrcamentoServiceImpl implements OrcamentoService {
         orcamentoExistente.setGarantiaMeses(novoOrcamento.getGarantiaMeses());
         orcamentoExistente.setTipoPagamento(novoOrcamento.getTipoPagamento());
         orcamentoExistente.setNumeroParcelas(novoOrcamento.getNumeroParcelas());
+        orcamentoExistente.setPrazoFiadoDias(novoOrcamento.getPrazoFiadoDias());
         orcamentoExistente.setMecanico(novoOrcamento.getMecanico());
         orcamentoExistente.setConsultor(novoOrcamento.getConsultor());
         orcamentoExistente.setObservacoes(novoOrcamento.getObservacoes());

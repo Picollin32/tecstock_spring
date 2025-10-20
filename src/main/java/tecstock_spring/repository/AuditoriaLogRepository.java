@@ -31,7 +31,12 @@ public interface AuditoriaLogRepository extends JpaRepository<AuditoriaLog, Long
 
     @Query(value = "SELECT * FROM auditoria_log a WHERE " +
            "(CAST(:usuario AS TEXT) IS NULL OR :usuario = '' OR a.usuario = :usuario) AND " +
-           "(CAST(:entidade AS TEXT) IS NULL OR :entidade = '' OR a.entidade = :entidade) AND " +
+           "(CAST(:entidade AS TEXT) IS NULL OR :entidade = '' OR " +
+           "  CASE WHEN POSITION(',' IN :entidade) > 0 THEN " +
+           "    a.entidade = ANY(STRING_TO_ARRAY(:entidade, ',')) " +
+           "  ELSE " +
+           "    a.entidade = :entidade " +
+           "  END) AND " +
            "(CAST(:operacao AS TEXT) IS NULL OR :operacao = '' OR a.operacao = :operacao) AND " +
            "(CAST(:entidadeId AS BIGINT) IS NULL OR a.entidade_id = CAST(:entidadeId AS BIGINT)) AND " +
            "(CAST(:dataInicio AS TIMESTAMP) IS NULL OR a.data_hora >= CAST(:dataInicio AS TIMESTAMP)) AND " +

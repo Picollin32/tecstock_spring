@@ -112,7 +112,6 @@ public class MovimentacaoEstoque {
 
         if (fornecedor != null && fornecedor.getMargemLucro() != null) {
             BigDecimal margemLucro = fornecedor.getMargemLucro();
-            // Se a margem for maior que 1, assume que está em percentual e divide por 100
             BigDecimal margemDecimal = margemLucro.compareTo(BigDecimal.ONE) > 0 
                 ? margemLucro.divide(new BigDecimal("100.0")) 
                 : margemLucro;

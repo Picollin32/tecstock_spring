@@ -122,10 +122,17 @@ public class RelatorioService {
                 .count();
         int canceladas = 0;
 
+        List<String> numerosOSEncerradas = ordens.stream()
+                .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()))
+                .map(OrdemServico::getNumeroOS)
+                .collect(Collectors.toList());
+
         List<ServicoOrdemServico> servicosRealizados = servicoOrdemServicoRepository.findAll().stream()
                 .filter(s -> s.getDataRealizacao() != null &&
                         !s.getDataRealizacao().toLocalDate().isBefore(dataInicio) &&
-                        !s.getDataRealizacao().toLocalDate().isAfter(dataFim))
+                        !s.getDataRealizacao().toLocalDate().isAfter(dataFim) &&
+                        s.getNumeroOS() != null &&
+                        numerosOSEncerradas.contains(s.getNumeroOS()))
                 .collect(Collectors.toList());
 
         BigDecimal valorTotalServicos = servicosRealizados.stream()
@@ -319,10 +326,23 @@ public class RelatorioService {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        List<OrdemServico> ordensFinalizadas = ordemServicoRepository.findAll().stream()
+                .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) && 
+                        os.getDataHoraEncerramento() != null &&
+                        !os.getDataHoraEncerramento().toLocalDate().isBefore(dataInicio) && 
+                        !os.getDataHoraEncerramento().toLocalDate().isAfter(dataFim))
+                .collect(Collectors.toList());
+
+        List<String> numerosOSEncerradas = ordensFinalizadas.stream()
+                .map(OrdemServico::getNumeroOS)
+                .collect(Collectors.toList());
+
         List<ServicoOrdemServico> servicosRealizados = servicoOrdemServicoRepository.findAll().stream()
                 .filter(s -> s.getDataRealizacao() != null &&
                         !s.getDataRealizacao().toLocalDate().isBefore(dataInicio) &&
-                        !s.getDataRealizacao().toLocalDate().isAfter(dataFim))
+                        !s.getDataRealizacao().toLocalDate().isAfter(dataFim) &&
+                        s.getNumeroOS() != null &&
+                        numerosOSEncerradas.contains(s.getNumeroOS()))
                 .collect(Collectors.toList());
 
         BigDecimal receitaServicos = servicosRealizados.stream()
@@ -343,13 +363,6 @@ public class RelatorioService {
                     return valor.multiply(BigDecimal.valueOf(qtd));
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        List<OrdemServico> ordensFinalizadas = ordemServicoRepository.findAll().stream()
-                .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) && 
-                        os.getDataHoraEncerramento() != null &&
-                        !os.getDataHoraEncerramento().toLocalDate().isBefore(dataInicio) && 
-                        !os.getDataHoraEncerramento().toLocalDate().isAfter(dataFim))
-                .collect(Collectors.toList());
 
         BigDecimal descontosPecas = ordensFinalizadas.stream()
                 .map(os -> os.getDescontoPecas() != null ? BigDecimal.valueOf(os.getDescontoPecas()) : BigDecimal.ZERO)

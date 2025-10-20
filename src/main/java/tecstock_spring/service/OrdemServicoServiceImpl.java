@@ -30,6 +30,18 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Override
     public OrdemServico salvar(OrdemServico ordemServico) {
         boolean isNovaOS = ordemServico.getId() == null;
+
+        // Validar checklist apenas se NÃO for proveniente de orçamento
+        if (ordemServico.getChecklistId() == null && ordemServico.getOrcamentoOrigemId() == null) {
+            logger.error("Tentativa de salvar OS sem checklist vinculado");
+            throw new IllegalArgumentException("Não é permitido salvar uma Ordem de Serviço sem um Checklist vinculado. Por favor, selecione um checklist antes de salvar.");
+        }
+        
+        if (ordemServico.getChecklistId() != null) {
+            logger.info("Validação de checklist: OK - Checklist ID: " + ordemServico.getChecklistId());
+        } else {
+            logger.info("OS criada a partir do orçamento " + ordemServico.getNumeroOrcamentoOrigem() + " - Checklist será exigido ao encerrar");
+        }
         
         if (isNovaOS && (ordemServico.getNumeroOS() == null || ordemServico.getNumeroOS().isEmpty())) {
             Integer max = repository.findAll().stream()
@@ -106,6 +118,18 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     public OrdemServico atualizar(Long id, OrdemServico novaOrdemServico) {
         OrdemServico ordemServicoExistente = buscarPorId(id);
 
+        // Validar checklist apenas se NÃO for proveniente de orçamento
+        if (novaOrdemServico.getChecklistId() == null && ordemServicoExistente.getOrcamentoOrigemId() == null) {
+            logger.error("Tentativa de atualizar OS ID: " + id + " sem checklist vinculado");
+            throw new IllegalArgumentException("Não é permitido atualizar uma Ordem de Serviço sem um Checklist vinculado. Por favor, selecione um checklist antes de salvar.");
+        }
+        
+        if (novaOrdemServico.getChecklistId() != null) {
+            logger.info("Validação de checklist na atualização: OK - Checklist ID: " + novaOrdemServico.getChecklistId());
+        } else {
+            logger.info("OS proveniente de orçamento - Checklist será exigido ao encerrar");
+        }
+
         List<tecstock_spring.model.PecaOrdemServico> pecasAnteriores = new java.util.ArrayList<>();
         if (ordemServicoExistente.getPecasUtilizadas() != null) {
             for (tecstock_spring.model.PecaOrdemServico peca : ordemServicoExistente.getPecasUtilizadas()) {
@@ -132,6 +156,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         ordemServicoExistente.setGarantiaMeses(novaOrdemServico.getGarantiaMeses());
         ordemServicoExistente.setTipoPagamento(novaOrdemServico.getTipoPagamento());
         ordemServicoExistente.setNumeroParcelas(novaOrdemServico.getNumeroParcelas());
+        ordemServicoExistente.setPrazoFiadoDias(novaOrdemServico.getPrazoFiadoDias());
+        ordemServicoExistente.setFiadoPago(novaOrdemServico.getFiadoPago());
         ordemServicoExistente.setMecanico(novaOrdemServico.getMecanico());
         ordemServicoExistente.setConsultor(novaOrdemServico.getConsultor());
         ordemServicoExistente.setObservacoes(novaOrdemServico.getObservacoes());
@@ -226,7 +252,13 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             logger.warn("Tentativa de fechar OS já encerrada: " + ordemServico.getNumeroOS());
             return ordemServico;
         }
+
+        if (ordemServico.getChecklistId() == null) {
+            logger.error("Tentativa de fechar OS ID: " + id + " (Número: " + ordemServico.getNumeroOS() + ") sem checklist vinculado");
+            throw new IllegalArgumentException("Não é permitido fechar uma Ordem de Serviço sem um Checklist vinculado. Por favor, vincule um checklist antes de fechar a OS.");
+        }
         
+        logger.info("Validação de checklist no fechamento: OK - Checklist ID: " + ordemServico.getChecklistId());
         logger.info("OS válida para fechamento. Prosseguindo...");
 
         ordemServico.setStatus("Encerrada");
@@ -433,41 +465,9 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         logger.info("  - Peças: " + (ordemServico.getPecasUtilizadas() != null ? ordemServico.getPecasUtilizadas().size() : "null"));
         
         if ("Encerrada".equals(ordemServico.getStatus())) {
-            logger.info("OS estava encerrada. Devolvendo peças ao estoque...");
-            if (ordemServico.getPecasUtilizadas() != null && !ordemServico.getPecasUtilizadas().isEmpty()) {
-                for (tecstock_spring.model.PecaOrdemServico pecaOS : ordemServico.getPecasUtilizadas()) {
-                    if (pecaOS.getPeca() != null && pecaOS.getPeca().getFornecedor() != null) {
-                        try {
-                            String codigoFabricante = pecaOS.getPeca().getCodigoFabricante();
-                            Long fornecedorId = pecaOS.getPeca().getFornecedor().getId();
-                            int quantidade = pecaOS.getQuantidade();
-                            Double precoUnitario = pecaOS.getValorUnitario();
-                            String observacoes = "Devolução por desbloqueio de OS " + ordemServico.getNumeroOS();
-                            
-                            logger.info("  Devolvendo peça " + pecaOS.getPeca().getNome() + 
-                                       " (Código: " + codigoFabricante + "): " + quantidade + " unidades");
-                            
-                            String numeroNotaFiscal = "OS-" + ordemServico.getNumeroOS() + "-ENTRADA-" + codigoFabricante;
-                            movimentacaoEstoqueService.registrarEntradaSemValidacaoNota(
-                                codigoFabricante,
-                                fornecedorId,
-                                quantidade,
-                                precoUnitario,
-                                numeroNotaFiscal,
-                                observacoes
-                            );
-                            
-                            logger.info("  Peça devolvida ao estoque com sucesso");
-                        } catch (Exception e) {
-                            logger.error("  Erro ao devolver peça " + pecaOS.getPeca().getNome() + 
-                                       " ao estoque: " + e.getMessage(), e);
-                        }
-                    }
-                }
-                logger.info("Processo de devolução concluído");
-            } else {
-                logger.info("Nenhuma peça para devolver ao estoque");
-            }
+            logger.info("OS estava encerrada. Removendo movimentações de saída antigas e devolvendo peças ao estoque...");
+            movimentacaoEstoqueService.removerSaidasDeOrdemServico(ordemServico.getNumeroOS());
+            logger.info("Movimentações de saída removidas e peças devolvidas ao estoque com sucesso");
         }
 
         if (ordemServico.getChecklistId() != null) {
@@ -507,40 +507,10 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         logger.info("  - Preço Total: R$ " + ordemServico.getPrecoTotal());
         logger.info("  - Desconto Serviços: R$ " + ordemServico.getDescontoServicos());
         logger.info("  - Desconto Peças: R$ " + ordemServico.getDescontoPecas());
-        logger.info("Devolvendo peças ao estoque...");
-        if (ordemServico.getPecasUtilizadas() != null && !ordemServico.getPecasUtilizadas().isEmpty()) {
-            for (tecstock_spring.model.PecaOrdemServico pecaOS : ordemServico.getPecasUtilizadas()) {
-                if (pecaOS.getPeca() != null && pecaOS.getPeca().getFornecedor() != null) {
-                    try {
-                        String codigoFabricante = pecaOS.getPeca().getCodigoFabricante();
-                        Long fornecedorId = pecaOS.getPeca().getFornecedor().getId();
-                        int quantidade = pecaOS.getQuantidade();
-                        String observacoes = "Devolução por reabertura de OS " + ordemServico.getNumeroOS();
-                        
-                        logger.info("  Devolvendo peça " + pecaOS.getPeca().getNome() + 
-                                   " (Código: " + codigoFabricante + "): " + quantidade + " unidades");
-
-                        String numeroNotaFiscal = "OS-" + ordemServico.getNumeroOS() + "-ENTRADA-" + codigoFabricante;
-                        movimentacaoEstoqueService.registrarEntradaSemValidacaoNota(
-                            codigoFabricante,
-                            fornecedorId,
-                            quantidade,
-                            null,
-                            numeroNotaFiscal,
-                            observacoes
-                        );
-                        
-                        logger.info("  Peça devolvida ao estoque com sucesso");
-                    } catch (Exception e) {
-                        logger.error("  Erro ao devolver peça " + pecaOS.getPeca().getNome() + 
-                                   " ao estoque: " + e.getMessage(), e);
-                    }
-                }
-            }
-            logger.info("Processo de devolução concluído");
-        } else {
-            logger.info("Nenhuma peça para devolver ao estoque");
-        }
+        
+        logger.info("Removendo movimentações de saída antigas e devolvendo peças ao estoque...");
+        movimentacaoEstoqueService.removerSaidasDeOrdemServico(ordemServico.getNumeroOS());
+        logger.info("Movimentações de saída removidas e peças devolvidas ao estoque com sucesso");
 
         ordemServico.setStatus("Aberta");
         ordemServico.setDataHoraEncerramento(null);
