@@ -31,7 +31,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     public OrdemServico salvar(OrdemServico ordemServico) {
         boolean isNovaOS = ordemServico.getId() == null;
 
-        // Validar checklist apenas se NÃO for proveniente de orçamento
         if (ordemServico.getChecklistId() == null && ordemServico.getOrcamentoOrigemId() == null) {
             logger.error("Tentativa de salvar OS sem checklist vinculado");
             throw new IllegalArgumentException("Não é permitido salvar uma Ordem de Serviço sem um Checklist vinculado. Por favor, selecione um checklist antes de salvar.");
@@ -118,7 +117,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     public OrdemServico atualizar(Long id, OrdemServico novaOrdemServico) {
         OrdemServico ordemServicoExistente = buscarPorId(id);
 
-        // Validar checklist apenas se NÃO for proveniente de orçamento
         if (novaOrdemServico.getChecklistId() == null && ordemServicoExistente.getOrcamentoOrigemId() == null) {
             logger.error("Tentativa de atualizar OS ID: " + id + " sem checklist vinculado");
             throw new IllegalArgumentException("Não é permitido atualizar uma Ordem de Serviço sem um Checklist vinculado. Por favor, selecione um checklist antes de salvar.");
@@ -493,6 +491,10 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         logger.info("  - Serviços: " + (osSalva.getServicosRealizados() != null ? osSalva.getServicosRealizados().size() : "null"));
         logger.info("  - Peças: " + (osSalva.getPecasUtilizadas() != null ? osSalva.getPecasUtilizadas().size() : "null"));
         
+        logger.info("Atualizando contadores de serviços e peças em uso após desbloqueio");
+        servicoService.atualizarUnidadesUsadas();
+        pecaService.atualizarUnidadesUsadas();
+        
         logger.info("OS desbloqueada com sucesso. Novo status: " + osSalva.getStatus());
         return osSalva;
     }
@@ -538,6 +540,10 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         logger.info("  - Preço Total: R$ " + osSalva.getPrecoTotal());
         logger.info("  - Desconto Serviços: R$ " + osSalva.getDescontoServicos());
         logger.info("  - Desconto Peças: R$ " + osSalva.getDescontoPecas());
+        
+        logger.info("Atualizando contadores de serviços e peças em uso após reabertura");
+        servicoService.atualizarUnidadesUsadas();
+        pecaService.atualizarUnidadesUsadas();
         
         logger.info("OS " + osSalva.getNumeroOS() + " reaberta com sucesso. Novo status: " + osSalva.getStatus());
         return osSalva;
