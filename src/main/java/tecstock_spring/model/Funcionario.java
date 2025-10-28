@@ -1,66 +1,30 @@
 package tecstock_spring.model;
 
-import java.sql.Date;
-import java.time.LocalDateTime;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Column;
-import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.envers.Audited;
 import tecstock_spring.util.AuditListener;
 
 @Entity
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 @Audited
 @EntityListeners(AuditListener.class)
-public class Funcionario {
+public class Funcionario extends Pessoa {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    private String nome;
-    private String telefone;
     
-    @Email(message = "Email inválido")
-    private String email;
-    
-    private String cpf;
-    private Date dataNascimento;
     private int nivelAcesso;
-    
-    private String rua;
-    private String numeroCasa;
-    private String bairro;
-    private String cidade;
-    private String uf;
-    
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-    
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-    
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-    }
-    
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }
