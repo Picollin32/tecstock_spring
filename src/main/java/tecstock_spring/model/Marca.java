@@ -31,7 +31,7 @@ public class Marca {
 
     private String marca;
     
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     
     @Column(name = "updated_at")
@@ -42,7 +42,6 @@ public class Marca {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
-
     }
     
     @PreUpdate

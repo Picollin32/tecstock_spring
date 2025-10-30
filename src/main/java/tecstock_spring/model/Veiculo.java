@@ -43,7 +43,7 @@ public class Veiculo {
     @ManyToOne
     private Marca marca;
     
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     
     @Column(name = "updated_at")
@@ -54,12 +54,10 @@ public class Veiculo {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
-        updatedAt = null;
     }
     
     @PreUpdate
     protected void onUpdate() {
-
         updatedAt = LocalDateTime.now();
     }
 }

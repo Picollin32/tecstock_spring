@@ -24,6 +24,10 @@ public class UsuarioServiceImpl implements UsuarioService {
     public Usuario salvar(Usuario usuario) {
         validarNomeUsuarioDuplicado(usuario.getNomeUsuario(), null);
 
+        if (usuario.getSenha() == null || usuario.getSenha().trim().isEmpty()) {
+            throw new RuntimeException("Senha é obrigatória");
+        }
+
         if (usuario.getNivelAcesso() == null) {
             throw new RuntimeException("Nível de acesso não informado");
         }

@@ -34,7 +34,7 @@ public abstract class Pessoa {
     private String cidade;
     private String uf;
     
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     
     @Column(name = "updated_at")

@@ -30,7 +30,7 @@ public class Fabricante {
     
     private String nome;
     
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     
     @Column(name = "updated_at")
@@ -41,8 +41,6 @@ public class Fabricante {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
-
-        updatedAt = null;
     }
     
     @PreUpdate
