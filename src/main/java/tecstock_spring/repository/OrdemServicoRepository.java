@@ -40,5 +40,8 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
     
     List<OrdemServico> findAllByOrderByCreatedAtDesc();
     
+    @Query("SELECT os FROM OrdemServico os ORDER BY CAST(os.numeroOS AS int) ASC")
+    List<OrdemServico> findAllOrderByNumeroOSAsc();
+    
     List<OrdemServico> findByStatusAndPrazoFiadoDiasIsNotNullOrderByDataHoraEncerramentoAsc(String status);
 }

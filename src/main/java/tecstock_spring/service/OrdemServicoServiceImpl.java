@@ -83,8 +83,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
     @Override
     public List<OrdemServico> listarTodos() {
-        List<OrdemServico> ordensServico = repository.findAllByOrderByCreatedAtDesc();
-        logger.info(ordensServico.size() + " ordens de serviço encontradas.");
+        List<OrdemServico> ordensServico = repository.findAllOrderByNumeroOSAsc();
+        logger.info(ordensServico.size() + " ordens de serviço encontradas (ordenadas por numeroOS crescente).");
         return ordensServico;
     }
     

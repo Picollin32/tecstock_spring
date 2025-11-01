@@ -55,8 +55,8 @@ public class OrcamentoServiceImpl implements OrcamentoService {
 
     @Override
     public List<Orcamento> listarTodos() {
-        List<Orcamento> orcamentos = repository.findAllByOrderByCreatedAtDesc();
-        logger.info(orcamentos.size() + " orçamentos encontrados.");
+        List<Orcamento> orcamentos = repository.findAllOrderByNumeroOrcamentoAsc();
+        logger.info(orcamentos.size() + " orçamentos encontrados (ordenados por numeroOrcamento crescente).");
         return orcamentos;
     }
     

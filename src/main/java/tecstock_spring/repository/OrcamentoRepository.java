@@ -15,6 +15,9 @@ public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
     
     List<Orcamento> findAllByOrderByCreatedAtDesc();
     
+    @org.springframework.data.jpa.repository.Query("SELECT o FROM Orcamento o ORDER BY CAST(o.numeroOrcamento AS int) ASC")
+    List<Orcamento> findAllOrderByNumeroOrcamentoAsc();
+    
     List<Orcamento> findByClienteCpfOrderByDataHoraDesc(String clienteCpf);
     java.util.Optional<Orcamento> findFirstByClienteCpfOrderByDataHoraDesc(String clienteCpf);
     

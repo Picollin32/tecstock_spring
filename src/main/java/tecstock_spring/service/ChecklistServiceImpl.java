@@ -42,14 +42,9 @@ public class ChecklistServiceImpl implements ChecklistService {
         List<Checklist> checklists = repository.findAll();
 
         if (checklists != null && !checklists.isEmpty()) {
-            checklists.sort((a, b) -> {
-                if (a.getCreatedAt() == null && b.getCreatedAt() == null) return 0;
-                if (a.getCreatedAt() == null) return 1;
-                if (b.getCreatedAt() == null) return -1;
-                return a.getCreatedAt().compareTo(b.getCreatedAt());
-            });
-            logger.info(checklists.size() + " checklists encontrados (ordenados por createdAt crescente).");
-            System.out.println(checklists.size() + " checklists encontrados (ordenados por createdAt crescente).");
+            checklists.sort((a, b) -> Integer.compare(a.getNumeroChecklist(), b.getNumeroChecklist()));
+            logger.info(checklists.size() + " checklists encontrados (ordenados por numeroChecklist crescente).");
+            System.out.println(checklists.size() + " checklists encontrados (ordenados por numeroChecklist crescente).");
         } else {
             logger.info("Nenhuma checklist cadastrada");
             System.out.println("Nenhuma checklist cadastrada");
