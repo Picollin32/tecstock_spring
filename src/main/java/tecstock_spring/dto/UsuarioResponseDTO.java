@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class UsuarioResponseDTO {
     private Long id;
     private String nomeUsuario;
+    private Integer nivelAcesso;
     private Funcionario consultor;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
