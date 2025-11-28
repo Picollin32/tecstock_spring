@@ -35,8 +35,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (usuario.getNivelAcesso() != 0 && usuario.getNivelAcesso() != 1) {
             throw new RuntimeException("Nível de acesso inválido. Use 0 (Admin) ou 1 (Consultor)");
         }
-        
-        // Consultor (nivelAcesso = 1) deve obrigatoriamente ter consultor atrelado
+
         if (usuario.getNivelAcesso() == 1) {
             if (usuario.getConsultor() == null || usuario.getConsultor().getId() == null) {
                 throw new RuntimeException("Usuário do tipo Consultor deve ter um consultor atrelado");
@@ -51,7 +50,7 @@ public class UsuarioServiceImpl implements UsuarioService {
             
             usuario.setConsultor(consultor);
         }
-        // Admin (nivelAcesso = 0) pode não ter consultor atrelado
+
 
         String senhaCriptografada = passwordEncoder.encode(usuario.getSenha());
         usuario.setSenha(senhaCriptografada);
@@ -92,7 +91,6 @@ public class UsuarioServiceImpl implements UsuarioService {
             usuarioExistente.setNivelAcesso(novoUsuario.getNivelAcesso());
         }
 
-        // Consultor (nivelAcesso = 1) deve obrigatoriamente ter consultor atrelado
         Integer nivelAcessoFinal = novoUsuario.getNivelAcesso() != null ? novoUsuario.getNivelAcesso() : usuarioExistente.getNivelAcesso();
         
         if (nivelAcessoFinal == 1) {
@@ -111,7 +109,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                 usuarioExistente.setConsultor(consultor);
             }
         } else if (novoUsuario.getConsultor() != null && novoUsuario.getConsultor().getId() != null) {
-            // Admin pode ter consultor atrelado opcionalmente
+
             Funcionario consultor = funcionarioRepository.findById(novoUsuario.getConsultor().getId())
                     .orElseThrow(() -> new RuntimeException("Consultor não encontrado"));
             
