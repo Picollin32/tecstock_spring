@@ -4279,3 +4279,115 @@
 2025-12-09 09:40:48,678 [http-nio-8081-exec-6] INFO  tecstock_spring.service.OrcamentoServiceImpl - 1 orçamentos encontrados (ordenados por numeroOrcamento crescente).
 2025-12-09 09:40:48,686 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.FuncionarioController - 6 funcionarios encontrados.
 2025-12-09 09:40:48,703 [http-nio-8081-exec-1] INFO  tecstock_spring.service.OrdemServicoServiceImpl - 2 ordens de serviço encontradas (ordenadas por numeroOS crescente).
+2025-12-09 17:20:35,332 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.AuthController - Tentativa de login recebida
+2025-12-09 17:20:35,353 [http-nio-8081-exec-2] INFO  tecstock_spring.service.AuthServiceImpl - Tentativa de login recebida
+2025-12-09 17:20:35,762 [http-nio-8081-exec-2] INFO  tecstock_spring.service.AuthServiceImpl - Usuário ID 1 admin sem consultor vinculado
+2025-12-09 17:20:35,805 [http-nio-8081-exec-2] INFO  tecstock_spring.service.AuthServiceImpl - Login realizado com sucesso - ID: 1 (Nível: 0)
+2025-12-09 17:20:35,806 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.AuthController - Login bem-sucedido
+2025-12-09 17:20:36,207 [http-nio-8081-exec-10] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:36,207 [http-nio-8081-exec-1] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:36,208 [http-nio-8081-exec-3] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:36,215 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.MarcaController - Listando marcas no controller.
+2025-12-09 17:20:36,215 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-12-09 17:20:36,215 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-12-09 17:20:36,215 [http-nio-8081-exec-9] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:36,215 [http-nio-8081-exec-2] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:36,220 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-12-09 17:20:36,220 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.AgendamentoController - Listando agendamentos no controller.
+2025-12-09 17:20:36,221 [http-nio-8081-exec-7] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:36,224 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.FabricanteController - Listando fabricantes no controller.
+2025-12-09 17:20:36,280 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.FabricanteController - 12 fabricantes encontrados.
+2025-12-09 17:20:36,290 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.AgendamentoController - 3 agendamentos encontrados.
+2025-12-09 17:20:36,297 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.ClienteController - 30 clientes encontrados.
+2025-12-09 17:20:36,303 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.MarcaController - 12 marcas encontrados.
+2025-12-09 17:20:36,311 [http-nio-8081-exec-6] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:36,315 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ServicoController - Listando serviços no controller.
+2025-12-09 17:20:36,325 [http-nio-8081-exec-4] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:36,326 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.ChecklistController - 4 checklists encontrados (ordenados por numeroChecklist crescente).
+2025-12-09 17:20:36,332 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.FornecedorController - Listando fornecedores no controller.
+2025-12-09 17:20:36,340 [http-nio-8081-exec-5] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:36,348 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.ServicoController - 4 serviços encontrados.
+2025-12-09 17:20:36,348 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.PecaController - Listando todas as peças.
+2025-12-09 17:20:36,351 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.FornecedorController - 9 fornecedores encontrados.
+2025-12-09 17:20:36,362 [http-nio-8081-exec-8] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:36,369 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.FuncionarioController - Listando funcionarios no controller.
+2025-12-09 17:20:36,379 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.PecaController - 8 peças encontradas.
+2025-12-09 17:20:36,387 [http-nio-8081-exec-7] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:36,392 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.TipoPagamentoController - Listando tipos de pagamento no controller.
+2025-12-09 17:20:36,404 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.FuncionarioController - 6 funcionarios encontrados.
+2025-12-09 17:20:36,407 [http-nio-8081-exec-7] INFO  tecstock_spring.service.TipoPagamentoServiceImpl - 5 tipos de pagamento encontrados.
+2025-12-09 17:20:36,415 [http-nio-8081-exec-9] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:36,415 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.VeiculoController - 34 veículos encontrados.
+2025-12-09 17:20:36,420 [http-nio-8081-exec-4] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:36,422 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.OrdemServicoController - Listando todas as ordens de serviço no controller.
+2025-12-09 17:20:36,425 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.OrcamentoController - Listando todos os orçamentos no controller.
+2025-12-09 17:20:36,434 [http-nio-8081-exec-1] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:36,511 [http-nio-8081-exec-4] INFO  tecstock_spring.service.OrcamentoServiceImpl - 1 orçamentos encontrados (ordenados por numeroOrcamento crescente).
+2025-12-09 17:20:36,518 [http-nio-8081-exec-9] INFO  tecstock_spring.service.OrdemServicoServiceImpl - 2 ordens de serviço encontradas (ordenadas por numeroOS crescente).
+2025-12-09 17:20:41,480 [http-nio-8081-exec-6] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:41,486 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.FuncionarioController - Listando mecânicos no controller.
+2025-12-09 17:20:41,493 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.FuncionarioController - 3 mecânicos encontrados.
+2025-12-09 17:20:43,498 [http-nio-8081-exec-5] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:49,545 [http-nio-8081-exec-2] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:49,545 [http-nio-8081-exec-8] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:49,548 [http-nio-8081-exec-1] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:49,548 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.FornecedorController - Listando fornecedores no controller.
+2025-12-09 17:20:49,548 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.PecaController - Listando todas as peças.
+2025-12-09 17:20:49,558 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.PecaController - 8 peças encontradas.
+2025-12-09 17:20:49,559 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.OrdemServicoController - Listando ordens de serviço com status: Aberta
+2025-12-09 17:20:49,564 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.FornecedorController - 9 fornecedores encontrados.
+2025-12-09 17:20:49,617 [http-nio-8081-exec-9] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:20:49,618 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.FabricanteController - Listando fabricantes no controller.
+2025-12-09 17:20:49,622 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.FabricanteController - 12 fabricantes encontrados.
+2025-12-09 17:21:19,512 [http-nio-8081-exec-4] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:21:19,514 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-12-09 17:21:19,527 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.ClienteController - 30 clientes encontrados.
+2025-12-09 17:34:28,964 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.AuthController - Tentativa de login recebida
+2025-12-09 17:34:29,001 [http-nio-8081-exec-3] INFO  tecstock_spring.service.AuthServiceImpl - Tentativa de login recebida
+2025-12-09 17:34:29,223 [http-nio-8081-exec-3] INFO  tecstock_spring.service.AuthServiceImpl - Usuário ID 1 admin sem consultor vinculado
+2025-12-09 17:34:29,278 [http-nio-8081-exec-3] INFO  tecstock_spring.service.AuthServiceImpl - Login realizado com sucesso - ID: 1 (Nível: 0)
+2025-12-09 17:34:29,279 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.AuthController - Login bem-sucedido
+2025-12-09 17:34:29,778 [http-nio-8081-exec-2] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:34:29,778 [http-nio-8081-exec-1] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:34:29,778 [http-nio-8081-exec-5] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:34:29,778 [http-nio-8081-exec-3] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:34:29,778 [http-nio-8081-exec-4] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:34:29,778 [http-nio-8081-exec-6] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:34:29,783 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.VeiculoController - Listando veículos no controller.
+2025-12-09 17:34:29,783 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.MarcaController - Listando marcas no controller.
+2025-12-09 17:34:29,783 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.AgendamentoController - Listando agendamentos no controller.
+2025-12-09 17:34:29,783 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.ClienteController - Listando clientes no controller.
+2025-12-09 17:34:29,783 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ChecklistController - Listando checklists no controller.
+2025-12-09 17:34:29,783 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ServicoController - Listando serviços no controller.
+2025-12-09 17:34:29,836 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.AgendamentoController - 3 agendamentos encontrados.
+2025-12-09 17:34:29,836 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.ClienteController - 30 clientes encontrados.
+2025-12-09 17:34:29,836 [http-nio-8081-exec-5] INFO  tecstock_spring.controller.ServicoController - 4 serviços encontrados.
+2025-12-09 17:34:29,836 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.MarcaController - 12 marcas encontrados.
+2025-12-09 17:34:29,870 [http-nio-8081-exec-3] INFO  tecstock_spring.controller.ChecklistController - 4 checklists encontrados (ordenados por numeroChecklist crescente).
+2025-12-09 17:34:29,932 [http-nio-8081-exec-10] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:34:29,937 [http-nio-8081-exec-8] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:34:29,937 [http-nio-8081-exec-7] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:34:29,941 [http-nio-8081-exec-9] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:34:29,945 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.FabricanteController - Listando fabricantes no controller.
+2025-12-09 17:34:29,948 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.FornecedorController - Listando fornecedores no controller.
+2025-12-09 17:34:29,950 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.PecaController - Listando todas as peças.
+2025-12-09 17:34:29,950 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.FuncionarioController - Listando funcionarios no controller.
+2025-12-09 17:34:29,954 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.VeiculoController - 34 veículos encontrados.
+2025-12-09 17:34:29,959 [http-nio-8081-exec-10] INFO  tecstock_spring.controller.FabricanteController - 12 fabricantes encontrados.
+2025-12-09 17:34:29,963 [http-nio-8081-exec-8] INFO  tecstock_spring.controller.FornecedorController - 9 fornecedores encontrados.
+2025-12-09 17:34:29,964 [http-nio-8081-exec-9] INFO  tecstock_spring.controller.FuncionarioController - 6 funcionarios encontrados.
+2025-12-09 17:34:29,992 [http-nio-8081-exec-7] INFO  tecstock_spring.controller.PecaController - 8 peças encontradas.
+2025-12-09 17:34:30,009 [http-nio-8081-exec-4] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:34:30,012 [http-nio-8081-exec-4] INFO  tecstock_spring.controller.OrdemServicoController - Listando todas as ordens de serviço no controller.
+2025-12-09 17:34:30,013 [http-nio-8081-exec-2] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:34:30,016 [http-nio-8081-exec-6] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:34:30,016 [http-nio-8081-exec-2] INFO  tecstock_spring.controller.TipoPagamentoController - Listando tipos de pagamento no controller.
+2025-12-09 17:34:30,019 [http-nio-8081-exec-6] INFO  tecstock_spring.controller.OrcamentoController - Listando todos os orçamentos no controller.
+2025-12-09 17:34:30,023 [http-nio-8081-exec-5] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:34:30,027 [http-nio-8081-exec-2] INFO  tecstock_spring.service.TipoPagamentoServiceImpl - 5 tipos de pagamento encontrados.
+2025-12-09 17:34:30,112 [http-nio-8081-exec-6] INFO  tecstock_spring.service.OrcamentoServiceImpl - 1 orçamentos encontrados (ordenados por numeroOrcamento crescente).
+2025-12-09 17:34:30,118 [http-nio-8081-exec-4] INFO  tecstock_spring.service.OrdemServicoServiceImpl - 2 ordens de serviço encontradas (ordenadas por numeroOS crescente).
+2025-12-09 17:34:34,397 [http-nio-8081-exec-1] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN
+2025-12-09 17:34:34,400 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.FuncionarioController - Listando mecânicos no controller.
+2025-12-09 17:34:34,408 [http-nio-8081-exec-1] INFO  tecstock_spring.controller.FuncionarioController - 3 mecânicos encontrados.
+2025-12-09 17:34:36,044 [http-nio-8081-exec-8] INFO  tecstock_spring.filter.JwtAuthenticationFilter - JWT Authentication - Username: admin, NivelAcesso: 0, Role: ROLE_ADMIN

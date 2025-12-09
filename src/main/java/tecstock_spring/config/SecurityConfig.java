@@ -68,10 +68,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
+        // Permite localhost para desenvolvimento e qualquer origem em produção
         configuration.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:*",
-                "http://127.0.0.1:*"
-
+                "http://127.0.0.1:*",
+                "https://*",  // Permite qualquer domínio HTTPS (produção)
+                "http://*"    // Permite qualquer domínio HTTP
         ));
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
