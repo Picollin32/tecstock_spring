@@ -33,10 +33,5 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -
 # Forçar porta 8081
 ENV SERVER_PORT=8081
 
-# Health check simples sem actuator - verifica se a porta está respondendo
-# Aumentado start-period para 90s para dar tempo do Spring Boot inicializar completamente
-HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=5 \
-  CMD curl -f http://localhost:8081/ || exit 1
-
 # Executar aplicação
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
