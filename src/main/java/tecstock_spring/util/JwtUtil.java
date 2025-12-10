@@ -15,7 +15,7 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:TecStockSecretKeyForJWTTokenGenerationAndValidation2024!@#$%SecureKey123456789}")
+    @Value("${jwt.secret:TecStockSecretKeyForJWTTokenGenerationAndValidation2024SecureHS512Key!@#$}")
     private String secret;
 
     @Value("${jwt.expiration:86400000}")
