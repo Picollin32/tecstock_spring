@@ -3,6 +3,10 @@
 .env.local
 .env.production
 
+# Spring Configuration (sensitive data)
+application.properties
+application-*.properties
+
 # Maven
 target/
 pom.xml.tag
@@ -42,6 +46,7 @@ nbdist/
 # Logs
 logs/
 *.log
+app.log
 
 # OS
 .DS_Store

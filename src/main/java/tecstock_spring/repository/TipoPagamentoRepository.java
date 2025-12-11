@@ -15,4 +15,7 @@ public interface TipoPagamentoRepository extends JpaRepository<TipoPagamento, Lo
     
     @Query("SELECT COALESCE(MAX(t.codigo), 0) FROM TipoPagamento t")
     Integer findMaxCodigo();
+    
+    @Query("SELECT COALESCE(MAX(t.id), 0) FROM TipoPagamento t")
+    Long findMaxId();
 }

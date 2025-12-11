@@ -2,9 +2,11 @@ package tecstock_spring.service;
 
 import java.util.List;
 
+import jakarta.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tecstock_spring.exception.NomeDuplicadoException;
 import tecstock_spring.exception.TipoPagamentoEmUsoException;
 import tecstock_spring.model.TipoPagamento;
@@ -18,12 +20,24 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
 
     private final TipoPagamentoRepository repository;
     private final OrdemServicoRepository ordemServicoRepository;
+    private final EntityManager entityManager;
     Logger logger = Logger.getLogger(TipoPagamentoServiceImpl.class);
 
     @Override
+    @Transactional
     public TipoPagamento salvar(TipoPagamento tipoPagamento) {
+
+        tipoPagamento.setId(null);
+        
         if (repository.existsByNome(tipoPagamento.getNome())) {
             throw new NomeDuplicadoException("Nome de tipo de pagamento já cadastrado");
+        }
+
+        Long maxId = repository.findMaxId();
+        if (maxId > 0) {
+            entityManager.createNativeQuery(
+                "SELECT setval('tipo_pagamento_id_seq', :maxId, true)"
+            ).setParameter("maxId", maxId).getSingleResult();
         }
         
         Integer proximoCodigo = repository.findMaxCodigo() + 1;
