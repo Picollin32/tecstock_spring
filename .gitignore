@@ -51,3 +51,5 @@ app.log
 # OS
 .DS_Store
 Thumbs.db
+logs/app.log
+logs/app.log
