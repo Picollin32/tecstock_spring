@@ -20,7 +20,7 @@ import tecstock_spring.service.MovimentacaoEstoqueService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/movimentacao-estoque")
+@RequestMapping("/api/movimentacoes")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class MovimentacaoEstoqueController {
