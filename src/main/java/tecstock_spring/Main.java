@@ -11,7 +11,7 @@ public class Main {
     
     @PostConstruct
     public void init() {
-        // Define o timezone padrão para toda a JVM
+
         TimeZone.setDefault(TimeZone.getTimeZone("America/Sao_Paulo"));
     }
     
