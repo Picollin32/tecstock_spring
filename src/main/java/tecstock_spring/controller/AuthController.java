@@ -32,7 +32,7 @@ public class AuthController {
         } catch (Exception e) {
             logger.error("Falha no login: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Credenciais inválidas");
+                    .body(e.getMessage());
         }
     }
 }

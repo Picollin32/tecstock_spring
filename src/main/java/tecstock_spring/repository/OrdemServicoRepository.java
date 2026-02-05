@@ -44,4 +44,11 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
     List<OrdemServico> findAllOrderByNumeroOSAsc();
     
     List<OrdemServico> findByStatusAndPrazoFiadoDiasIsNotNullOrderByDataHoraEncerramentoAsc(String status);
+    List<OrdemServico> findByEmpresaIdOrderByCreatedAtDesc(Long empresaId);
+    List<OrdemServico> findByEmpresaId(Long empresaId);
+    Optional<OrdemServico> findByIdAndEmpresaId(Long id, Long empresaId);
+    Optional<OrdemServico> findByNumeroOSAndEmpresaId(String numeroOS, Long empresaId);
+    List<OrdemServico> findByClienteCpfAndEmpresaIdOrderByDataHoraDesc(String clienteCpf, Long empresaId);
+    List<OrdemServico> findByVeiculoPlacaAndEmpresaIdOrderByDataHoraDesc(String veiculoPlaca, Long empresaId);
+    List<OrdemServico> findByStatusAndEmpresaIdOrderByDataHoraDesc(String status, Long empresaId);
 }

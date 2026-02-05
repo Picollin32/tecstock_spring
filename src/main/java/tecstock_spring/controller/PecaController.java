@@ -67,7 +67,7 @@ public class PecaController {
             @RequestHeader(value = "X-User-Level", required = false) Integer userLevel) {
 
         Peca pecaExistente = service.buscarPorId(id);
-        if (userLevel != null && userLevel != 0) {
+        if (userLevel != null && userLevel > 1) {
             if (pecaExistente.getQuantidadeEstoque() > 0) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado. Apenas administradores podem editar peças com estoque.");
             }
@@ -78,7 +78,7 @@ public class PecaController {
     
     @PostMapping("/ajustar-estoque")
     public ResponseEntity<?> ajustarEstoque(@Valid @RequestBody AjusteEstoqueDTO ajusteDTO, @RequestHeader(value = "X-User-Level", required = false) Integer userLevel) {
-        if (userLevel == null || userLevel != 0) {
+        if (userLevel == null || userLevel > 1) {
             logger.warn("Acesso negado ao ajustar estoque. Nível: " + userLevel);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado. Apenas administradores podem ajustar estoque.");
         }

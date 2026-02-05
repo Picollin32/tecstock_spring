@@ -45,4 +45,9 @@ public interface PecaRepository extends JpaRepository<Peca, Long> {
     @Transactional
     @Query("UPDATE Peca p SET p.quantidadeEstoque = p.quantidadeEstoque - :quantidade WHERE p.id = :pecaId AND p.quantidadeEstoque >= :quantidade")
     int decrementarEstoqueAtomico(@Param("pecaId") Long pecaId, @Param("quantidade") int quantidade);
+    List<Peca> findByEmpresaId(Long empresaId);
+    Optional<Peca> findByIdAndEmpresaId(Long id, Long empresaId);
+    
+    @Query("SELECT p FROM Peca p WHERE p.codigoFabricante = :codigo AND p.fornecedor.id = :fornecedorId AND p.empresa.id = :empresaId")
+    Optional<Peca> findByCodigoFabricanteAndFornecedorIdAndEmpresaId(@Param("codigo") String codigoFabricante, @Param("fornecedorId") Long fornecedorId, @Param("empresaId") Long empresaId);
 }

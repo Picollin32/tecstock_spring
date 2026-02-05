@@ -8,8 +8,11 @@ import org.springframework.stereotype.Service;
 import tecstock_spring.controller.FabricanteController;
 import tecstock_spring.exception.NomeDuplicadoException;
 import tecstock_spring.exception.FabricanteEmUsoException;
+import tecstock_spring.model.Empresa;
 import tecstock_spring.model.Fabricante;
+import tecstock_spring.repository.EmpresaRepository;
 import tecstock_spring.repository.FabricanteRepository;
+import tecstock_spring.util.TenantContext;
 import tecstock_spring.repository.PecaRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -18,56 +21,90 @@ import lombok.RequiredArgsConstructor;
 public class FabricanteServiceImpl implements FabricanteService {
 
     private final FabricanteRepository repository;
+    private final EmpresaRepository empresaRepository;
     private final PecaRepository pecaRepository;
     Logger logger = Logger.getLogger(FabricanteController.class);
 
     @Override
     public Fabricante salvar(Fabricante fabricante) {
-        validarNomeDuplicado(fabricante.getNome(), null);
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        validarNomeDuplicado(fabricante.getNome(), null, empresaId);
+        
+        Empresa empresa = empresaRepository.findById(empresaId)
+            .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+        fabricante.setEmpresa(empresa);
+        
         Fabricante fabricanteSalvo = repository.save(fabricante);
-        logger.info("Fabricante salvo com sucesso: " + fabricanteSalvo);
+        logger.info("Fabricante salvo com sucesso na empresa " + empresaId + ": " + fabricanteSalvo);
         return fabricanteSalvo;
     }
 
     @Override
     public Fabricante buscarPorId(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Fabricante não encontrado"));
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        return repository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new RuntimeException("Fabricante não encontrado ou não pertence à sua empresa"));
     }
 
     @Override
     public List<Fabricante> listarTodos() {
-        List<Fabricante> fabricantes = repository.findAll();
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        List<Fabricante> fabricantes = repository.findByEmpresaId(empresaId);
         if (fabricantes.isEmpty()) {
-            logger.info("Nenhum fabricante cadastrado.");
+            logger.info("Nenhum fabricante cadastrado na empresa " + empresaId);
         } else {
-            logger.info(fabricantes.size() + " fabricantes encontrados.");
+            logger.info(fabricantes.size() + " fabricantes encontrados na empresa " + empresaId);
         }
         return fabricantes;
     }
 
     @Override
     public Fabricante atualizar(Long id, Fabricante novoFabricante) {
-        Fabricante fabricanteExistente = buscarPorId(id);
-        validarNomeDuplicado(novoFabricante.getNome(), id);
-        BeanUtils.copyProperties(novoFabricante, fabricanteExistente, "id", "createdAt", "updatedAt");
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        Fabricante fabricanteExistente = repository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new RuntimeException("Fabricante não encontrado ou não pertence à sua empresa"));
+        
+        validarNomeDuplicado(novoFabricante.getNome(), id, empresaId);
+        BeanUtils.copyProperties(novoFabricante, fabricanteExistente, "id", "empresa", "createdAt", "updatedAt");
         return repository.save(fabricanteExistente);
     }
 
     @Override
     public void deletar(Long id) {
-        Fabricante fabricante = buscarPorId(id);
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        Fabricante fabricante = repository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new RuntimeException("Fabricante não encontrado ou não pertence à sua empresa"));
         
         if (pecaRepository.existsByFabricante(fabricante)) {
             throw new FabricanteEmUsoException("Fabricante não pode ser excluído pois está vinculado a uma peça");
         }
         
         repository.deleteById(id);
-        logger.info("Fabricante excluído com sucesso: " + fabricante.getNome());
+        logger.info("Fabricante excluído com sucesso da empresa " + empresaId + ": " + fabricante.getNome());
     }
     
-    private void validarNomeDuplicado(String nome, Long idExcluir) {
-        logger.info("Validando nome duplicado para fabricante: " + nome + " (excluindo ID: " + idExcluir + ")");
+    private void validarNomeDuplicado(String nome, Long idExcluir, Long empresaId) {
+        logger.info("Validando nome duplicado para fabricante: " + nome + " (excluindo ID: " + idExcluir + ") na empresa " + empresaId);
         
         if (nome == null || nome.trim().isEmpty()) {
             logger.warn("Nome do fabricante é nulo ou vazio");
@@ -79,15 +116,15 @@ public class FabricanteServiceImpl implements FabricanteService {
         
         boolean exists;
         if (idExcluir != null) {
-            exists = repository.existsByNomeIgnoreCaseAndIdNot(nomeLimpo, idExcluir);
-            logger.info("Verificação para atualização - Existe outro fabricante com nome " + nomeLimpo + " (excluindo ID " + idExcluir + "): " + exists);
+            exists = repository.existsByNomeIgnoreCaseAndIdNotAndEmpresaId(nomeLimpo, idExcluir, empresaId);
+            logger.info("Verificação para atualização - Existe outro fabricante com nome " + nomeLimpo + " (excluindo ID " + idExcluir + ") na empresa " + empresaId + ": " + exists);
         } else {
-            exists = repository.existsByNomeIgnoreCase(nomeLimpo);
-            logger.info("Verificação para criação - Existe fabricante com nome " + nomeLimpo + ": " + exists);
+            exists = repository.existsByNomeIgnoreCaseAndEmpresaId(nomeLimpo, empresaId);
+            logger.info("Verificação para criação - Existe fabricante com nome " + nomeLimpo + " na empresa " + empresaId + ": " + exists);
         }
         
         if (exists) {
-            String mensagem = "Nome do fabricante já está cadastrado";
+            String mensagem = "Nome do fabricante já está cadastrado nesta empresa";
             logger.error(mensagem + ": " + nomeLimpo);
             throw new NomeDuplicadoException(mensagem);
         }

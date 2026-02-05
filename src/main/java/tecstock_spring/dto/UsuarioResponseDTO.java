@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import tecstock_spring.model.Funcionario;
+import tecstock_spring.model.Empresa;
 
 import java.time.LocalDateTime;
 
@@ -17,6 +18,7 @@ public class UsuarioResponseDTO {
     private String nomeUsuario;
     private Integer nivelAcesso;
     private Funcionario consultor;
+    private Empresa empresa;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -16,7 +16,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import tecstock_spring.util.JwtUtil;
 
 import java.io.IOException;
-import java.util.Collections;
 
 @Component
 @RequiredArgsConstructor
@@ -46,17 +45,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 final Integer nivelAcesso = jwtUtil.extractNivelAcesso(jwt);
                 final Long userId = jwtUtil.extractUserId(jwt);
                 final Long consultorId = jwtUtil.extractConsultorId(jwt);
+                final Long empresaId = jwtUtil.extractEmpresaId(jwt);
 
-
-                String role = nivelAcesso == 0 ? "ROLE_ADMIN" : "ROLE_CONSULTOR";
+                String role;
+                if (nivelAcesso == 0) {
+                    role = "ROLE_SUPER_ADMIN";
+                } else if (nivelAcesso == 1) {
+                    role = "ROLE_ADMIN";
+                } else {
+                    role = "ROLE_CONSULTOR";
+                }
+                
                 SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
+                SimpleGrantedAuthority nivelAuthority = new SimpleGrantedAuthority("NIVEL_ACESSO_" + nivelAcesso);
+                
+                java.util.List<SimpleGrantedAuthority> authorities = java.util.Arrays.asList(authority, nivelAuthority);
                 
                 logger.info("JWT Authentication - Username: " + username + ", NivelAcesso: " + nivelAcesso + ", Role: " + role);
 
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         username,
                         null,
-                        Collections.singletonList(authority)
+                        authorities
                 );
 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -64,6 +74,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 request.setAttribute("userId", userId);
                 request.setAttribute("nivelAcesso", nivelAcesso);
                 request.setAttribute("consultorId", consultorId);
+                request.setAttribute("empresaId", empresaId);
+
+                tecstock_spring.util.TenantContext.setCurrentNivelAcesso(nivelAcesso);
+                if (empresaId != null) {
+                    tecstock_spring.util.TenantContext.setCurrentEmpresaId(empresaId);
+                }
 
                 SecurityContextHolder.getContext().setAuthentication(authToken);
                 
@@ -73,6 +89,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             logger.error("Erro ao processar token JWT: " + e.getMessage());
         }
 
-        filterChain.doFilter(request, response);
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            tecstock_spring.util.TenantContext.clear();
+        }
     }
 }

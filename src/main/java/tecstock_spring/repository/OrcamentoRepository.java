@@ -31,4 +31,10 @@ public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
     boolean existsByConsultorId(Long consultorId);
     java.util.Optional<Orcamento> findFirstByMecanicoIdOrderByDataHoraDesc(Long mecanicoId);
     java.util.Optional<Orcamento> findFirstByConsultorIdOrderByDataHoraDesc(Long consultorId);
+    List<Orcamento> findByEmpresaIdOrderByCreatedAtDesc(Long empresaId);
+    List<Orcamento> findByEmpresaId(Long empresaId);
+    Optional<Orcamento> findByIdAndEmpresaId(Long id, Long empresaId);
+    Optional<Orcamento> findByNumeroOrcamentoAndEmpresaId(String numeroOrcamento, Long empresaId);
+    List<Orcamento> findByClienteCpfAndEmpresaIdOrderByDataHoraDesc(String clienteCpf, Long empresaId);
+    List<Orcamento> findByVeiculoPlacaAndEmpresaIdOrderByDataHoraDesc(String veiculoPlaca, Long empresaId);
 }

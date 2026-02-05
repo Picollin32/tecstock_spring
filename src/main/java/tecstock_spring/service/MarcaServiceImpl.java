@@ -7,8 +7,11 @@ import org.springframework.stereotype.Service;
 import tecstock_spring.controller.MarcaController;
 import tecstock_spring.exception.NomeDuplicadoException;
 import tecstock_spring.exception.MarcaEmUsoException;
+import tecstock_spring.model.Empresa;
 import tecstock_spring.model.Marca;
+import tecstock_spring.repository.EmpresaRepository;
 import tecstock_spring.repository.MarcaRepository;
+import tecstock_spring.util.TenantContext;
 import tecstock_spring.repository.VeiculoRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -17,58 +20,92 @@ import lombok.RequiredArgsConstructor;
 public class MarcaServiceImpl implements MarcaService {
 
     private final MarcaRepository repository;
+    private final EmpresaRepository empresaRepository;
     private final VeiculoRepository veiculoRepository;
     Logger logger = Logger.getLogger(MarcaController.class);
 
     @Override
     public Marca salvar(Marca marca) {
-        validarNomeDuplicado(marca.getMarca(), null);
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        validarNomeDuplicado(marca.getMarca(), null, empresaId);
+        
+        Empresa empresa = empresaRepository.findById(empresaId)
+            .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+        marca.setEmpresa(empresa);
+        
         Marca marcaSalva = repository.save(marca);
-        logger.info("Marca salva com sucesso: " + marcaSalva);
+        logger.info("Marca salva com sucesso na empresa " + empresaId + ": " + marcaSalva);
         return marcaSalva;
     }
 
     @Override
     public Marca buscarPorId(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Marca não encontrado"));
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        return repository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new RuntimeException("Marca não encontrada ou não pertence à sua empresa"));
     }
 
     @Override
     public List<Marca> listarTodos() {
-        List<Marca> marcas = repository.findAll();
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        List<Marca> marcas = repository.findByEmpresaId(empresaId);
         if (marcas != null && marcas.isEmpty()) {
-            logger.info("Nenhuma marca cadastrada: " + marcas);
-            System.out.println("Nenhuma marca cadastrada: " + marcas);
+            logger.info("Nenhuma marca cadastrada na empresa " + empresaId);
+            System.out.println("Nenhuma marca cadastrada na empresa " + empresaId);
         } else if (marcas != null && !marcas.isEmpty()) {
-            logger.info(marcas.size() + " marcas encontrados.");
-            System.out.println(marcas.size() + " marcas encontrados.");
+            logger.info(marcas.size() + " marcas encontradas na empresa " + empresaId);
+            System.out.println(marcas.size() + " marcas encontradas na empresa " + empresaId);
         }
         return marcas;
     }
 
     @Override
     public Marca atualizar(Long id, Marca novoMarca) {
-        Marca categoriaExistente = buscarPorId(id);
-        validarNomeDuplicado(novoMarca.getMarca(), id);
-        BeanUtils.copyProperties(novoMarca, categoriaExistente, "id", "createdAt", "updatedAt");
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        Marca categoriaExistente = repository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new RuntimeException("Marca não encontrada ou não pertence à sua empresa"));
+        
+        validarNomeDuplicado(novoMarca.getMarca(), id, empresaId);
+        BeanUtils.copyProperties(novoMarca, categoriaExistente, "id", "empresa", "createdAt", "updatedAt");
         return repository.save(categoriaExistente);
     }
 
     @Override
     public void deletar(Long id) {
-        Marca marca = buscarPorId(id);
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        Marca marca = repository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new RuntimeException("Marca não encontrada ou não pertence à sua empresa"));
         
         if (veiculoRepository.existsByMarca(marca)) {
             throw new MarcaEmUsoException("Marca não pode ser excluída pois está vinculada a um veículo");
         }
         
         repository.deleteById(id);
-        logger.info("Marca excluída com sucesso: " + marca.getMarca());
+        logger.info("Marca excluída com sucesso da empresa " + empresaId + ": " + marca.getMarca());
     }
     
-    private void validarNomeDuplicado(String nome, Long idExcluir) {
-        logger.info("Validando nome duplicado para marca: " + nome + " (excluindo ID: " + idExcluir + ")");
+    private void validarNomeDuplicado(String nome, Long idExcluir, Long empresaId) {
+        logger.info("Validando nome duplicado para marca: " + nome + " (excluindo ID: " + idExcluir + ") na empresa " + empresaId);
         
         if (nome == null || nome.trim().isEmpty()) {
             logger.warn("Nome da marca é nulo ou vazio");
@@ -80,10 +117,10 @@ public class MarcaServiceImpl implements MarcaService {
         
         boolean exists;
         if (idExcluir != null) {
-            exists = repository.existsByNomeIgnoreCaseAndIdNot(nomeLimpo, idExcluir);
-            logger.info("Verificação para atualização - Existe outra marca com nome " + nomeLimpo + " (excluindo ID " + idExcluir + "): " + exists);
+            exists = repository.existsByNomeIgnoreCaseAndIdNotAndEmpresaId(nomeLimpo, idExcluir, empresaId);
+            logger.info("Checando duplicação (exceto ID " + idExcluir + "): " + exists);
         } else {
-            exists = repository.existsByNomeIgnoreCase(nomeLimpo);
+            exists = repository.existsByNomeIgnoreCaseAndEmpresaId(nomeLimpo, empresaId);
             logger.info("Verificação para criação - Existe marca com nome " + nomeLimpo + ": " + exists);
         }
         

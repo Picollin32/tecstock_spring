@@ -8,10 +8,13 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.ServicoController;
 import tecstock_spring.exception.NomeDuplicadoException;
+import tecstock_spring.model.Empresa;
 import tecstock_spring.model.OrdemServico;
 import tecstock_spring.model.Servico;
+import tecstock_spring.repository.EmpresaRepository;
 import tecstock_spring.repository.OrdemServicoRepository;
 import tecstock_spring.repository.ServicoRepository;
+import tecstock_spring.util.TenantContext;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -19,39 +22,67 @@ import lombok.RequiredArgsConstructor;
 public class ServicoServiceImpl implements ServicoService {
 
     private final ServicoRepository repository;
+    private final EmpresaRepository empresaRepository;
     private final OrdemServicoRepository ordemServicoRepository;
     Logger logger = Logger.getLogger(ServicoController.class);
 
     @Override
     public Servico salvar(Servico servico) {
-        validarNomeDuplicado(servico.getNome(), null);
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        validarNomeDuplicado(servico.getNome(), null, empresaId);
+        
+        Empresa empresa = empresaRepository.findById(empresaId)
+            .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+        servico.setEmpresa(empresa);
+        
         Servico servicoSalvo = repository.save(servico);
-        logger.info("Serviço salvo com sucesso: " + servicoSalvo);
+        logger.info("Serviço salvo com sucesso na empresa " + empresaId + ": " + servicoSalvo);
         return servicoSalvo;
     }
 
     @Override
     public Servico buscarPorId(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        return repository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new RuntimeException("Serviço não encontrado ou não pertence à sua empresa"));
     }
 
     @Override
     public List<Servico> listarTodos() {
-        List<Servico> servicos = repository.findAll();
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        List<Servico> servicos = repository.findByEmpresaId(empresaId);
         if (servicos.isEmpty()) {
-            logger.info("Nenhum serviço cadastrado.");
+            logger.info("Nenhum serviço cadastrado na empresa " + empresaId);
         } else {
-            logger.info(servicos.size() + " serviços encontrados.");
+            logger.info(servicos.size() + " serviços encontrados na empresa " + empresaId);
         }
         return servicos;
     }
 
     @Override
     public Servico atualizar(Long id, Servico novoServico) {
-        Servico servicoExistente = buscarPorId(id);
-        validarNomeDuplicado(novoServico.getNome(), id);
-        BeanUtils.copyProperties(novoServico, servicoExistente, "id", "createdAt", "updatedAt");
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        Servico servicoExistente = repository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new RuntimeException("Serviço não encontrado ou não pertence à sua empresa"));
+        
+        validarNomeDuplicado(novoServico.getNome(), id, empresaId);
+        BeanUtils.copyProperties(novoServico, servicoExistente, "id", "empresa", "createdAt", "updatedAt");
         return repository.save(servicoExistente);
     }
 
@@ -62,8 +93,13 @@ public class ServicoServiceImpl implements ServicoService {
     
     @Override
     public List<Servico> listarComPendentes() {
-        logger.info("Listando serviços com unidades pendentes em OSs não encerradas");
-        List<Servico> servicos = repository.findAll();
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        logger.info("Listando serviços com unidades pendentes em OSs não encerradas da empresa " + empresaId);
+        List<Servico> servicos = repository.findByEmpresaId(empresaId);
         return servicos.stream()
                 .filter(servico -> servico.getUnidadesUsadasEmOS() != null && servico.getUnidadesUsadasEmOS() > 0)
                 .collect(Collectors.toList());
@@ -71,9 +107,14 @@ public class ServicoServiceImpl implements ServicoService {
     
     @Override
     public void atualizarUnidadesUsadas() {
-        logger.info("Atualizando unidades usadas em OSs para todos os serviços");
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
         
-        List<Servico> todosServicos = repository.findAll();
+        logger.info("Atualizando unidades usadas em OSs para todos os serviços da empresa " + empresaId);
+        
+        List<Servico> todosServicos = repository.findByEmpresaId(empresaId);
         List<OrdemServico> osNaoEncerradas = ordemServicoRepository.findByStatusNot("Encerrada");
         
         for (Servico servico : todosServicos) {
@@ -99,8 +140,8 @@ public class ServicoServiceImpl implements ServicoService {
         logger.info("Atualização de unidades usadas concluída");
     }
     
-    private void validarNomeDuplicado(String nome, Long idExcluir) {
-        logger.info("Validando nome duplicado para serviço: " + nome + " (excluindo ID: " + idExcluir + ")");
+    private void validarNomeDuplicado(String nome, Long idExcluir, Long empresaId) {
+        logger.info("Validando nome duplicado para serviço: " + nome + " (excluindo ID: " + idExcluir + ") na empresa " + empresaId);
         
         if (nome == null || nome.trim().isEmpty()) {
             logger.warn("Nome do serviço é nulo ou vazio");
@@ -112,15 +153,15 @@ public class ServicoServiceImpl implements ServicoService {
         
         boolean exists;
         if (idExcluir != null) {
-            exists = repository.existsByNomeIgnoreCaseAndIdNot(nomeLimpo, idExcluir);
-            logger.info("Verificação para atualização - Existe outro serviço com nome " + nomeLimpo + " (excluindo ID " + idExcluir + "): " + exists);
+            exists = repository.existsByNomeIgnoreCaseAndIdNotAndEmpresaId(nomeLimpo, idExcluir, empresaId);
+            logger.info("Verificação para atualização - Existe outro serviço com nome " + nomeLimpo + " (excluindo ID " + idExcluir + ") na empresa " + empresaId + ": " + exists);
         } else {
-            exists = repository.existsByNomeIgnoreCase(nomeLimpo);
-            logger.info("Verificação para criação - Existe serviço com nome " + nomeLimpo + ": " + exists);
+            exists = repository.existsByNomeIgnoreCaseAndEmpresaId(nomeLimpo, empresaId);
+            logger.info("Verificação para criação - Existe serviço com nome " + nomeLimpo + " na empresa " + empresaId + ": " + exists);
         }
         
         if (exists) {
-            String mensagem = "Nome do serviço já está cadastrado";
+            String mensagem = "Nome do serviço já está cadastrado nesta empresa";
             logger.error(mensagem + ": " + nomeLimpo);
             throw new NomeDuplicadoException(mensagem);
         }

@@ -6,7 +6,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.ChecklistController;
 import tecstock_spring.model.Checklist;
+import tecstock_spring.model.Empresa;
 import tecstock_spring.repository.ChecklistRepository;
+import tecstock_spring.repository.EmpresaRepository;
+import tecstock_spring.util.TenantContext;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -14,55 +17,91 @@ import lombok.RequiredArgsConstructor;
 public class ChecklistServiceImpl implements ChecklistService {
 
     private final ChecklistRepository repository;
+    private final EmpresaRepository empresaRepository;
     Logger logger = Logger.getLogger(ChecklistController.class);
 
     @Override
     public Checklist salvar(Checklist checklist) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        Empresa empresa = empresaRepository.findById(empresaId)
+            .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+        checklist.setEmpresa(empresa);
+        
         if (checklist.getId() == null && checklist.getNumeroChecklist() == 0) {
-            Integer max = repository.findAll().stream()
+            Integer max = repository.findByEmpresaId(empresaId).stream()
                 .mapToInt(Checklist::getNumeroChecklist)
                 .max()
                 .orElse(0);
             checklist.setNumeroChecklist(max + 1);
-            logger.info("Gerando novo numeroChecklist: " + checklist.getNumeroChecklist());
+            logger.info("Gerando novo numeroChecklist: " + checklist.getNumeroChecklist() + " para empresa " + empresaId);
         }
         Checklist checklistSalva = repository.save(checklist);
-        logger.info("Checklist salva com sucesso: " + checklistSalva);
+        logger.info("Checklist salva com sucesso na empresa " + empresaId + ": " + checklistSalva);
         return checklistSalva;
     }
 
     @Override
     public Checklist buscarPorId(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Checklist não encontrado"));
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        return repository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new RuntimeException("Checklist não encontrado ou não pertence à sua empresa"));
     }
 
     @Override
     public List<Checklist> listarTodos() {
-        List<Checklist> checklists = repository.findAll();
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        List<Checklist> checklists = repository.findByEmpresaId(empresaId);
 
         if (checklists != null && !checklists.isEmpty()) {
             checklists.sort((a, b) -> Integer.compare(a.getNumeroChecklist(), b.getNumeroChecklist()));
-            logger.info(checklists.size() + " checklists encontrados (ordenados por numeroChecklist crescente).");
-            System.out.println(checklists.size() + " checklists encontrados (ordenados por numeroChecklist crescente).");
+            logger.info(checklists.size() + " checklists encontrados na empresa " + empresaId + " (ordenados por numeroChecklist crescente).");
+            System.out.println(checklists.size() + " checklists encontrados na empresa " + empresaId + " (ordenados por numeroChecklist crescente).");
         } else {
-            logger.info("Nenhuma checklist cadastrada");
-            System.out.println("Nenhuma checklist cadastrada");
+            logger.info("Nenhuma checklist cadastrada na empresa " + empresaId);
+            System.out.println("Nenhuma checklist cadastrada na empresa " + empresaId);
         }
         return checklists;
     }
 
     @Override
     public Checklist atualizar(Long id, Checklist novoChecklist) {
-        Checklist checklistExistente = buscarPorId(id);
-        BeanUtils.copyProperties(novoChecklist, checklistExistente, "id", "numeroChecklist", "createdAt", "updatedAt");
-        logger.info("Atualizando checklist ID: " + id + " - Preservando numeroChecklist: " + checklistExistente.getNumeroChecklist());
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        Checklist checklistExistente = repository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new RuntimeException("Checklist não encontrado ou não pertence à sua empresa"));
+        
+        BeanUtils.copyProperties(novoChecklist, checklistExistente, "id", "empresa", "numeroChecklist", "createdAt", "updatedAt");
+        logger.info("Atualizando checklist ID: " + id + " da empresa " + empresaId + " - Preservando numeroChecklist: " + checklistExistente.getNumeroChecklist());
         return repository.save(checklistExistente);
     }
 
     @Override
     public void deletar(Long id) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        repository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new RuntimeException("Checklist não encontrado ou não pertence à sua empresa"));
+        
         repository.deleteById(id);
+        logger.info("Checklist excluído com sucesso da empresa " + empresaId);
     }
     
     @Override

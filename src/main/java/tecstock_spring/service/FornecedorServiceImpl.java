@@ -6,9 +6,12 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.FornecedorController;
 import tecstock_spring.exception.FornecedorEmUsoException;
+import tecstock_spring.model.Empresa;
 import tecstock_spring.model.Fornecedor;
+import tecstock_spring.repository.EmpresaRepository;
 import tecstock_spring.repository.FornecedorRepository;
 import tecstock_spring.repository.PecaRepository;
+import tecstock_spring.util.TenantContext;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -16,57 +19,90 @@ import lombok.RequiredArgsConstructor;
 public class FornecedorServiceImpl implements FornecedorService {
 
     private final FornecedorRepository repository;
+    private final EmpresaRepository empresaRepository;
     private final PecaRepository pecaRepository;
     Logger logger = Logger.getLogger(FornecedorController.class);
 
     @Override
     public Fornecedor salvar(Fornecedor fornecedor) {
-        if (repository.existsByCnpj(fornecedor.getCnpj())) {
-            throw new RuntimeException("CNPJ já cadastrado: " + fornecedor.getCnpj());
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
         }
         
+        if (repository.existsByCnpjAndEmpresaId(fornecedor.getCnpj(), empresaId)) {
+            throw new RuntimeException("CNPJ já cadastrado nesta empresa: " + fornecedor.getCnpj());
+        }
+        
+        Empresa empresa = empresaRepository.findById(empresaId)
+            .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+        fornecedor.setEmpresa(empresa);
+        
         Fornecedor fornecedorSalvo = repository.save(fornecedor);
-        logger.info("Fornecedor salvo com sucesso: " + fornecedorSalvo);
+        logger.info("Fornecedor salvo com sucesso na empresa " + empresaId + ": " + fornecedorSalvo);
         return fornecedorSalvo;
     }
 
     @Override
     public Fornecedor buscarPorId(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado"));
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        return repository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado ou não pertence à sua empresa"));
     }
 
     @Override
     public List<Fornecedor> listarTodos() {
-        List<Fornecedor> fornecedores = repository.findAll();
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        List<Fornecedor> fornecedores = repository.findByEmpresaId(empresaId);
         if (fornecedores != null && fornecedores.isEmpty()) {
-            logger.info("Nenhum fornecedor cadastrado: " + fornecedores);
+            logger.info("Nenhum fornecedor cadastrado na empresa " + empresaId);
         } else if (fornecedores != null && !fornecedores.isEmpty()) {
-            logger.info(fornecedores.size() + " fornecedores encontrados.");
+            logger.info(fornecedores.size() + " fornecedores encontrados na empresa " + empresaId);
         }
         return fornecedores;
     }
 
     @Override
     public Fornecedor atualizar(Long id, Fornecedor novoFornecedor) {
-        Fornecedor fornecedorExistente = buscarPorId(id);
-        
-        if (repository.existsByCnpjAndIdNot(novoFornecedor.getCnpj(), id)) {
-            throw new RuntimeException("CNPJ já cadastrado em outro fornecedor: " + novoFornecedor.getCnpj());
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
         }
         
-        BeanUtils.copyProperties(novoFornecedor, fornecedorExistente, "id", "pecasComDesconto", "createdAt", "updatedAt");
+        Fornecedor fornecedorExistente = repository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado ou não pertence à sua empresa"));
+        
+        if (repository.existsByCnpjAndIdNotAndEmpresaId(novoFornecedor.getCnpj(), id, empresaId)) {
+            throw new RuntimeException("CNPJ já cadastrado em outro fornecedor desta empresa: " + novoFornecedor.getCnpj());
+        }
+        
+        BeanUtils.copyProperties(novoFornecedor, fornecedorExistente, "id", "empresa", "pecasComDesconto", "createdAt", "updatedAt");
         return repository.save(fornecedorExistente);
     }
 
     @Override
     public void deletar(Long id) {
-        Fornecedor fornecedor = buscarPorId(id);
-            if (pecaRepository.existsByFornecedor(fornecedor)) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        Fornecedor fornecedor = repository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado ou não pertence à sua empresa"));
+        
+        if (pecaRepository.existsByFornecedor(fornecedor)) {
             throw new FornecedorEmUsoException("Fornecedor não pode ser excluído pois está vinculado a uma peça");
         }
         
         repository.deleteById(id);
-        logger.info("Fornecedor excluído com sucesso: " + fornecedor.getNome());
+        logger.info("Fornecedor excluído com sucesso da empresa " + empresaId + ": " + fornecedor.getNome());
     }
 }

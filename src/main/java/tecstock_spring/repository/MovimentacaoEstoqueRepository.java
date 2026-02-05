@@ -5,9 +5,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import tecstock_spring.model.MovimentacaoEstoque;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MovimentacaoEstoqueRepository extends JpaRepository<MovimentacaoEstoque, Long> {
+    
+    List<MovimentacaoEstoque> findByEmpresaId(Long empresaId);
+    Optional<MovimentacaoEstoque> findByIdAndEmpresaId(Long id, Long empresaId);
     
     @Query("SELECT m FROM MovimentacaoEstoque m WHERE m.codigoPeca = ?1 ORDER BY COALESCE(m.dataSaida, m.dataEntrada) DESC")
     List<MovimentacaoEstoque> findByCodigoPecaOrderByDataEntradaDesc(String codigoPeca);

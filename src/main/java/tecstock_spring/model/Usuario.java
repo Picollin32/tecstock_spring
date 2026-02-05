@@ -1,8 +1,10 @@
 package tecstock_spring.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -47,9 +49,13 @@ public class Usuario {
     @Column(nullable = false)
     private Integer nivelAcesso;
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "consultor_id", nullable = true)
     private Funcionario consultor;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "empresa_id", nullable = true)
+    private Empresa empresa;
     
     @Column(name = "created_at")
     private LocalDateTime createdAt;

@@ -40,7 +40,8 @@ public interface AuditoriaLogRepository extends JpaRepository<AuditoriaLog, Long
            "(CAST(:operacao AS TEXT) IS NULL OR :operacao = '' OR a.operacao = :operacao) AND " +
            "(CAST(:entidadeId AS BIGINT) IS NULL OR a.entidade_id = CAST(:entidadeId AS BIGINT)) AND " +
            "(CAST(:dataInicio AS TIMESTAMP) IS NULL OR a.data_hora >= CAST(:dataInicio AS TIMESTAMP)) AND " +
-           "(CAST(:dataFim AS TIMESTAMP) IS NULL OR a.data_hora <= CAST(:dataFim AS TIMESTAMP))",
+           "(CAST(:dataFim AS TIMESTAMP) IS NULL OR a.data_hora <= CAST(:dataFim AS TIMESTAMP)) AND " +
+           "(CAST(:empresaId AS BIGINT) IS NULL OR a.empresa_id = CAST(:empresaId AS BIGINT))",
            nativeQuery = true)
     Page<AuditoriaLog> findComFiltros(@Param("usuario") String usuario,
                                       @Param("entidade") String entidade,
@@ -48,9 +49,15 @@ public interface AuditoriaLogRepository extends JpaRepository<AuditoriaLog, Long
                                       @Param("entidadeId") Long entidadeId,
                                       @Param("dataInicio") LocalDateTime dataInicio,
                                       @Param("dataFim") LocalDateTime dataFim,
+                                      @Param("empresaId") Long empresaId,
                                       Pageable pageable);
     
     Long countByUsuario(String usuario);
 
     Long countByEntidade(String entidade);
+    
+    Page<AuditoriaLog> findByEmpresaIdOrderByDataHoraDesc(Long empresaId, Pageable pageable);
+    Page<AuditoriaLog> findByUsuarioAndEmpresaIdOrderByDataHoraDesc(String usuario, Long empresaId, Pageable pageable);
+    Page<AuditoriaLog> findByEntidadeAndEmpresaIdOrderByDataHoraDesc(String entidade, Long empresaId, Pageable pageable);
+    List<AuditoriaLog> findByEntidadeAndEntidadeIdAndEmpresaIdOrderByDataHoraDesc(String entidade, Long entidadeId, Long empresaId);
 }

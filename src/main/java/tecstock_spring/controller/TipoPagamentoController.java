@@ -29,7 +29,7 @@ public class TipoPagamentoController {
 
     @PostMapping("/api/tipos-pagamento/salvar")
     public ResponseEntity<?> salvar(@RequestBody TipoPagamento tipoPagamento, @RequestHeader(value = "X-User-Level", required = false) Integer userLevel) {
-        if (userLevel == null || userLevel != 0) {
+        if (userLevel == null || userLevel > 1) {
             logger.warn("Acesso negado ao salvar tipo de pagamento. Nível: " + userLevel);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado. Apenas administradores podem criar tipos de pagamento.");
         }
@@ -50,7 +50,7 @@ public class TipoPagamentoController {
 
     @PutMapping("/api/tipos-pagamento/atualizar/{id}")
     public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody TipoPagamento tipoPagamento, @RequestHeader(value = "X-User-Level", required = false) Integer userLevel) {
-        if (userLevel == null || userLevel != 0) {
+        if (userLevel == null || userLevel > 1) {
             logger.warn("Acesso negado ao atualizar tipo de pagamento. Nível: " + userLevel);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado. Apenas administradores podem atualizar tipos de pagamento.");
         }
@@ -60,7 +60,7 @@ public class TipoPagamentoController {
 
     @DeleteMapping("/api/tipos-pagamento/deletar/{id}")
     public ResponseEntity<?> deletar(@PathVariable Long id, @RequestHeader(value = "X-User-Level", required = false) Integer userLevel) {
-        if (userLevel == null || userLevel != 0) {
+        if (userLevel == null || userLevel > 1) {
             logger.warn("Acesso negado ao deletar tipo de pagamento. Nível: " + userLevel);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado. Apenas administradores podem deletar tipos de pagamento.");
         }

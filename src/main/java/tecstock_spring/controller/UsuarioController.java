@@ -69,6 +69,7 @@ public class UsuarioController {
                 .nomeUsuario(usuario.getNomeUsuario())
                 .nivelAcesso(usuario.getNivelAcesso())
                 .consultor(usuario.getConsultor())
+                .empresa(usuario.getEmpresa())
                 .createdAt(usuario.getCreatedAt())
                 .updatedAt(usuario.getUpdatedAt())
                 .build();

@@ -11,6 +11,7 @@ import tecstock_spring.model.Peca;
 import tecstock_spring.repository.FornecedorRepository;
 import tecstock_spring.repository.MovimentacaoEstoqueRepository;
 import tecstock_spring.repository.PecaRepository;
+import tecstock_spring.util.TenantContext;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.Optional;
@@ -56,6 +57,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         }
         
         MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
+        movimentacao.setEmpresa(peca.getEmpresa());
         movimentacao.setCodigoPeca(codigoPeca);
         movimentacao.setFornecedor(fornecedor);
         movimentacao.setQuantidade(quantidade);
@@ -118,6 +120,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
                 .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado"));
         
         MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
+        movimentacao.setEmpresa(peca.getEmpresa());
         movimentacao.setCodigoPeca(codigoPeca);
         movimentacao.setFornecedor(fornecedor);
         movimentacao.setQuantidade(quantidade);
@@ -156,7 +159,12 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
 
     @Override
     public List<MovimentacaoEstoque> listarTodas() {
-        return movimentacaoEstoqueRepository.findAllByOrderByDataEntradaDesc();
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        
+        return movimentacaoEstoqueRepository.findByEmpresaId(empresaId);
     }
 
     @Override
@@ -171,7 +179,12 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
 
     @Override
     public MovimentacaoEstoque buscarPorId(Long id) {
-        return movimentacaoEstoqueRepository.findById(id)
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        
+        return movimentacaoEstoqueRepository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new RuntimeException("Movimentação não encontrada"));
     }
 
@@ -221,6 +234,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
             
             String numeroNotaFiscal = "OS-" + numeroOS + "-SAIDA-" + codigoPeca;
             MovimentacaoEstoque movimentacaoSaida = new MovimentacaoEstoque();
+            movimentacaoSaida.setEmpresa(peca.getEmpresa());
             movimentacaoSaida.setCodigoPeca(codigoPeca);
             movimentacaoSaida.setFornecedor(fornecedor);
             movimentacaoSaida.setQuantidade(quantidade);
@@ -322,6 +336,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         }
         
         MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
+        movimentacao.setEmpresa(peca.getEmpresa());
         movimentacao.setCodigoPeca(codigoPeca);
         movimentacao.setFornecedor(fornecedor);
         movimentacao.setQuantidade(quantidade);

@@ -7,17 +7,20 @@ import tecstock_spring.controller.PecaController;
 import tecstock_spring.dto.AjusteEstoqueDTO;
 import tecstock_spring.exception.CodigoPecaDuplicadoException;
 import tecstock_spring.exception.PecaComEstoqueException;
+import tecstock_spring.model.Empresa;
 import tecstock_spring.model.Fabricante;
 import tecstock_spring.model.Fornecedor;
 import tecstock_spring.model.MovimentacaoEstoque;
 import tecstock_spring.model.OrdemServico;
 import tecstock_spring.model.Peca;
 import tecstock_spring.model.PecaOrdemServico;
+import tecstock_spring.repository.EmpresaRepository;
 import tecstock_spring.repository.FabricanteRepository;
 import tecstock_spring.repository.FornecedorRepository;
 import tecstock_spring.repository.MovimentacaoEstoqueRepository;
 import tecstock_spring.repository.OrdemServicoRepository;
 import tecstock_spring.repository.PecaRepository;
+import tecstock_spring.util.TenantContext;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -34,11 +37,21 @@ public class PecaServiceImpl implements PecaService {
     private final FornecedorRepository fornecedorRepository;
     private final OrdemServicoRepository ordemServicoRepository;
     private final MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
+    private final EmpresaRepository empresaRepository;
     
     Logger logger = Logger.getLogger(PecaController.class);
 
     @Override
     public Peca salvar(Peca peca) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+        peca.setEmpresa(empresa);
+        
         if (peca.getFabricante() == null || peca.getFabricante().getId() == null) {
             throw new IllegalArgumentException("O ID do Fabricante não pode ser nulo ao salvar uma Peça.");
         }
@@ -103,7 +116,12 @@ public class PecaServiceImpl implements PecaService {
 
     @Override
     public Peca buscarPorId(Long id) {
-        return pecaRepository.findById(id)
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        
+        return pecaRepository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new RuntimeException("Peça não encontrada"));
     }
 
@@ -116,7 +134,12 @@ public class PecaServiceImpl implements PecaService {
 
     @Override
     public List<Peca> listarTodas() {
-        List<Peca> pecas = pecaRepository.findAll();
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        
+        List<Peca> pecas = pecaRepository.findByEmpresaId(empresaId);
         if (pecas.isEmpty()) {
             logger.info("Nenhuma peça cadastrada.");
         } else {
@@ -127,8 +150,16 @@ public class PecaServiceImpl implements PecaService {
 
     @Override
     public Peca atualizar(Long id, Peca novaPeca) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        
         Peca pecaExistente = buscarPorId(id);
         
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+        novaPeca.setEmpresa(empresa);
         novaPeca.setId(id);
         if (novaPeca.getFabricante() != null && novaPeca.getFabricante().getId() != null) {
             Fabricante fabricanteGerenciado = fabricanteRepository.findById(novaPeca.getFabricante().getId())
@@ -196,6 +227,7 @@ public class PecaServiceImpl implements PecaService {
         Peca pecaAtualizada = pecaRepository.save(peca);
 
         MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
+        movimentacao.setEmpresa(peca.getEmpresa());
         movimentacao.setCodigoPeca(peca.getCodigoFabricante());
         movimentacao.setFornecedor(peca.getFornecedor());
         movimentacao.setQuantidade(Math.abs(ajusteDTO.getAjuste()));
@@ -230,8 +262,13 @@ public class PecaServiceImpl implements PecaService {
     
     @Override
     public List<Peca> listarEmUso() {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        
         logger.info("Listando peças em uso em OSs não encerradas");
-        List<Peca> pecas = pecaRepository.findAll();
+        List<Peca> pecas = pecaRepository.findByEmpresaId(empresaId);
         return pecas.stream()
                 .filter(peca -> peca.getUnidadesUsadasEmOS() != null && peca.getUnidadesUsadasEmOS() > 0)
                 .collect(Collectors.toList());
@@ -239,9 +276,14 @@ public class PecaServiceImpl implements PecaService {
     
     @Override
     public void atualizarUnidadesUsadas() {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        
         logger.info("Atualizando unidades usadas em OSs para todas as peças");
         
-        List<Peca> todasPecas = pecaRepository.findAll();
+        List<Peca> todasPecas = pecaRepository.findByEmpresaId(empresaId);
         List<OrdemServico> osNaoEncerradas = ordemServicoRepository.findByStatusNot("Encerrada");
         
         for (Peca peca : todasPecas) {

@@ -5,7 +5,9 @@ import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 import tecstock_spring.exception.OrcamentoNotFoundException;
 import tecstock_spring.model.*;
+import tecstock_spring.repository.EmpresaRepository;
 import tecstock_spring.repository.OrcamentoRepository;
+import tecstock_spring.util.TenantContext;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -17,10 +19,20 @@ public class OrcamentoServiceImpl implements OrcamentoService {
 
     private final OrcamentoRepository repository;
     private final OrdemServicoService ordemServicoService;
+    private final EmpresaRepository empresaRepository;
     private static final Logger logger = Logger.getLogger(OrcamentoServiceImpl.class);
 
     @Override
     public Orcamento salvar(Orcamento orcamento) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+        orcamento.setEmpresa(empresa);
+        
         if (orcamento.getId() == null && (orcamento.getNumeroOrcamento() == null || orcamento.getNumeroOrcamento().isEmpty())) {
             Integer max = repository.findAll().stream()
                 .filter(orc -> orc.getNumeroOrcamento() != null && orc.getNumeroOrcamento().matches("\\d+"))
@@ -43,7 +55,12 @@ public class OrcamentoServiceImpl implements OrcamentoService {
 
     @Override
     public Orcamento buscarPorId(Long id) {
-        return repository.findById(id)
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        
+        return repository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new OrcamentoNotFoundException("Orçamento não encontrado com ID: " + id));
     }
     
@@ -55,7 +72,12 @@ public class OrcamentoServiceImpl implements OrcamentoService {
 
     @Override
     public List<Orcamento> listarTodos() {
-        List<Orcamento> orcamentos = repository.findAllOrderByNumeroOrcamentoAsc();
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        
+        List<Orcamento> orcamentos = repository.findByEmpresaId(empresaId);
         logger.info(orcamentos.size() + " orçamentos encontrados (ordenados por numeroOrcamento crescente).");
         return orcamentos;
     }

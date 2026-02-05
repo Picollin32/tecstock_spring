@@ -5,10 +5,13 @@ import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tecstock_spring.exception.OrdemServicoNotFoundException;
+import tecstock_spring.model.Empresa;
 import tecstock_spring.model.OrdemServico;
+import tecstock_spring.repository.EmpresaRepository;
 import tecstock_spring.repository.OrdemServicoRepository;
 import tecstock_spring.repository.PecaRepository;
 import tecstock_spring.repository.PecaOrdemServicoRepository;
+import tecstock_spring.util.TenantContext;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,10 +28,20 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final ServicoService servicoService;
     private final PecaService pecaService;
     private final ChecklistService checklistService;
+    private final EmpresaRepository empresaRepository;
     private static final Logger logger = Logger.getLogger(OrdemServicoServiceImpl.class);
 
     @Override
     public OrdemServico salvar(OrdemServico ordemServico) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+        ordemServico.setEmpresa(empresa);
+        
         boolean isNovaOS = ordemServico.getId() == null;
 
         if (ordemServico.getChecklistId() == null && ordemServico.getOrcamentoOrigemId() == null) {
@@ -71,7 +84,12 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
     @Override
     public OrdemServico buscarPorId(Long id) {
-        return repository.findById(id)
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        
+        return repository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new OrdemServicoNotFoundException("Ordem de Serviço não encontrada com ID: " + id));
     }
     
@@ -83,7 +101,12 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
     @Override
     public List<OrdemServico> listarTodos() {
-        List<OrdemServico> ordensServico = repository.findAllOrderByNumeroOSAsc();
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        
+        List<OrdemServico> ordensServico = repository.findByEmpresaId(empresaId);
         logger.info(ordensServico.size() + " ordens de serviço encontradas (ordenadas por numeroOS crescente).");
         return ordensServico;
     }

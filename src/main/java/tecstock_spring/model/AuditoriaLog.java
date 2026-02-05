@@ -1,5 +1,6 @@
 package tecstock_spring.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,6 +18,11 @@ public class AuditoriaLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "empresa_id")
+    private Empresa empresa;
     
     @Column(nullable = false)
     private String entidade;

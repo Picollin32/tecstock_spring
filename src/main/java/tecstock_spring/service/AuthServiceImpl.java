@@ -52,6 +52,7 @@ public class AuthServiceImpl implements AuthService {
         String nomeCompleto;
         Integer nivelAcesso;
         Long consultorId = null;
+        Long empresaId = null;
         LoginResponseDTO.ConsultorDTO consultorDTO = null;
         
         if (usuario.getConsultor() != null) {
@@ -59,6 +60,7 @@ public class AuthServiceImpl implements AuthService {
             nomeCompleto = usuario.getConsultor().getNome();
             nivelAcesso = Integer.valueOf(usuario.getConsultor().getNivelAcesso());
             consultorId = usuario.getConsultor().getId();
+            empresaId = usuario.getConsultor().getEmpresa() != null ? usuario.getConsultor().getEmpresa().getId() : null;
 
             consultorDTO = LoginResponseDTO.ConsultorDTO.builder()
                     .id(usuario.getConsultor().getId())
@@ -71,10 +73,11 @@ public class AuthServiceImpl implements AuthService {
 
             nomeCompleto = usuario.getNomeCompleto() != null ? usuario.getNomeCompleto() : usuario.getNomeUsuario();
             nivelAcesso = usuario.getNivelAcesso();
+            empresaId = usuario.getEmpresa() != null ? usuario.getEmpresa().getId() : null;
             logger.info("Usuário ID " + usuario.getId() + " admin sem consultor vinculado");
         }
 
-        String token = jwtUtil.generateToken(usuario.getId(), usuario.getNomeUsuario(), nivelAcesso, consultorId);
+        String token = jwtUtil.generateToken(usuario.getId(), usuario.getNomeUsuario(), nivelAcesso, consultorId, empresaId);
 
         LoginResponseDTO response = new LoginResponseDTO();
         response.setId(usuario.getId());
@@ -83,6 +86,22 @@ public class AuthServiceImpl implements AuthService {
         response.setNivelAcesso(nivelAcesso);
         response.setToken(token);
         response.setConsultor(consultorDTO);
+
+        if (empresaId != null) {
+            if (usuario.getConsultor() != null && usuario.getConsultor().getEmpresa() != null) {
+                LoginResponseDTO.EmpresaDTO empresaDTO = LoginResponseDTO.EmpresaDTO.builder()
+                        .id(usuario.getConsultor().getEmpresa().getId())
+                        .nomeFantasia(usuario.getConsultor().getEmpresa().getNomeFantasia())
+                        .build();
+                response.setEmpresa(empresaDTO);
+            } else if (usuario.getEmpresa() != null) {
+                LoginResponseDTO.EmpresaDTO empresaDTO = LoginResponseDTO.EmpresaDTO.builder()
+                        .id(usuario.getEmpresa().getId())
+                        .nomeFantasia(usuario.getEmpresa().getNomeFantasia())
+                        .build();
+                response.setEmpresa(empresaDTO);
+            }
+        }
                 
         logger.info("Login realizado com sucesso - ID: " + usuario.getId() + " (Nível: " + nivelAcesso + ")");
         return response;

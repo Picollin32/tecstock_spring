@@ -16,6 +16,7 @@ public class LoginResponseDTO {
     private Integer nivelAcesso;
     private String token;
     private ConsultorDTO consultor;
+    private EmpresaDTO empresa;
     
     @Data
     @NoArgsConstructor
@@ -25,5 +26,14 @@ public class LoginResponseDTO {
         private Long id;
         private String nome;
         private Integer nivelAcesso;
+    }
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class EmpresaDTO {
+        private Long id;
+        private String nomeFantasia;
     }
 }

@@ -5,6 +5,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import tecstock_spring.model.Funcionario;
 
+import java.util.List;
+import java.util.Optional;
+
 public interface FuncionarioRepository extends JpaRepository<Funcionario, Long> {
     
     @Query("SELECT f FROM Funcionario f WHERE f.cpf = :cpf")
@@ -15,4 +18,6 @@ public interface FuncionarioRepository extends JpaRepository<Funcionario, Long> 
     
     @Query("SELECT COUNT(f) > 0 FROM Funcionario f WHERE f.cpf = :cpf")
     boolean existsByCpf(@Param("cpf") String cpf);
+    List<Funcionario> findByEmpresaId(Long empresaId);
+    Optional<Funcionario> findByIdAndEmpresaId(Long id, Long empresaId);
 }

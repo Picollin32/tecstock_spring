@@ -25,13 +25,16 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateToken(Long userId, String nomeUsuario, Integer nivelAcesso, Long consultorId) {
+    public String generateToken(Long userId, String nomeUsuario, Integer nivelAcesso, Long consultorId, Long empresaId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("nomeUsuario", nomeUsuario);
         claims.put("nivelAcesso", nivelAcesso);
         if (consultorId != null) {
             claims.put("consultorId", consultorId);
+        }
+        if (empresaId != null) {
+            claims.put("empresaId", empresaId);
         }
 
         return Jwts.builder()
@@ -57,6 +60,10 @@ public class JwtUtil {
 
     public Long extractConsultorId(String token) {
         return extractClaims(token).get("consultorId", Long.class);
+    }
+
+    public Long extractEmpresaId(String token) {
+        return extractClaims(token).get("empresaId", Long.class);
     }
 
     public boolean validateToken(String token, String username) {

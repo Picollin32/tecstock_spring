@@ -236,6 +236,16 @@ public class AuditListener {
         log.setValoresAntigos(valoresAntigos);
         log.setValoresNovos(valoresNovos);
         log.setDescricao(descricao);
+
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId != null) {
+            try {
+                var empresaRepository = applicationContext.getBean("empresaRepository", tecstock_spring.repository.EmpresaRepository.class);
+                empresaRepository.findById(empresaId).ifPresent(log::setEmpresa);
+            } catch (Exception e) {
+                System.err.println("Erro ao obter empresa para log de auditoria: " + e.getMessage());
+            }
+        }
         
         repository.save(log);
     }

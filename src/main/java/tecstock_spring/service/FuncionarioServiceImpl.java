@@ -6,12 +6,17 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.FuncionarioController;
 import tecstock_spring.exception.CpfDuplicadoException;
+import tecstock_spring.exception.ResourceNotFoundException;
 import tecstock_spring.model.Funcionario;
+import tecstock_spring.model.Empresa;
 import tecstock_spring.repository.FuncionarioRepository;
 import tecstock_spring.repository.OrdemServicoRepository;
 import tecstock_spring.repository.OrcamentoRepository;
 import tecstock_spring.repository.ChecklistRepository;
+import tecstock_spring.repository.EmpresaRepository;
+import tecstock_spring.repository.UsuarioRepository;
 import tecstock_spring.exception.FuncionarioEmUsoException;
+import tecstock_spring.util.TenantContext;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -19,13 +24,26 @@ import lombok.RequiredArgsConstructor;
 public class FuncionarioServiceImpl implements FuncionarioService {
 
     private final FuncionarioRepository repository;
+    private final EmpresaRepository empresaRepository;
     private final OrdemServicoRepository ordemServicoRepository;
     private final OrcamentoRepository orcamentoRepository;
     private final ChecklistRepository checklistRepository;
+    private final UsuarioRepository usuarioRepository;
     Logger logger = Logger.getLogger(FuncionarioController.class);
 
     @Override
     public Funcionario salvar(Funcionario funcionario) {
+
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new RuntimeException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa não encontrada"));
+        
+        funcionario.setEmpresa(empresa);
+        
         validarCpfDuplicado(funcionario.getCpf(), null);
         Funcionario funcionariosalvo = repository.save(funcionario);
         logger.info("Funcionario salvo com sucesso: " + funcionariosalvo);
@@ -34,47 +52,77 @@ public class FuncionarioServiceImpl implements FuncionarioService {
 
     @Override
     public Funcionario buscarPorId(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Funcionario não encontrado"));
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new RuntimeException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        return repository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Funcionario não encontrado"));
     }
 
     @Override
     public List<Funcionario> listarTodos() {
-        List<Funcionario> funcionarios = repository.findAll();
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new RuntimeException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        List<Funcionario> funcionarios = repository.findByEmpresaId(empresaId);
         if (funcionarios != null && funcionarios.isEmpty()) {
-            logger.info("Nenhum funcionario cadastrado: " + funcionarios);
-            System.out.println("Nenhum funcionario cadastrado: " + funcionarios);
+            logger.info("Nenhum funcionario cadastrado na empresa " + empresaId);
+            System.out.println("Nenhum funcionario cadastrado na empresa " + empresaId);
         } else if (funcionarios != null && !funcionarios.isEmpty()) {
-            logger.info(funcionarios.size() + " funcionarios encontrados.");
-            System.out.println(funcionarios.size() + " funcionarios encontrados.");
+            logger.info(funcionarios.size() + " funcionarios encontrados na empresa " + empresaId);
+            System.out.println(funcionarios.size() + " funcionarios encontrados na empresa " + empresaId);
         }
         return funcionarios;
     }
 
     @Override
     public List<Funcionario> listarMecanicos() {
-        List<Funcionario> mecanicos = repository.findAll().stream()
-                .filter(f -> f.getNivelAcesso() == 2)
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new RuntimeException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        List<Funcionario> mecanicos = repository.findByEmpresaId(empresaId).stream()
+                .filter(f -> f.getNivelAcesso() == 3)
                 .toList();
-        logger.info(mecanicos.size() + " mecânicos encontrados.");
+        logger.info(mecanicos.size() + " mecânicos encontrados na empresa " + empresaId);
         return mecanicos;
     }
 
     @Override
     public Funcionario atualizar(Long id, Funcionario novoFuncionario) {
+
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new RuntimeException("Empresa não encontrada no contexto do usuário");
+        }
+        
         Funcionario funcionarioExistente = buscarPorId(id);
         validarCpfDuplicado(novoFuncionario.getCpf(), id);
-        BeanUtils.copyProperties(novoFuncionario, funcionarioExistente, "id", "pecasComDesconto", "createdAt", "updatedAt");
+        BeanUtils.copyProperties(novoFuncionario, funcionarioExistente, "id", "pecasComDesconto", "createdAt", "updatedAt", "empresa");
         return repository.save(funcionarioExistente);
     }
 
     @Override
     public void deletar(Long id) {
+
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new RuntimeException("Empresa não encontrada no contexto do usuário");
+        }
+
+        Funcionario funcionario = buscarPorId(id);
+        
         boolean emOrdemComoMecanico = ordemServicoRepository.existsByMecanicoId(id);
         boolean emOrdemComoConsultor = ordemServicoRepository.existsByConsultorId(id);
         boolean emOrcamentoComoMecanico = orcamentoRepository.existsByMecanicoId(id);
         boolean emOrcamentoComoConsultor = orcamentoRepository.existsByConsultorId(id);
         boolean emChecklistComoConsultor = checklistRepository.existsByConsultorId(id);
+        boolean emUsuarioComoConsultor = usuarioRepository.existsByConsultorId(id);
 
         if (emOrdemComoMecanico) {
             throw new FuncionarioEmUsoException("Funcionário não pode ser excluído pois está vinculado como mecânico em uma Ordem de Serviço");
@@ -94,6 +142,10 @@ public class FuncionarioServiceImpl implements FuncionarioService {
 
         if (emOrcamentoComoConsultor) {
             throw new FuncionarioEmUsoException("Funcionário não pode ser excluído pois está vinculado como consultor em um Orçamento");
+        }
+
+        if (emUsuarioComoConsultor) {
+            throw new FuncionarioEmUsoException("Funcionário não pode ser excluído pois está vinculado como consultor em um Usuário");
         }
 
         repository.deleteById(id);
