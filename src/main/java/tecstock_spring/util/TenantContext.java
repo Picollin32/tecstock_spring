@@ -25,6 +25,11 @@ public class TenantContext {
         return nivel != null && nivel == 0;
     }
     
+    public static boolean isAdmin() {
+        Integer nivel = currentNivelAcesso.get();
+        return nivel != null && nivel <= 1;
+    }
+    
     public static void clear() {
         currentEmpresaId.remove();
         currentNivelAcesso.remove();

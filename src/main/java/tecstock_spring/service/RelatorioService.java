@@ -13,6 +13,7 @@ import tecstock_spring.dto.RelatorioGarantiasDTO;
 import tecstock_spring.dto.RelatorioServicosDTO;
 import tecstock_spring.model.*;
 import tecstock_spring.repository.*;
+import tecstock_spring.util.TenantContext;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -50,8 +51,12 @@ public class RelatorioService {
     private ChecklistRepository checklistRepository;
 
     public RelatorioAgendamentosDTO gerarRelatorioAgendamentos(LocalDate dataInicio, LocalDate dataFim) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
 
-        List<Agendamento> agendamentos = agendamentoRepository.findAll().stream()
+        List<Agendamento> agendamentos = agendamentoRepository.findByEmpresaId(empresaId).stream()
                 .filter(a -> a.getData() != null &&
                         !a.getData().isBefore(dataInicio) &&
                         !a.getData().isAfter(dataFim))
@@ -105,8 +110,12 @@ public class RelatorioService {
     }
 
     public RelatorioServicosDTO gerarRelatorioServicos(LocalDate dataInicio, LocalDate dataFim) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
 
-        List<OrdemServico> ordens = ordemServicoRepository.findAll().stream()
+        List<OrdemServico> ordens = ordemServicoRepository.findByEmpresaId(empresaId).stream()
                 .filter(os -> os.getDataHora() != null && 
                         !os.getDataHora().toLocalDate().isBefore(dataInicio) && 
                         !os.getDataHora().toLocalDate().isAfter(dataFim) &&
@@ -127,13 +136,13 @@ public class RelatorioService {
                 .map(OrdemServico::getNumeroOS)
                 .collect(Collectors.toList());
 
-        List<ServicoOrdemServico> servicosRealizados = servicoOrdemServicoRepository.findAll().stream()
-                .filter(s -> s.getDataRealizacao() != null &&
-                        !s.getDataRealizacao().toLocalDate().isBefore(dataInicio) &&
-                        !s.getDataRealizacao().toLocalDate().isAfter(dataFim) &&
-                        s.getNumeroOS() != null &&
-                        numerosOSEncerradas.contains(s.getNumeroOS()))
-                .collect(Collectors.toList());
+        List<ServicoOrdemServico> servicosRealizados = numerosOSEncerradas.isEmpty() ? 
+                Collections.emptyList() : 
+                servicoOrdemServicoRepository.findByNumeroOSIn(numerosOSEncerradas).stream()
+                    .filter(s -> s.getDataRealizacao() != null &&
+                            !s.getDataRealizacao().toLocalDate().isBefore(dataInicio) &&
+                            !s.getDataRealizacao().toLocalDate().isAfter(dataFim))
+                    .collect(Collectors.toList());
 
         BigDecimal valorTotalServicos = servicosRealizados.stream()
                 .map(s -> s.getValor() != null ? BigDecimal.valueOf(s.getValor()) : BigDecimal.ZERO)
@@ -210,7 +219,12 @@ public class RelatorioService {
     }
 
     public RelatorioEstoqueDTO gerarRelatorioEstoque(LocalDate dataInicio, LocalDate dataFim) {
-        List<MovimentacaoEstoque> movimentacoes = movimentacaoEstoqueRepository.findAll().stream()
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+
+        List<MovimentacaoEstoque> movimentacoes = movimentacaoEstoqueRepository.findByEmpresaId(empresaId).stream()
                 .filter(m -> {
                     LocalDateTime data = m.getTipoMovimentacao() == MovimentacaoEstoque.TipoMovimentacao.ENTRADA 
                             ? m.getDataEntrada() : m.getDataSaida();
@@ -244,7 +258,7 @@ public class RelatorioService {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        List<Peca> pecas = pecaRepository.findAll();
+        List<Peca> pecas = pecaRepository.findByEmpresaId(empresaId);
         BigDecimal valorTotalEstoque = pecas.stream()
                 .map(p -> {
                     BigDecimal preco = BigDecimal.valueOf(p.getPrecoUnitario());
@@ -310,8 +324,12 @@ public class RelatorioService {
     }
 
     public RelatorioFinanceiroDTO gerarRelatorioFinanceiro(LocalDate dataInicio, LocalDate dataFim) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
 
-        List<MovimentacaoEstoque> saidas = movimentacaoEstoqueRepository.findAll().stream()
+        List<MovimentacaoEstoque> saidas = movimentacaoEstoqueRepository.findByEmpresaId(empresaId).stream()
                 .filter(m -> m.getTipoMovimentacao() == MovimentacaoEstoque.TipoMovimentacao.SAIDA &&
                         m.getDataSaida() != null &&
                         !m.getDataSaida().toLocalDate().isBefore(dataInicio) && 
@@ -326,7 +344,7 @@ public class RelatorioService {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        List<OrdemServico> ordensFinalizadas = ordemServicoRepository.findAll().stream()
+        List<OrdemServico> ordensFinalizadas = ordemServicoRepository.findByEmpresaId(empresaId).stream()
                 .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) && 
                         os.getDataHoraEncerramento() != null &&
                         !os.getDataHoraEncerramento().toLocalDate().isBefore(dataInicio) && 
@@ -337,19 +355,19 @@ public class RelatorioService {
                 .map(OrdemServico::getNumeroOS)
                 .collect(Collectors.toList());
 
-        List<ServicoOrdemServico> servicosRealizados = servicoOrdemServicoRepository.findAll().stream()
-                .filter(s -> s.getDataRealizacao() != null &&
-                        !s.getDataRealizacao().toLocalDate().isBefore(dataInicio) &&
-                        !s.getDataRealizacao().toLocalDate().isAfter(dataFim) &&
-                        s.getNumeroOS() != null &&
-                        numerosOSEncerradas.contains(s.getNumeroOS()))
-                .collect(Collectors.toList());
+        List<ServicoOrdemServico> servicosRealizados = numerosOSEncerradas.isEmpty() ? 
+                Collections.emptyList() : 
+                servicoOrdemServicoRepository.findByNumeroOSIn(numerosOSEncerradas).stream()
+                    .filter(s -> s.getDataRealizacao() != null &&
+                            !s.getDataRealizacao().toLocalDate().isBefore(dataInicio) &&
+                            !s.getDataRealizacao().toLocalDate().isAfter(dataFim))
+                    .collect(Collectors.toList());
 
         BigDecimal receitaServicos = servicosRealizados.stream()
                 .map(s -> s.getValor() != null ? BigDecimal.valueOf(s.getValor()) : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        List<MovimentacaoEstoque> entradas = movimentacaoEstoqueRepository.findAll().stream()
+        List<MovimentacaoEstoque> entradas = movimentacaoEstoqueRepository.findByEmpresaId(empresaId).stream()
                 .filter(m -> m.getTipoMovimentacao() == MovimentacaoEstoque.TipoMovimentacao.ENTRADA &&
                         m.getDataEntrada() != null &&
                         !m.getDataEntrada().toLocalDate().isBefore(dataInicio) && 
@@ -408,13 +426,17 @@ public class RelatorioService {
     }
 
     public RelatorioComissaoDTO gerarRelatorioComissao(LocalDate dataInicio, LocalDate dataFim, Long mecanicoId) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
 
-        Funcionario mecanico = funcionarioRepository.findById(mecanicoId)
+        Funcionario mecanico = funcionarioRepository.findByIdAndEmpresaId(mecanicoId, empresaId)
                 .orElseThrow(() -> new RuntimeException("Mecânico não encontrado"));
         
         String mecanicoNome = mecanico.getNome();
 
-        List<OrdemServico> ordensEncerradas = ordemServicoRepository.findAll().stream()
+        List<OrdemServico> ordensEncerradas = ordemServicoRepository.findByEmpresaId(empresaId).stream()
                 .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) &&
                         os.getDataHoraEncerramento() != null &&
                         !os.getDataHoraEncerramento().toLocalDate().isBefore(dataInicio) &&
@@ -490,8 +512,12 @@ public class RelatorioService {
     }
 
     public RelatorioGarantiasDTO gerarRelatorioGarantias(LocalDate dataInicio, LocalDate dataFim) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
 
-        List<OrdemServico> ordensEncerradas = ordemServicoRepository.findAll().stream()
+        List<OrdemServico> ordensEncerradas = ordemServicoRepository.findByEmpresaId(empresaId).stream()
                 .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) &&
                         os.getDataHoraEncerramento() != null)
                 .collect(Collectors.toList());
@@ -559,7 +585,12 @@ public class RelatorioService {
     }
 
     public RelatorioFiadoDTO gerarRelatorioFiado(LocalDate dataInicio, LocalDate dataFim) {
-        List<OrdemServico> ordensComFiado = ordemServicoRepository.findAll().stream()
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+
+        List<OrdemServico> ordensComFiado = ordemServicoRepository.findByEmpresaId(empresaId).stream()
                 .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) &&
                         os.getDataHoraEncerramento() != null &&
                         os.getPrazoFiadoDias() != null &&
@@ -677,9 +708,13 @@ public class RelatorioService {
     }
 
     public RelatorioConsultoresDTO gerarRelatorioConsultores(LocalDate dataInicio, LocalDate dataFim) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
 
-        List<Funcionario> todosConsultores = funcionarioRepository.findAll().stream()
-                .filter(f -> f.getNivelAcesso() == 1)
+        List<Funcionario> todosConsultores = funcionarioRepository.findByEmpresaId(empresaId).stream()
+                .filter(f -> f.getNivelAcesso() == 2)
                 .collect(Collectors.toList());
         
         List<ConsultorMetricasDTO> consultoresMetricas = new ArrayList<>();
@@ -694,7 +729,7 @@ public class RelatorioService {
             Long consultorId = consultor.getId();
             String consultorNome = consultor.getNome();
 
-            long totalOrcamentos = orcamentoRepository.findAll().stream()
+            long totalOrcamentos = orcamentoRepository.findByEmpresaId(empresaId).stream()
                     .filter(o -> o.getConsultor() != null && 
                                 o.getConsultor().getId().equals(consultorId) &&
                                 o.getDataHora() != null &&
@@ -702,7 +737,7 @@ public class RelatorioService {
                                 !o.getDataHora().toLocalDate().isAfter(dataFim))
                     .count();
 
-            List<OrdemServico> ordensServico = ordemServicoRepository.findAll().stream()
+            List<OrdemServico> ordensServico = ordemServicoRepository.findByEmpresaId(empresaId).stream()
                     .filter(os -> os.getConsultor() != null && 
                                  os.getConsultor().getId().equals(consultorId) &&
                                  os.getDataHora() != null &&
@@ -728,7 +763,7 @@ public class RelatorioService {
                 valorMedioOS = valorTotalOS / totalOS;
             }
 
-            long totalChecklists = checklistRepository.findAll().stream()
+            long totalChecklists = checklistRepository.findByEmpresaId(empresaId).stream()
                     .filter(c -> c.getConsultor() != null && 
                                 c.getConsultor().getId().equals(consultorId) &&
                                 c.getCreatedAt() != null &&
@@ -736,7 +771,7 @@ public class RelatorioService {
                                 !c.getCreatedAt().toLocalDate().isAfter(dataFim))
                     .count();
 
-            long totalAgendamentos = agendamentoRepository.findAll().stream()
+            long totalAgendamentos = agendamentoRepository.findByEmpresaId(empresaId).stream()
                     .filter(a -> a.getNomeConsultor() != null &&
                                 a.getNomeConsultor().equals(consultorNome) &&
                                 a.getData() != null &&

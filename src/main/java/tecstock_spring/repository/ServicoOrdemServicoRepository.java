@@ -16,4 +16,6 @@ public interface ServicoOrdemServicoRepository extends JpaRepository<ServicoOrde
     List<ServicoOrdemServico> findByServicoIdOrderByDataRealizacaoDesc(Long servicoId);
     
     boolean existsByNumeroOS(String numeroOS);
+    
+    List<ServicoOrdemServico> findByNumeroOSIn(List<String> numerosOS);
 }

@@ -6,12 +6,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tecstock_spring.exception.UsuarioDuplicadoException;
 import tecstock_spring.exception.ResourceNotFoundException;
+import tecstock_spring.exception.UsuarioEmUsoException;
 import tecstock_spring.model.Usuario;
 import tecstock_spring.model.Funcionario;
 import tecstock_spring.model.Empresa;
 import tecstock_spring.repository.UsuarioRepository;
 import tecstock_spring.repository.FuncionarioRepository;
 import tecstock_spring.repository.EmpresaRepository;
+import tecstock_spring.repository.OrdemServicoRepository;
+import tecstock_spring.repository.OrcamentoRepository;
+import tecstock_spring.repository.ChecklistRepository;
+import tecstock_spring.repository.CustomRevisionEntityRepository;
 import tecstock_spring.util.TenantContext;
 import lombok.RequiredArgsConstructor;
 
@@ -22,6 +27,10 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioRepository repository;
     private final FuncionarioRepository funcionarioRepository;
     private final EmpresaRepository empresaRepository;
+    private final OrdemServicoRepository ordemServicoRepository;
+    private final OrcamentoRepository orcamentoRepository;
+    private final ChecklistRepository checklistRepository;
+    private final CustomRevisionEntityRepository customRevisionEntityRepository;
     private final PasswordEncoder passwordEncoder;
     Logger logger = Logger.getLogger(UsuarioServiceImpl.class);
 
@@ -199,6 +208,40 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
 
         Usuario usuario = buscarPorId(id);
+
+        if (customRevisionEntityRepository.existsByUsuario(usuario.getNomeUsuario())) {
+            throw new UsuarioEmUsoException("Usuário não pode ser excluído pois já registrou dados no sistema");
+        }
+
+        if (usuario.getNivelAcesso() == 2 && usuario.getConsultor() != null) {
+            Long consultorId = usuario.getConsultor().getId();
+            
+            boolean emOrdemComoMecanico = ordemServicoRepository.existsByMecanicoId(consultorId);
+            boolean emOrdemComoConsultor = ordemServicoRepository.existsByConsultorId(consultorId);
+            boolean emOrcamentoComoMecanico = orcamentoRepository.existsByMecanicoId(consultorId);
+            boolean emOrcamentoComoConsultor = orcamentoRepository.existsByConsultorId(consultorId);
+            boolean emChecklistComoConsultor = checklistRepository.existsByConsultorId(consultorId);
+
+            if (emOrdemComoMecanico) {
+                throw new UsuarioEmUsoException("Usuário não pode ser excluído pois o consultor vinculado está registrado como mecânico em uma Ordem de Serviço");
+            }
+
+            if (emOrdemComoConsultor) {
+                throw new UsuarioEmUsoException("Usuário não pode ser excluído pois o consultor vinculado está registrado como consultor em uma Ordem de Serviço");
+            }
+
+            if (emChecklistComoConsultor) {
+                throw new UsuarioEmUsoException("Usuário não pode ser excluído pois o consultor vinculado está registrado em um Checklist");
+            }
+
+            if (emOrcamentoComoMecanico) {
+                throw new UsuarioEmUsoException("Usuário não pode ser excluído pois o consultor vinculado está registrado como mecânico em um Orçamento");
+            }
+
+            if (emOrcamentoComoConsultor) {
+                throw new UsuarioEmUsoException("Usuário não pode ser excluído pois o consultor vinculado está registrado como consultor em um Orçamento");
+            }
+        }
 
         if (usuario.getNivelAcesso() == 1 && usuario.getEmpresa() != null) {
             Long empresaId = usuario.getEmpresa().getId();

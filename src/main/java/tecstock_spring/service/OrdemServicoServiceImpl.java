@@ -1,7 +1,7 @@
 package tecstock_spring.service;
 
-import lombok.RequiredArgsConstructor;
 import org.apache.log4j.Logger;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tecstock_spring.exception.OrdemServicoNotFoundException;
@@ -17,7 +17,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class OrdemServicoServiceImpl implements OrdemServicoService {
 
     private final OrdemServicoRepository repository;
@@ -29,7 +28,31 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final PecaService pecaService;
     private final ChecklistService checklistService;
     private final EmpresaRepository empresaRepository;
+    private final OrcamentoService orcamentoService;
     private static final Logger logger = Logger.getLogger(OrdemServicoServiceImpl.class);
+
+    public OrdemServicoServiceImpl(
+            OrdemServicoRepository repository,
+            PecaRepository pecaRepository,
+            PecaOrdemServicoRepository pecaOrdemServicoRepository,
+            MovimentacaoEstoqueService movimentacaoEstoqueService,
+            ServicoOrdemServicoService servicoOrdemServicoService,
+            ServicoService servicoService,
+            PecaService pecaService,
+            ChecklistService checklistService,
+            EmpresaRepository empresaRepository,
+            @Lazy OrcamentoService orcamentoService) {
+        this.repository = repository;
+        this.pecaRepository = pecaRepository;
+        this.pecaOrdemServicoRepository = pecaOrdemServicoRepository;
+        this.movimentacaoEstoqueService = movimentacaoEstoqueService;
+        this.servicoOrdemServicoService = servicoOrdemServicoService;
+        this.servicoService = servicoService;
+        this.pecaService = pecaService;
+        this.checklistService = checklistService;
+        this.empresaRepository = empresaRepository;
+        this.orcamentoService = orcamentoService;
+    }
 
     @Override
     public OrdemServico salvar(OrdemServico ordemServico) {
@@ -386,6 +409,19 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             logger.info("OS não está encerrada. Nenhum estoque será restaurado (estoque não foi subtraído).");
         }
         
+        if (ordemServico.getOrcamentoOrigemId() != null) {
+            try {
+                logger.info("OS " + ordemServico.getNumeroOS() + " foi criada a partir do orçamento " + 
+                           ordemServico.getNumeroOrcamentoOrigem() + " (ID: " + ordemServico.getOrcamentoOrigemId() + 
+                           "). Excluindo orçamento de origem...");
+                orcamentoService.deletar(ordemServico.getOrcamentoOrigemId());
+                logger.info("Orçamento de origem excluído com sucesso");
+            } catch (Exception e) {
+                logger.error("Erro ao excluir orçamento de origem ID " + ordemServico.getOrcamentoOrigemId() + ": " + e.getMessage());
+
+            }
+        }
+        
         logger.info("Deletando Ordem de Serviço: " + ordemServico.getNumeroOS());
         repository.deleteById(id);
 
@@ -420,6 +456,9 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     }
 
     private void processarDiferencasEstoque(List<tecstock_spring.model.PecaOrdemServico> pecasAnteriores, List<tecstock_spring.model.PecaOrdemServico> pecasNovas) {
+
+        logger.info("Processando diferenças de peças na atualização da OS (sem alterar estoque)");
+        
         java.util.Map<Long, Integer> pecasAnterioresMap = new java.util.HashMap<>();
         if (pecasAnteriores != null) {
             for (tecstock_spring.model.PecaOrdemServico peca : pecasAnteriores) {
@@ -450,12 +489,9 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             if (diferenca != 0) {
                 tecstock_spring.model.Peca peca = pecaRepository.findById(pecaId).orElse(null);
                 if (peca != null) {
-                    int novoEstoque = peca.getQuantidadeEstoque() - diferenca;
-                    peca.setQuantidadeEstoque(novoEstoque);
-                    pecaRepository.save(peca);
-                    
-                    String acao = diferenca > 0 ? "subtraída" : "adicionada";
-                    logger.info("Estoque da peça " + peca.getNome() + " atualizado: " + Math.abs(diferenca) + " " + acao + ", estoque atual: " + novoEstoque);
+                    String acao = diferenca > 0 ? "aumentada" : "reduzida";
+                    logger.info("Quantidade da peça " + peca.getNome() + " foi " + acao + " em " + Math.abs(diferenca) + 
+                               " unidades na OS. Estoque será atualizado apenas no fechamento da OS.");
                 }
             }
         }

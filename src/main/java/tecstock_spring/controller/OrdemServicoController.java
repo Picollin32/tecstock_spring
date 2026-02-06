@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import tecstock_spring.dto.OrdemServicoResumoDTO;
 import tecstock_spring.model.OrdemServico;
 import tecstock_spring.service.OrdemServicoService;
+import tecstock_spring.util.TenantContext;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,12 +27,16 @@ public class OrdemServicoController {
     public OrdemServico salvar(@RequestBody OrdemServico ordemServico) {
         logger.info("Salvando ordem de serviço: " + ordemServico.getNumeroOS() + " no controller.");
 
-        if (!ordemServico.isDescontoServicosValido(ordemServico.getDescontoServicos())) {
-            throw new IllegalArgumentException("Desconto de serviços excede o limite máximo de 10%");
-        }
-        
-        if (!ordemServico.isDescontoPecasValido(ordemServico.getDescontoPecas())) {
-            throw new IllegalArgumentException("Desconto de peças excede a margem de lucro disponível");
+        if (!TenantContext.isAdmin()) {
+            if (!ordemServico.isDescontoServicosValido(ordemServico.getDescontoServicos())) {
+                throw new IllegalArgumentException("Desconto de serviços excede o limite máximo de 10%");
+            }
+            
+            if (!ordemServico.isDescontoPecasValido(ordemServico.getDescontoPecas())) {
+                throw new IllegalArgumentException("Desconto de peças excede a margem de lucro disponível");
+            }
+        } else {
+            logger.info("Validação de desconto ignorada - Usuário é admin (nivelAcesso: " + TenantContext.getCurrentNivelAcesso() + ")");
         }
         
         return service.salvar(ordemServico);
@@ -90,13 +95,17 @@ public class OrdemServicoController {
     @PutMapping("/api/ordens-servico/atualizar/{id}")
     public OrdemServico atualizar(@PathVariable Long id, @RequestBody OrdemServico ordemServico) {
         logger.info("Atualizando ordem de serviço no controller. ID: " + id + ", OS: " + ordemServico.getNumeroOS());
-        
-        if (!ordemServico.isDescontoServicosValido(ordemServico.getDescontoServicos())) {
-            throw new IllegalArgumentException("Desconto de serviços excede o limite máximo de 10%");
-        }
-        
-        if (!ordemServico.isDescontoPecasValido(ordemServico.getDescontoPecas())) {
-            throw new IllegalArgumentException("Desconto de peças excede a margem de lucro disponível");
+
+        if (!TenantContext.isAdmin()) {
+            if (!ordemServico.isDescontoServicosValido(ordemServico.getDescontoServicos())) {
+                throw new IllegalArgumentException("Desconto de serviços excede o limite máximo de 10%");
+            }
+            
+            if (!ordemServico.isDescontoPecasValido(ordemServico.getDescontoPecas())) {
+                throw new IllegalArgumentException("Desconto de peças excede a margem de lucro disponível");
+            }
+        } else {
+            logger.info("Validação de desconto ignorada - Usuário é admin (nivelAcesso: " + TenantContext.getCurrentNivelAcesso() + ")");
         }
         
         return service.atualizar(id, ordemServico);

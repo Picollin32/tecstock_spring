@@ -1,6 +1,5 @@
 package tecstock_spring.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;

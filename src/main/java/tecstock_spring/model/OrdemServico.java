@@ -240,11 +240,27 @@ public class OrdemServico {
         if (desconto == null || desconto <= 0) {
             return true;
         }
+
+        if (this.precoTotalServicos != null && desconto > this.precoTotalServicos) {
+            return false;
+        }
+
+        if (tecstock_spring.util.TenantContext.isAdmin()) {
+            return true;
+        }
         return desconto <= calcularMaxDescontoServicos();
     }
 
     public boolean isDescontoPecasValido(Double desconto) {
         if (desconto == null || desconto <= 0) {
+            return true;
+        }
+        // Desconto não pode deixar valor negativo
+        if (this.precoTotalPecas != null && desconto > this.precoTotalPecas) {
+            return false;
+        }
+        // Admins (nivelAcesso <= 1) não têm limite de desconto (exceto valor total)
+        if (tecstock_spring.util.TenantContext.isAdmin()) {
             return true;
         }
         return desconto <= calcularMaxDescontoPecas();

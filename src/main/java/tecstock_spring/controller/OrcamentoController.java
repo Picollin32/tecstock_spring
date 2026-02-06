@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import tecstock_spring.model.Orcamento;
 import tecstock_spring.model.OrdemServico;
 import tecstock_spring.service.OrcamentoService;
+import tecstock_spring.util.TenantContext;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,12 +24,16 @@ public class OrcamentoController {
     public Orcamento salvar(@RequestBody Orcamento orcamento) {
         logger.info("Salvando orçamento: " + orcamento.getNumeroOrcamento() + " no controller.");
 
-        if (!orcamento.isDescontoServicosValido(orcamento.getDescontoServicos())) {
-            throw new IllegalArgumentException("Desconto de serviços excede o limite máximo de 10%");
-        }
-        
-        if (!orcamento.isDescontoPecasValido(orcamento.getDescontoPecas())) {
-            throw new IllegalArgumentException("Desconto de peças excede a margem de lucro disponível");
+        if (!TenantContext.isAdmin()) {
+            if (!orcamento.isDescontoServicosValido(orcamento.getDescontoServicos())) {
+                throw new IllegalArgumentException("Desconto de serviços excede o limite máximo de 10%");
+            }
+            
+            if (!orcamento.isDescontoPecasValido(orcamento.getDescontoPecas())) {
+                throw new IllegalArgumentException("Desconto de peças excede a margem de lucro disponível");
+            }
+        } else {
+            logger.info("Validação de desconto ignorada - Usuário é admin (nivelAcesso: " + TenantContext.getCurrentNivelAcesso() + ")");
         }
         
         return service.salvar(orcamento);
@@ -77,13 +82,17 @@ public class OrcamentoController {
     @PutMapping("/api/orcamentos/atualizar/{id}")
     public Orcamento atualizar(@PathVariable Long id, @RequestBody Orcamento orcamento) {
         logger.info("Atualizando orçamento no controller. ID: " + id + ", Orçamento: " + orcamento.getNumeroOrcamento());
-        
-        if (!orcamento.isDescontoServicosValido(orcamento.getDescontoServicos())) {
-            throw new IllegalArgumentException("Desconto de serviços excede o limite máximo de 10%");
-        }
-        
-        if (!orcamento.isDescontoPecasValido(orcamento.getDescontoPecas())) {
-            throw new IllegalArgumentException("Desconto de peças excede a margem de lucro disponível");
+
+        if (!TenantContext.isAdmin()) {
+            if (!orcamento.isDescontoServicosValido(orcamento.getDescontoServicos())) {
+                throw new IllegalArgumentException("Desconto de serviços excede o limite máximo de 10%");
+            }
+            
+            if (!orcamento.isDescontoPecasValido(orcamento.getDescontoPecas())) {
+                throw new IllegalArgumentException("Desconto de peças excede a margem de lucro disponível");
+            }
+        } else {
+            logger.info("Validação de desconto ignorada - Usuário é admin (nivelAcesso: " + TenantContext.getCurrentNivelAcesso() + ")");
         }
         
         return service.atualizar(id, orcamento);

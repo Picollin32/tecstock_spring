@@ -185,6 +185,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(UsuarioEmUsoException.class)
+    public ResponseEntity<Map<String, Object>> handleUsuarioEmUsoException(
+            UsuarioEmUsoException ex, WebRequest request) {
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        body.put("error", "Usuário em Uso");
+        
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(OrdemServicoNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleOrdemServicoNotFoundException(
             OrdemServicoNotFoundException ex, WebRequest request) {
@@ -222,6 +235,19 @@ public class GlobalExceptionHandler {
         body.put("error", "Dados Inválidos");
         
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalStateException(
+            IllegalStateException ex, WebRequest request) {
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        body.put("error", "Operação Não Permitida");
+        
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(RuntimeException.class)
