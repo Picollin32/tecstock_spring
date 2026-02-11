@@ -61,8 +61,8 @@
             <appender-ref ref="CONSOLE_JSON"/>
         </root>
         
-        <!-- Logs da aplicação em INFO -->
-        <logger name="tecstock_spring" level="INFO"/>
+        <!-- Logs da aplicação em WARN (evita spam de logs INFO em produção) -->
+        <logger name="tecstock_spring" level="WARN"/>
         
         <!-- Security em WARN (evita logs excessivos de autenticação) -->
         <logger name="org.springframework.security" level="WARN"/>
