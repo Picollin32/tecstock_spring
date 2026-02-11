@@ -15,6 +15,7 @@ import jakarta.persistence.PreUpdate;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.envers.Audited;
+import org.hibernate.annotations.Filter;
 import tecstock_spring.util.AuditListener;
 
 import java.time.LocalDate;
@@ -25,6 +26,7 @@ import java.time.LocalTime;
 @Getter
 @Setter
 @Audited
+@Filter(name = "empresaFilter", condition = "empresa_id = :empresaId")
 @EntityListeners(AuditListener.class)
 public class Agendamento {
 

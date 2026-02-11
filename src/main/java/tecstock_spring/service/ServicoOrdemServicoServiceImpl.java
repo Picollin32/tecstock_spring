@@ -1,7 +1,8 @@
 package tecstock_spring.service;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tecstock_spring.model.OrdemServico;
@@ -16,7 +17,7 @@ import java.util.List;
 public class ServicoOrdemServicoServiceImpl implements ServicoOrdemServicoService {
 
     private final ServicoOrdemServicoRepository repository;
-    private static final Logger logger = Logger.getLogger(ServicoOrdemServicoServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(ServicoOrdemServicoServiceImpl.class);
 
     @Override
     public ServicoOrdemServico salvar(ServicoOrdemServico servicoOrdemServico) {
@@ -26,6 +27,7 @@ public class ServicoOrdemServicoServiceImpl implements ServicoOrdemServicoServic
 
     @Override
     @Transactional
+    @SuppressWarnings("null")
     public void registrarServicosRealizados(OrdemServico ordemServico) {
         if (ordemServico.getServicosRealizados() == null || ordemServico.getServicosRealizados().isEmpty()) {
             logger.info("Nenhum serviço para registrar na OS: " + ordemServico.getNumeroOS());
@@ -92,6 +94,7 @@ public class ServicoOrdemServicoServiceImpl implements ServicoOrdemServicoServic
     }
 
     @Override
+    @SuppressWarnings("null")
     public void deletar(Long id) {
         logger.info("Deletando registro de serviço realizado ID: " + id);
         repository.deleteById(id);

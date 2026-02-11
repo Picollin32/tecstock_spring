@@ -2,7 +2,8 @@ package tecstock_spring.controller;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class ChecklistController {
 
     private final ChecklistService service;
-    Logger logger = Logger.getLogger(ChecklistController.class);
+    Logger logger = LoggerFactory.getLogger(ChecklistController.class);
 
     @PostMapping("/api/checklists/salvar")
     public Checklist salvar(@RequestBody Checklist checklist) {

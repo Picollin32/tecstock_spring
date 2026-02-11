@@ -1,7 +1,8 @@
 package tecstock_spring.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import tecstock_spring.dto.ServicoOrdemServicoDTO;
 import tecstock_spring.model.ServicoOrdemServico;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 public class ServicoOrdemServicoController {
 
     private final ServicoOrdemServicoService service;
-    private static final Logger logger = Logger.getLogger(ServicoOrdemServicoController.class);
+    private static final Logger logger = LoggerFactory.getLogger(ServicoOrdemServicoController.class);
 
     @GetMapping("/api/servicos-ordem-servico/listarTodos")
     public List<ServicoOrdemServico> listarTodos() {

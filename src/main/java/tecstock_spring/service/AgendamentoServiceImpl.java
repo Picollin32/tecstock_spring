@@ -1,6 +1,7 @@
 package tecstock_spring.service;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import tecstock_spring.controller.AgendamentoController;
@@ -14,11 +15,12 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class AgendamentoServiceImpl implements AgendamentoService {
 
     private final AgendamentoRepository repository;
     private final EmpresaRepository empresaRepository;
-    Logger logger = Logger.getLogger(AgendamentoController.class);
+    Logger logger = LoggerFactory.getLogger(AgendamentoController.class);
 
     @Override
     public Agendamento salvar(Agendamento agendamento) {

@@ -1,6 +1,7 @@
 package tecstock_spring.controller;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 public class UtilController {
 
     private final PasswordEncoder passwordEncoder;
-    private static final Logger logger = Logger.getLogger(UtilController.class);
+    private static final Logger logger = LoggerFactory.getLogger(UtilController.class);
 
     @GetMapping("/gerar-senha")
     public String gerarSenhaCriptografada(@RequestParam String senha) {

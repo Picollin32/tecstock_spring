@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.envers.Audited;
+import org.hibernate.annotations.Filter;
 import tecstock_spring.util.AuditListener;
 
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Audited
+@Filter(name = "empresaFilter", condition = "empresa_id = :empresaId")
 @EntityListeners(AuditListener.class)
 public class OrdemServico {
     
@@ -255,11 +257,10 @@ public class OrdemServico {
         if (desconto == null || desconto <= 0) {
             return true;
         }
-        // Desconto não pode deixar valor negativo
         if (this.precoTotalPecas != null && desconto > this.precoTotalPecas) {
             return false;
         }
-        // Admins (nivelAcesso <= 1) não têm limite de desconto (exceto valor total)
+
         if (tecstock_spring.util.TenantContext.isAdmin()) {
             return true;
         }

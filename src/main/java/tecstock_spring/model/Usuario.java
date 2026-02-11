@@ -20,6 +20,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.envers.Audited;
+import org.hibernate.annotations.Filter;
 import tecstock_spring.util.AuditListener;
 
 @Entity
@@ -28,6 +29,7 @@ import tecstock_spring.util.AuditListener;
 @AllArgsConstructor
 @Builder
 @Audited
+@Filter(name = "empresaFilter", condition = "empresa_id = :empresaId")
 @EntityListeners(AuditListener.class)
 public class Usuario {
     @Id

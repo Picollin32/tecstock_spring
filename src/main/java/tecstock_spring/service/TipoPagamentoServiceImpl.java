@@ -3,7 +3,8 @@ package tecstock_spring.service;
 import java.util.List;
 
 import jakarta.persistence.EntityManager;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +26,7 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
     private final EmpresaRepository empresaRepository;
     private final OrdemServicoRepository ordemServicoRepository;
     private final EntityManager entityManager;
-    Logger logger = Logger.getLogger(TipoPagamentoServiceImpl.class);
+    Logger logger = LoggerFactory.getLogger(TipoPagamentoServiceImpl.class);
 
     @Override
     @Transactional
@@ -88,6 +89,7 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public TipoPagamento atualizar(Long id, TipoPagamento novoTipoPagamento) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
@@ -106,6 +108,7 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public void deletar(Long id) {
 
         TipoPagamento tipoPagamento = buscarPorId(id);

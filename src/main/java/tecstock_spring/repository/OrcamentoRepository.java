@@ -18,23 +18,21 @@ public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
     @org.springframework.data.jpa.repository.Query("SELECT o FROM Orcamento o ORDER BY CAST(o.numeroOrcamento AS int) ASC")
     List<Orcamento> findAllOrderByNumeroOrcamentoAsc();
     
-    List<Orcamento> findByClienteCpfOrderByDataHoraDesc(String clienteCpf);
-    java.util.Optional<Orcamento> findFirstByClienteCpfOrderByDataHoraDesc(String clienteCpf);
+    List<Orcamento> findByClienteCpfAndEmpresaIdOrderByDataHoraDesc(String clienteCpf, Long empresaId);
+    java.util.Optional<Orcamento> findFirstByClienteCpfAndEmpresaIdOrderByDataHoraDesc(String clienteCpf, Long empresaId);
     
-    List<Orcamento> findByVeiculoPlacaOrderByDataHoraDesc(String veiculoPlaca);
-    java.util.Optional<Orcamento> findFirstByVeiculoPlacaOrderByDataHoraDesc(String veiculoPlaca);
+    List<Orcamento> findByVeiculoPlacaAndEmpresaIdOrderByDataHoraDesc(String veiculoPlaca, Long empresaId);
+    java.util.Optional<Orcamento> findFirstByVeiculoPlacaAndEmpresaIdOrderByDataHoraDesc(String veiculoPlaca, Long empresaId);
     
-    List<Orcamento> findByDataHoraBetween(LocalDateTime inicio, LocalDateTime fim);
-    boolean existsByClienteCpf(String clienteCpf);
-    boolean existsByVeiculoPlaca(String veiculoPlaca);
-    boolean existsByMecanicoId(Long mecanicoId);
-    boolean existsByConsultorId(Long consultorId);
-    java.util.Optional<Orcamento> findFirstByMecanicoIdOrderByDataHoraDesc(Long mecanicoId);
-    java.util.Optional<Orcamento> findFirstByConsultorIdOrderByDataHoraDesc(Long consultorId);
+    List<Orcamento> findByDataHoraBetweenAndEmpresaId(LocalDateTime inicio, LocalDateTime fim, Long empresaId);
+    boolean existsByClienteCpfAndEmpresaId(String clienteCpf, Long empresaId);
+    boolean existsByVeiculoPlacaAndEmpresaId(String veiculoPlaca, Long empresaId);
+    boolean existsByMecanicoIdAndEmpresaId(Long mecanicoId, Long empresaId);
+    boolean existsByConsultorIdAndEmpresaId(Long consultorId, Long empresaId);
+    java.util.Optional<Orcamento> findFirstByMecanicoIdAndEmpresaIdOrderByDataHoraDesc(Long mecanicoId, Long empresaId);
+    java.util.Optional<Orcamento> findFirstByConsultorIdAndEmpresaIdOrderByDataHoraDesc(Long consultorId, Long empresaId);
     List<Orcamento> findByEmpresaIdOrderByCreatedAtDesc(Long empresaId);
     List<Orcamento> findByEmpresaId(Long empresaId);
     Optional<Orcamento> findByIdAndEmpresaId(Long id, Long empresaId);
     Optional<Orcamento> findByNumeroOrcamentoAndEmpresaId(String numeroOrcamento, Long empresaId);
-    List<Orcamento> findByClienteCpfAndEmpresaIdOrderByDataHoraDesc(String clienteCpf, Long empresaId);
-    List<Orcamento> findByVeiculoPlacaAndEmpresaIdOrderByDataHoraDesc(String veiculoPlaca, Long empresaId);
 }

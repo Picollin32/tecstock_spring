@@ -1,7 +1,8 @@
 package tecstock_spring.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import tecstock_spring.model.Orcamento;
@@ -18,7 +19,7 @@ import java.util.List;
 public class OrcamentoController {
 
     private final OrcamentoService service;
-    private static final Logger logger = Logger.getLogger(OrcamentoController.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrcamentoController.class);
 
     @PostMapping("/api/orcamentos/salvar")
     public Orcamento salvar(@RequestBody Orcamento orcamento) {

@@ -15,40 +15,36 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
     
     boolean existsByNumeroOS(String numeroOS);
     
-    List<OrdemServico> findByClienteCpfOrderByDataHoraDesc(String clienteCpf);
-    java.util.Optional<OrdemServico> findFirstByClienteCpfOrderByDataHoraDesc(String clienteCpf);
+    List<OrdemServico> findByClienteCpfAndEmpresaIdOrderByDataHoraDesc(String clienteCpf, Long empresaId);
+    java.util.Optional<OrdemServico> findFirstByClienteCpfAndEmpresaIdOrderByDataHoraDesc(String clienteCpf, Long empresaId);
     
-    List<OrdemServico> findByVeiculoPlacaOrderByDataHoraDesc(String veiculoPlaca);
-    java.util.Optional<OrdemServico> findFirstByVeiculoPlacaOrderByDataHoraDesc(String veiculoPlaca);
-    boolean existsByClienteCpf(String clienteCpf);
-    boolean existsByVeiculoPlaca(String veiculoPlaca);
-    boolean existsByMecanicoId(Long mecanicoId);
-    boolean existsByConsultorId(Long consultorId);
-    java.util.Optional<OrdemServico> findFirstByMecanicoIdOrderByDataHoraDesc(Long mecanicoId);
-    java.util.Optional<OrdemServico> findFirstByConsultorIdOrderByDataHoraDesc(Long consultorId);
+    List<OrdemServico> findByVeiculoPlacaAndEmpresaIdOrderByDataHoraDesc(String veiculoPlaca, Long empresaId);
+    java.util.Optional<OrdemServico> findFirstByVeiculoPlacaAndEmpresaIdOrderByDataHoraDesc(String veiculoPlaca, Long empresaId);
+    boolean existsByClienteCpfAndEmpresaId(String clienteCpf, Long empresaId);
+    boolean existsByVeiculoPlacaAndEmpresaId(String veiculoPlaca, Long empresaId);
+    boolean existsByMecanicoIdAndEmpresaId(Long mecanicoId, Long empresaId);
+    boolean existsByConsultorIdAndEmpresaId(Long consultorId, Long empresaId);
+    java.util.Optional<OrdemServico> findFirstByMecanicoIdAndEmpresaIdOrderByDataHoraDesc(Long mecanicoId, Long empresaId);
+    java.util.Optional<OrdemServico> findFirstByConsultorIdAndEmpresaIdOrderByDataHoraDesc(Long consultorId, Long empresaId);
     
-    List<OrdemServico> findByStatusOrderByDataHoraDesc(String status);
+    List<OrdemServico> findByStatusAndEmpresaIdOrderByDataHoraDesc(String status, Long empresaId);
     
-    List<OrdemServico> findByStatusNot(String status);
+    List<OrdemServico> findByStatusNotAndEmpresaId(String status, Long empresaId);
     
-    List<OrdemServico> findByChecklistIdOrderByDataHoraDesc(Long checklistId);
+    List<OrdemServico> findByChecklistIdAndEmpresaIdOrderByDataHoraDesc(Long checklistId, Long empresaId);
     
-    @Query("SELECT os FROM OrdemServico os WHERE os.dataHora BETWEEN :inicio AND :fim ORDER BY os.dataHora DESC")
-    List<OrdemServico> findByDataHoraBetween(@Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim);
+    @Query("SELECT os FROM OrdemServico os WHERE os.dataHora BETWEEN :inicio AND :fim AND os.empresa.id = :empresaId ORDER BY os.dataHora DESC")
+    List<OrdemServico> findByDataHoraBetweenAndEmpresaId(@Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim, @Param("empresaId") Long empresaId);
     
-    List<OrdemServico> findByPrecoTotalGreaterThanEqualOrderByPrecoTotalDesc(Double precoMinimo);
+    List<OrdemServico> findByPrecoTotalGreaterThanEqualAndEmpresaIdOrderByPrecoTotalDesc(Double precoMinimo, Long empresaId);
     
-    List<OrdemServico> findAllByOrderByCreatedAtDesc();
+    List<OrdemServico> findAllByEmpresaIdOrderByCreatedAtDesc(Long empresaId);
     
-    @Query("SELECT os FROM OrdemServico os ORDER BY CAST(os.numeroOS AS int) ASC")
-    List<OrdemServico> findAllOrderByNumeroOSAsc();
+    @Query("SELECT os FROM OrdemServico os WHERE os.empresa.id = :empresaId ORDER BY CAST(os.numeroOS AS int) ASC")
+    List<OrdemServico> findAllOrderByNumeroOSAsc(@Param("empresaId") Long empresaId);
     
-    List<OrdemServico> findByStatusAndPrazoFiadoDiasIsNotNullOrderByDataHoraEncerramentoAsc(String status);
-    List<OrdemServico> findByEmpresaIdOrderByCreatedAtDesc(Long empresaId);
+    List<OrdemServico> findByStatusAndPrazoFiadoDiasIsNotNullAndEmpresaIdOrderByDataHoraEncerramentoAsc(String status, Long empresaId);
     List<OrdemServico> findByEmpresaId(Long empresaId);
     Optional<OrdemServico> findByIdAndEmpresaId(Long id, Long empresaId);
     Optional<OrdemServico> findByNumeroOSAndEmpresaId(String numeroOS, Long empresaId);
-    List<OrdemServico> findByClienteCpfAndEmpresaIdOrderByDataHoraDesc(String clienteCpf, Long empresaId);
-    List<OrdemServico> findByVeiculoPlacaAndEmpresaIdOrderByDataHoraDesc(String veiculoPlaca, Long empresaId);
-    List<OrdemServico> findByStatusAndEmpresaIdOrderByDataHoraDesc(String status, Long empresaId);
 }

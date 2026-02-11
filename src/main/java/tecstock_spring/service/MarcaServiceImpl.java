@@ -1,7 +1,8 @@
 package tecstock_spring.service;
 
 import java.util.List;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.MarcaController;
@@ -22,7 +23,7 @@ public class MarcaServiceImpl implements MarcaService {
     private final MarcaRepository repository;
     private final EmpresaRepository empresaRepository;
     private final VeiculoRepository veiculoRepository;
-    Logger logger = Logger.getLogger(MarcaController.class);
+    Logger logger = LoggerFactory.getLogger(MarcaController.class);
 
     @Override
     public Marca salvar(Marca marca) {
@@ -72,6 +73,7 @@ public class MarcaServiceImpl implements MarcaService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public Marca atualizar(Long id, Marca novoMarca) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
@@ -87,6 +89,7 @@ public class MarcaServiceImpl implements MarcaService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public void deletar(Long id) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {

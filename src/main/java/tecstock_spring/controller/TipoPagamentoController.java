@@ -2,7 +2,8 @@ package tecstock_spring.controller;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -25,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class TipoPagamentoController {
 
     private final TipoPagamentoService service;
-    Logger logger = Logger.getLogger(TipoPagamentoController.class);
+    Logger logger = LoggerFactory.getLogger(TipoPagamentoController.class);
 
     @PostMapping("/api/tipos-pagamento/salvar")
     public ResponseEntity<?> salvar(@RequestBody TipoPagamento tipoPagamento, @RequestHeader(value = "X-User-Level", required = false) Integer userLevel) {

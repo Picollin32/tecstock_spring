@@ -1,6 +1,7 @@
 package tecstock_spring.service;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +30,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final ChecklistService checklistService;
     private final EmpresaRepository empresaRepository;
     private final OrcamentoService orcamentoService;
-    private static final Logger logger = Logger.getLogger(OrdemServicoServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrdemServicoServiceImpl.class);
 
     public OrdemServicoServiceImpl(
             OrdemServicoRepository repository,
@@ -118,7 +119,11 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     
     @Override
     public OrdemServico buscarPorNumeroOS(String numeroOS) {
-        return repository.findByNumeroOS(numeroOS)
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        return repository.findByNumeroOSAndEmpresaId(numeroOS, empresaId)
                 .orElseThrow(() -> new OrdemServicoNotFoundException("Ordem de Serviço não encontrada com número: " + numeroOS));
     }
 
@@ -136,27 +141,32 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     
     @Override
     public List<OrdemServico> listarPorCliente(String clienteCpf) {
-        return repository.findByClienteCpfOrderByDataHoraDesc(clienteCpf);
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        return repository.findByClienteCpfAndEmpresaIdOrderByDataHoraDesc(clienteCpf, empresaId);
     }
     
     @Override
     public List<OrdemServico> listarPorVeiculo(String veiculoPlaca) {
-        return repository.findByVeiculoPlacaOrderByDataHoraDesc(veiculoPlaca);
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        return repository.findByVeiculoPlacaAndEmpresaIdOrderByDataHoraDesc(veiculoPlaca, empresaId);
     }
     
     @Override
     public List<OrdemServico> listarPorStatus(String status) {
-        return repository.findByStatusOrderByDataHoraDesc(status);
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        return repository.findByStatusAndEmpresaIdOrderByDataHoraDesc(status, empresaId);
     }
     
     @Override
     public List<OrdemServico> listarPorChecklist(Long checklistId) {
-        return repository.findByChecklistIdOrderByDataHoraDesc(checklistId);
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        return repository.findByChecklistIdAndEmpresaIdOrderByDataHoraDesc(checklistId, empresaId);
     }
     
     @Override
     public List<OrdemServico> listarPorPeriodo(LocalDateTime inicio, LocalDateTime fim) {
-        return repository.findByDataHoraBetween(inicio, fim);
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        return repository.findByDataHoraBetweenAndEmpresaId(inicio, fim, empresaId);
     }
 
     @Override
@@ -225,6 +235,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
                 if (pecaNova.getId() != null) {
 
+                    @SuppressWarnings("null")
                     java.util.Optional<tecstock_spring.model.PecaOrdemServico> pecaExistente = 
                         pecaOrdemServicoRepository.findById(pecaNova.getId());
                     if (pecaExistente.isPresent()) {
@@ -389,6 +400,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public void deletar(Long id) {
         OrdemServico ordemServico = buscarPorId(id);
 
@@ -398,8 +410,9 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             logger.info("OS está encerrada. Restaurando estoque das peças...");
             for (tecstock_spring.model.PecaOrdemServico pecaOS : ordemServico.getPecasUtilizadas()) {
                 try {
-                    pecaOS.getPeca().setQuantidadeEstoque(pecaOS.getPeca().getQuantidadeEstoque() + pecaOS.getQuantidade());
-                    pecaRepository.save(pecaOS.getPeca());
+                    tecstock_spring.model.Peca peca = pecaOS.getPeca();
+                    peca.setQuantidadeEstoque(peca.getQuantidadeEstoque() + pecaOS.getQuantidade());
+                    pecaRepository.save(peca);
                     logger.info("Restaurado estoque da peça " + pecaOS.getPeca().getNome() + ": " + pecaOS.getQuantidade() + " unidades");
                 } catch (Exception e) {
                     logger.error("Erro ao restaurar estoque da peça " + pecaOS.getPeca().getNome() + ": " + e.getMessage());
@@ -487,6 +500,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             int diferenca = quantidadeNova - quantidadeAnterior;
             
             if (diferenca != 0) {
+                @SuppressWarnings("null")
                 tecstock_spring.model.Peca peca = pecaRepository.findById(pecaId).orElse(null);
                 if (peca != null) {
                     String acao = diferenca > 0 ? "aumentada" : "reduzida";
@@ -500,7 +514,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Override
     public List<OrdemServico> getFiadosEmAberto() {
         logger.info("Buscando fiados em aberto (OSs encerradas com prazo de fiado definido)");
-        List<OrdemServico> fiados = repository.findByStatusAndPrazoFiadoDiasIsNotNullOrderByDataHoraEncerramentoAsc("Encerrada");
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        List<OrdemServico> fiados = repository.findByStatusAndPrazoFiadoDiasIsNotNullAndEmpresaIdOrderByDataHoraEncerramentoAsc("Encerrada", empresaId);
         logger.info("Encontrados " + fiados.size() + " fiados em aberto");
         return fiados;
     }

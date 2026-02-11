@@ -4,7 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import jakarta.validation.Valid;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class UsuarioController {
 
     private final UsuarioService service;
-    Logger logger = Logger.getLogger(UsuarioController.class);
+    Logger logger = LoggerFactory.getLogger(UsuarioController.class);
 
     @PostMapping("/api/usuarios/salvar")
     public ResponseEntity<?> salvar(@Valid @RequestBody Usuario usuario) {

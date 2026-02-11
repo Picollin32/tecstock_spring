@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.envers.Audited;
+import org.hibernate.annotations.Filter;
 import tecstock_spring.util.AuditListener;
 
 @Entity
@@ -16,6 +17,7 @@ import tecstock_spring.util.AuditListener;
 @AllArgsConstructor
 @SuperBuilder
 @Audited
+@Filter(name = "empresaFilter", condition = "empresa_id = :empresaId")
 @EntityListeners(AuditListener.class)
 public class Funcionario extends Pessoa {
     @Id

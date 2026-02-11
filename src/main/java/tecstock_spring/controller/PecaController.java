@@ -3,7 +3,8 @@ package tecstock_spring.controller;
 import java.util.List;
 
 import jakarta.validation.Valid;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class PecaController {
 
     private final PecaService service;
-    private static final Logger logger = Logger.getLogger(PecaController.class);
+    private static final Logger logger = LoggerFactory.getLogger(PecaController.class);
 
     @PostMapping("/salvar")
     public Peca salvar(@RequestBody Peca peca) {

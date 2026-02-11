@@ -2,7 +2,8 @@ package tecstock_spring.service;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.FabricanteController;
@@ -23,7 +24,7 @@ public class FabricanteServiceImpl implements FabricanteService {
     private final FabricanteRepository repository;
     private final EmpresaRepository empresaRepository;
     private final PecaRepository pecaRepository;
-    Logger logger = Logger.getLogger(FabricanteController.class);
+    Logger logger = LoggerFactory.getLogger(FabricanteController.class);
 
     @Override
     public Fabricante salvar(Fabricante fabricante) {
@@ -71,6 +72,7 @@ public class FabricanteServiceImpl implements FabricanteService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public Fabricante atualizar(Long id, Fabricante novoFabricante) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
@@ -86,6 +88,7 @@ public class FabricanteServiceImpl implements FabricanteService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public void deletar(Long id) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {

@@ -21,30 +21,36 @@ public interface PecaRepository extends JpaRepository<Peca, Long> {
     
     @Query("SELECT p FROM Peca p WHERE p.codigoFabricante = :codigo")
     List<Peca> findByCodigoFabricante(@Param("codigo") String codigoFabricante);
+
+    @Query("SELECT p FROM Peca p WHERE p.codigoFabricante = :codigo AND p.empresa.id = :empresaId")
+    List<Peca> findByCodigoFabricanteAndEmpresaId(@Param("codigo") String codigoFabricante, @Param("empresaId") Long empresaId);
+    
+    @Query("SELECT p FROM Peca p WHERE p.codigoFabricante = :codigo AND p.fornecedor IS NULL AND p.empresa.id = :empresaId")
+    Optional<Peca> findByCodigoFabricanteAndFornecedorIsNullAndEmpresaId(@Param("codigo") String codigoFabricante, @Param("empresaId") Long empresaId);
     
     boolean existsByFabricante(Fabricante fabricante);
     boolean existsByFornecedor(Fornecedor fornecedor);
     
     @Modifying
     @Transactional
-    @Query("UPDATE Peca p SET p.quantidadeEstoque = :novaQuantidade WHERE p.id = :pecaId")
-    void atualizarEstoqueSemTriggerUpdate(@Param("pecaId") Long pecaId, @Param("novaQuantidade") int novaQuantidade);
+    @Query("UPDATE Peca p SET p.quantidadeEstoque = :novaQuantidade WHERE p.id = :pecaId AND p.empresa.id = :empresaId")
+    void atualizarEstoqueSemTriggerUpdate(@Param("pecaId") Long pecaId, @Param("novaQuantidade") int novaQuantidade, @Param("empresaId") Long empresaId);
     
     @Modifying
     @Transactional
-    @Query("UPDATE Peca p SET p.unidadesUsadasEmOS = :unidadesUsadas WHERE p.id = :pecaId")
-    void atualizarUnidadesUsadasSemTriggerUpdate(@Param("pecaId") Long pecaId, @Param("unidadesUsadas") int unidadesUsadas);
+    @Query("UPDATE Peca p SET p.unidadesUsadasEmOS = :unidadesUsadas WHERE p.id = :pecaId AND p.empresa.id = :empresaId")
+    void atualizarUnidadesUsadasSemTriggerUpdate(@Param("pecaId") Long pecaId, @Param("unidadesUsadas") int unidadesUsadas, @Param("empresaId") Long empresaId);
     
 
     @Modifying
     @Transactional
-    @Query("UPDATE Peca p SET p.quantidadeEstoque = p.quantidadeEstoque + :quantidade WHERE p.id = :pecaId")
-    int incrementarEstoqueAtomico(@Param("pecaId") Long pecaId, @Param("quantidade") int quantidade);
+    @Query("UPDATE Peca p SET p.quantidadeEstoque = p.quantidadeEstoque + :quantidade WHERE p.id = :pecaId AND p.empresa.id = :empresaId")
+    int incrementarEstoqueAtomico(@Param("pecaId") Long pecaId, @Param("quantidade") int quantidade, @Param("empresaId") Long empresaId);
 
     @Modifying
     @Transactional
-    @Query("UPDATE Peca p SET p.quantidadeEstoque = p.quantidadeEstoque - :quantidade WHERE p.id = :pecaId AND p.quantidadeEstoque >= :quantidade")
-    int decrementarEstoqueAtomico(@Param("pecaId") Long pecaId, @Param("quantidade") int quantidade);
+    @Query("UPDATE Peca p SET p.quantidadeEstoque = p.quantidadeEstoque - :quantidade WHERE p.id = :pecaId AND p.quantidadeEstoque >= :quantidade AND p.empresa.id = :empresaId")
+    int decrementarEstoqueAtomico(@Param("pecaId") Long pecaId, @Param("quantidade") int quantidade, @Param("empresaId") Long empresaId);
     List<Peca> findByEmpresaId(Long empresaId);
     Optional<Peca> findByIdAndEmpresaId(Long id, Long empresaId);
     

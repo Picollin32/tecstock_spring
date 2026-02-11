@@ -1,7 +1,8 @@
 package tecstock_spring.service;
 
 import java.util.List;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.FuncionarioController;
@@ -29,7 +30,7 @@ public class FuncionarioServiceImpl implements FuncionarioService {
     private final OrcamentoRepository orcamentoRepository;
     private final ChecklistRepository checklistRepository;
     private final UsuarioRepository usuarioRepository;
-    Logger logger = Logger.getLogger(FuncionarioController.class);
+    Logger logger = LoggerFactory.getLogger(FuncionarioController.class);
 
     @Override
     public Funcionario salvar(Funcionario funcionario) {
@@ -94,6 +95,7 @@ public class FuncionarioServiceImpl implements FuncionarioService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public Funcionario atualizar(Long id, Funcionario novoFuncionario) {
 
         Long empresaId = TenantContext.getCurrentEmpresaId();
@@ -108,21 +110,20 @@ public class FuncionarioServiceImpl implements FuncionarioService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public void deletar(Long id) {
 
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
             throw new RuntimeException("Empresa não encontrada no contexto do usuário");
         }
-
-        Funcionario funcionario = buscarPorId(id);
         
-        boolean emOrdemComoMecanico = ordemServicoRepository.existsByMecanicoId(id);
-        boolean emOrdemComoConsultor = ordemServicoRepository.existsByConsultorId(id);
-        boolean emOrcamentoComoMecanico = orcamentoRepository.existsByMecanicoId(id);
-        boolean emOrcamentoComoConsultor = orcamentoRepository.existsByConsultorId(id);
-        boolean emChecklistComoConsultor = checklistRepository.existsByConsultorId(id);
-        boolean emUsuarioComoConsultor = usuarioRepository.existsByConsultorId(id);
+        boolean emOrdemComoMecanico = ordemServicoRepository.existsByMecanicoIdAndEmpresaId(id, empresaId);
+        boolean emOrdemComoConsultor = ordemServicoRepository.existsByConsultorIdAndEmpresaId(id, empresaId);
+        boolean emOrcamentoComoMecanico = orcamentoRepository.existsByMecanicoIdAndEmpresaId(id, empresaId);
+        boolean emOrcamentoComoConsultor = orcamentoRepository.existsByConsultorIdAndEmpresaId(id, empresaId);
+        boolean emChecklistComoConsultor = checklistRepository.existsByConsultorIdAndEmpresaId(id, empresaId);
+        boolean emUsuarioComoConsultor = usuarioRepository.existsByConsultorIdAndEmpresaId(id, empresaId);
 
         if (emOrdemComoMecanico) {
             throw new FuncionarioEmUsoException("Funcionário não pode ser excluído pois está vinculado como mecânico em uma Ordem de Serviço");

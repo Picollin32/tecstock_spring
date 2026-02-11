@@ -3,7 +3,8 @@ package tecstock_spring.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.ServicoController;
@@ -24,7 +25,7 @@ public class ServicoServiceImpl implements ServicoService {
     private final ServicoRepository repository;
     private final EmpresaRepository empresaRepository;
     private final OrdemServicoRepository ordemServicoRepository;
-    Logger logger = Logger.getLogger(ServicoController.class);
+    Logger logger = LoggerFactory.getLogger(ServicoController.class);
 
     @Override
     public Servico salvar(Servico servico) {
@@ -72,6 +73,7 @@ public class ServicoServiceImpl implements ServicoService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public Servico atualizar(Long id, Servico novoServico) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
@@ -87,6 +89,7 @@ public class ServicoServiceImpl implements ServicoService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public void deletar(Long id) {
         repository.deleteById(id);
     }
@@ -115,7 +118,7 @@ public class ServicoServiceImpl implements ServicoService {
         logger.info("Atualizando unidades usadas em OSs para todos os serviços da empresa " + empresaId);
         
         List<Servico> todosServicos = repository.findByEmpresaId(empresaId);
-        List<OrdemServico> osNaoEncerradas = ordemServicoRepository.findByStatusNot("Encerrada");
+        List<OrdemServico> osNaoEncerradas = ordemServicoRepository.findByStatusNotAndEmpresaId("Encerrada", empresaId);
         
         for (Servico servico : todosServicos) {
             int unidadesUsadas = 0;

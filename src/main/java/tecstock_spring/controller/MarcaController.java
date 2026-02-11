@@ -2,7 +2,8 @@ package tecstock_spring.controller;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class MarcaController {
 
     private final MarcaService service;
-    Logger logger = Logger.getLogger(MarcaController.class);
+    Logger logger = LoggerFactory.getLogger(MarcaController.class);
 
     @PostMapping("/api/marcas/salvar")
     public Marca salvar(@RequestBody Marca marca) {

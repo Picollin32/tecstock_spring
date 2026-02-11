@@ -1,7 +1,8 @@
 package tecstock_spring.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 public class OrdemServicoController {
 
     private final OrdemServicoService service;
-    private static final Logger logger = Logger.getLogger(OrdemServicoController.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrdemServicoController.class);
 
     @PostMapping("/api/ordens-servico/salvar")
     public OrdemServico salvar(@RequestBody OrdemServico ordemServico) {

@@ -4,5 +4,5 @@ import tecstock_spring.dto.LoginRequestDTO;
 import tecstock_spring.dto.LoginResponseDTO;
 
 public interface AuthService {
-    LoginResponseDTO login(LoginRequestDTO loginRequest);
+    LoginResponseDTO login(LoginRequestDTO loginRequest, String clientIp);
 }

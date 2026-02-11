@@ -1,7 +1,8 @@
 package tecstock_spring.service;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tecstock_spring.model.Empresa;
@@ -16,7 +17,7 @@ public class EmpresaServiceImpl implements EmpresaService {
     
     private final EmpresaRepository repository;
     private final UsuarioRepository usuarioRepository;
-    private static final Logger logger = Logger.getLogger(EmpresaServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(EmpresaServiceImpl.class);
     
     @Override
     @Transactional
@@ -35,6 +36,7 @@ public class EmpresaServiceImpl implements EmpresaService {
     }
     
     @Override
+    @SuppressWarnings("null")
     public Empresa buscarPorId(Long id) {
         logger.info("Buscando empresa por ID: " + id);
         return repository.findById(id)
@@ -91,6 +93,7 @@ public class EmpresaServiceImpl implements EmpresaService {
     
     @Override
     @Transactional
+    @SuppressWarnings("null")
     public void deletar(Long id) {
         logger.info("Deletando empresa ID: " + id);
 

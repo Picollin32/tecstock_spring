@@ -1,6 +1,7 @@
 package tecstock_spring.service;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
@@ -24,22 +25,32 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
     private final PecaRepository pecaRepository;
     private final FornecedorRepository fornecedorRepository;
     
-    private static final Logger logger = Logger.getLogger(MovimentacaoEstoqueServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(MovimentacaoEstoqueServiceImpl.class);
+
+    private Long requireEmpresaId() {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        return empresaId;
+    }
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @SuppressWarnings("null")
     public MovimentacaoEstoque registrarEntrada(String codigoPeca, Long fornecedorId, int quantidade, Double precoUnitario, String numeroNotaFiscal, String observacoes, String origem) {
         logger.info("Registrando entrada de estoque - Código: " + codigoPeca + ", Fornecedor ID: " + fornecedorId + ", Quantidade: " + quantidade + ", Preço: " + precoUnitario + ", Nota: " + numeroNotaFiscal);
+        Long empresaId = requireEmpresaId();
         if (origem != null && origem.equalsIgnoreCase("ORCAMENTO")) {
             logger.warn("Tentativa de registrar entrada de estoque com origem 'ORCAMENTO' - operação bloqueada.");
             throw new RuntimeException("Operação de movimentação de estoque não permitida para orçamentos");
         }
 
-        if (movimentacaoEstoqueRepository.existsByNumeroNotaFiscalAndFornecedorId(numeroNotaFiscal, fornecedorId)) {
+        if (movimentacaoEstoqueRepository.existsByNumeroNotaFiscalAndFornecedorIdAndEmpresaId(numeroNotaFiscal, fornecedorId, empresaId)) {
             throw new RuntimeException("O número da nota fiscal '" + numeroNotaFiscal + "' já foi utilizado em outra movimentação para este fornecedor.");
         }
 
-        Optional<Peca> pecaOptional = pecaRepository.findByCodigoFabricanteAndFornecedorId(codigoPeca, fornecedorId);
+        Optional<Peca> pecaOptional = pecaRepository.findByCodigoFabricanteAndFornecedorIdAndEmpresaId(codigoPeca, fornecedorId, empresaId);
         if (pecaOptional.isEmpty()) {
             throw new RuntimeException("Não foi encontrada uma peça cadastrada com o código '" + codigoPeca + "' para o fornecedor informado.");
         }
@@ -48,6 +59,9 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         
         Fornecedor fornecedor = fornecedorRepository.findById(fornecedorId)
                 .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado"));
+        if (fornecedor.getEmpresa() != null && !fornecedor.getEmpresa().getId().equals(empresaId)) {
+            throw new RuntimeException("Fornecedor não pertence à empresa atual");
+        }
         
         boolean precoAlterado = false;
         if (precoUnitario != null && Math.abs(peca.getPrecoUnitario() - precoUnitario) > 0.01) {
@@ -68,7 +82,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         
         MovimentacaoEstoque movimentacaoSalva = movimentacaoEstoqueRepository.save(movimentacao);
 
-        int linhasAfetadas = pecaRepository.incrementarEstoqueAtomico(peca.getId(), quantidade);
+        int linhasAfetadas = pecaRepository.incrementarEstoqueAtomico(peca.getId(), quantidade, empresaId);
         if (linhasAfetadas == 0) {
             logger.error("Falha ao atualizar estoque da peça ID: " + peca.getId());
             throw new RuntimeException("Erro ao atualizar estoque da peça. A peça pode ter sido removida.");
@@ -87,8 +101,10 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @SuppressWarnings("null")
     public MovimentacaoEstoque registrarSaida(String codigoPeca, Long fornecedorId, int quantidade, String numeroNotaFiscal, String observacoes, String origem) {
         logger.info("Registrando saída de estoque - Código: " + codigoPeca + ", Fornecedor ID: " + fornecedorId + ", Quantidade: " + quantidade + ", Nota: " + numeroNotaFiscal);
+        Long empresaId = requireEmpresaId();
         if (origem != null && origem.equalsIgnoreCase("ORCAMENTO")) {
             logger.warn("Tentativa de registrar saída de estoque com origem 'ORCAMENTO' - operação bloqueada.");
             throw new RuntimeException("Operação de movimentação de estoque não permitida para orçamentos");
@@ -99,12 +115,12 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
             logger.info("Nota fiscal gerada automaticamente para saída: " + numeroNotaFiscal);
         } else {
 
-            if (movimentacaoEstoqueRepository.existsByNumeroNotaFiscalAndFornecedorId(numeroNotaFiscal, fornecedorId)) {
+            if (movimentacaoEstoqueRepository.existsByNumeroNotaFiscalAndFornecedorIdAndEmpresaId(numeroNotaFiscal, fornecedorId, empresaId)) {
                 throw new RuntimeException("O número da nota fiscal '" + numeroNotaFiscal + "' já foi utilizado em outra movimentação para este fornecedor.");
             }
         }
         
-        Optional<Peca> pecaOptional = pecaRepository.findByCodigoFabricanteAndFornecedorId(codigoPeca, fornecedorId);
+        Optional<Peca> pecaOptional = pecaRepository.findByCodigoFabricanteAndFornecedorIdAndEmpresaId(codigoPeca, fornecedorId, empresaId);
         if (pecaOptional.isEmpty()) {
             throw new RuntimeException("Não foi encontrada uma peça cadastrada com o código '" + codigoPeca + "' para o fornecedor informado.");
         }
@@ -118,6 +134,9 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         
         Fornecedor fornecedor = fornecedorRepository.findById(fornecedorId)
                 .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado"));
+        if (fornecedor.getEmpresa() != null && !fornecedor.getEmpresa().getId().equals(empresaId)) {
+            throw new RuntimeException("Fornecedor não pertence à empresa atual");
+        }
         
         MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
         movimentacao.setEmpresa(peca.getEmpresa());
@@ -140,7 +159,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
                 "(Validação garantida pelo banco de dados)");
         }
 
-        int linhasAfetadas = pecaRepository.decrementarEstoqueAtomico(peca.getId(), quantidade);
+        int linhasAfetadas = pecaRepository.decrementarEstoqueAtomico(peca.getId(), quantidade, empresaId);
         if (linhasAfetadas == 0) {
 
             Peca pecaAtualizada = pecaRepository.findById(peca.getId())
@@ -159,30 +178,26 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
 
     @Override
     public List<MovimentacaoEstoque> listarTodas() {
-        Long empresaId = TenantContext.getCurrentEmpresaId();
-        if (empresaId == null) {
-            throw new IllegalStateException("ID da empresa não encontrado no contexto");
-        }
+        Long empresaId = requireEmpresaId();
         
         return movimentacaoEstoqueRepository.findByEmpresaId(empresaId);
     }
 
     @Override
     public List<MovimentacaoEstoque> listarPorCodigoPeca(String codigoPeca) {
-        return movimentacaoEstoqueRepository.findByCodigoPecaOrderByDataEntradaDesc(codigoPeca);
+        Long empresaId = requireEmpresaId();
+        return movimentacaoEstoqueRepository.findByCodigoPecaAndEmpresaIdOrderByDataEntradaDesc(codigoPeca, empresaId);
     }
 
     @Override
     public List<MovimentacaoEstoque> listarPorFornecedor(Long fornecedorId) {
-        return movimentacaoEstoqueRepository.findByFornecedorIdOrderByDataEntradaDesc(fornecedorId);
+        Long empresaId = requireEmpresaId();
+        return movimentacaoEstoqueRepository.findByFornecedorIdAndEmpresaIdOrderByDataEntradaDesc(fornecedorId, empresaId);
     }
 
     @Override
     public MovimentacaoEstoque buscarPorId(Long id) {
-        Long empresaId = TenantContext.getCurrentEmpresaId();
-        if (empresaId == null) {
-            throw new IllegalStateException("ID da empresa não encontrado no contexto");
-        }
+        Long empresaId = requireEmpresaId();
         
         return movimentacaoEstoqueRepository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new RuntimeException("Movimentação não encontrada"));
@@ -190,16 +205,21 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @SuppressWarnings("null")
     public void processarSaidaPorOrdemServico(String codigoPeca, Long fornecedorId, int quantidade, String numeroOS) {
         logger.info("MÉTODO CHAMADO: processarSaidaPorOrdemServico");
         logger.info("INICIANDO processamento de saída - Peça: " + codigoPeca + 
                    " | Quantidade: " + quantidade + " | OS: " + numeroOS + " | Fornecedor ID: " + fornecedorId);
+        Long empresaId = requireEmpresaId();
         
         try {
             Fornecedor fornecedor = fornecedorRepository.findById(fornecedorId)
                     .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado"));
+            if (fornecedor.getEmpresa() != null && !fornecedor.getEmpresa().getId().equals(empresaId)) {
+                throw new RuntimeException("Fornecedor não pertence à empresa atual");
+            }
             
-            Optional<Peca> pecaOptional = pecaRepository.findByCodigoFabricanteAndFornecedorId(codigoPeca, fornecedorId);
+            Optional<Peca> pecaOptional = pecaRepository.findByCodigoFabricanteAndFornecedorIdAndEmpresaId(codigoPeca, fornecedorId, empresaId);
             if (pecaOptional.isEmpty()) {
                 throw new RuntimeException("Peça não encontrada com código: " + codigoPeca + " para o fornecedor informado");
             }
@@ -214,7 +234,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
                                          ", Solicitado: " + quantidade);
             }
 
-            int linhasAfetadas = pecaRepository.decrementarEstoqueAtomico(peca.getId(), quantidade);
+            int linhasAfetadas = pecaRepository.decrementarEstoqueAtomico(peca.getId(), quantidade, empresaId);
             if (linhasAfetadas == 0) {
 
                 Peca pecaAtualizada = pecaRepository.findById(peca.getId())
@@ -263,15 +283,20 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
 
     @Override
     public List<MovimentacaoEstoque> listarPorOrdemServico(String numeroOS) {
-        return movimentacaoEstoqueRepository.findByObservacoesContainingOrderByDataEntradaDesc("OS " + numeroOS);
+        Long empresaId = requireEmpresaId();
+        return movimentacaoEstoqueRepository.findByEmpresaId(empresaId).stream()
+                .filter(m -> m.getObservacoes() != null && m.getObservacoes().contains("OS " + numeroOS))
+                .toList();
     }
     
     @Override
     @Transactional
+    @SuppressWarnings("null")
     public void removerSaidasDeOrdemServico(String numeroOS) {
         logger.info("Removendo movimentações de saída antigas da OS: " + numeroOS);
+        Long empresaId = requireEmpresaId();
 
-        List<MovimentacaoEstoque> movimentacoes = movimentacaoEstoqueRepository.findAll().stream()
+        List<MovimentacaoEstoque> movimentacoes = movimentacaoEstoqueRepository.findByEmpresaId(empresaId).stream()
             .filter(m -> m.getTipoMovimentacao() == MovimentacaoEstoque.TipoMovimentacao.SAIDA &&
                         m.getObservacoes() != null && 
                         m.getObservacoes().contains("OS " + numeroOS))
@@ -281,16 +306,17 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
             logger.info("Encontradas " + movimentacoes.size() + " movimentações antigas. Devolvendo peças ao estoque...");
 
             for (MovimentacaoEstoque mov : movimentacoes) {
-                Optional<Peca> pecaOpt = pecaRepository.findByCodigoFabricanteAndFornecedorId(
+                Optional<Peca> pecaOpt = pecaRepository.findByCodigoFabricanteAndFornecedorIdAndEmpresaId(
                     mov.getCodigoPeca(), 
-                    mov.getFornecedor().getId()
+                    mov.getFornecedor().getId(),
+                    empresaId
                 );
                 
                 if (pecaOpt.isPresent()) {
                     Peca peca = pecaOpt.get();
                     int estoqueAnterior = peca.getQuantidadeEstoque();
                     
-                    pecaRepository.incrementarEstoqueAtomico(peca.getId(), mov.getQuantidade());
+                    pecaRepository.incrementarEstoqueAtomico(peca.getId(), mov.getQuantidade(), empresaId);
                     
                     Peca pecaAtualizada = pecaRepository.findById(peca.getId())
                         .orElseThrow(() -> new RuntimeException("Peça não encontrada"));
@@ -310,15 +336,18 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
     
     @Override
     public boolean verificarNotaFiscalJaUtilizada(String numeroNotaFiscal, Long fornecedorId) {
-        return movimentacaoEstoqueRepository.existsByNumeroNotaFiscalAndFornecedorId(numeroNotaFiscal, fornecedorId);
+        Long empresaId = requireEmpresaId();
+        return movimentacaoEstoqueRepository.existsByNumeroNotaFiscalAndFornecedorIdAndEmpresaId(numeroNotaFiscal, fornecedorId, empresaId);
     }
     
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @SuppressWarnings("null")
     public MovimentacaoEstoque registrarEntradaSemValidacaoNota(String codigoPeca, Long fornecedorId, int quantidade, Double precoUnitario, String numeroNotaFiscal, String observacoes) {
         logger.info("Registrando entrada SEM validação de nota - Código: " + codigoPeca + ", Fornecedor ID: " + fornecedorId + ", Quantidade: " + quantidade);
+        Long empresaId = requireEmpresaId();
         
-        Optional<Peca> pecaOptional = pecaRepository.findByCodigoFabricanteAndFornecedorId(codigoPeca, fornecedorId);
+        Optional<Peca> pecaOptional = pecaRepository.findByCodigoFabricanteAndFornecedorIdAndEmpresaId(codigoPeca, fornecedorId, empresaId);
         if (pecaOptional.isEmpty()) {
             throw new RuntimeException("Não foi encontrada uma peça cadastrada com o código '" + codigoPeca + "' para o fornecedor informado.");
         }
@@ -327,6 +356,9 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         
         Fornecedor fornecedor = fornecedorRepository.findById(fornecedorId)
                 .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado"));
+        if (fornecedor.getEmpresa() != null && !fornecedor.getEmpresa().getId().equals(empresaId)) {
+            throw new RuntimeException("Fornecedor não pertence à empresa atual");
+        }
         
         boolean precoAlterado = false;
         if (precoUnitario != null && Math.abs(peca.getPrecoUnitario() - precoUnitario) > 0.01) {
@@ -347,7 +379,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         
         MovimentacaoEstoque movimentacaoSalva = movimentacaoEstoqueRepository.save(movimentacao);
 
-        int linhasAfetadas = pecaRepository.incrementarEstoqueAtomico(peca.getId(), quantidade);
+        int linhasAfetadas = pecaRepository.incrementarEstoqueAtomico(peca.getId(), quantidade, empresaId);
         if (linhasAfetadas == 0) {
             logger.error("Falha ao atualizar estoque da peça ID: " + peca.getId());
             throw new RuntimeException("Erro ao atualizar estoque da peça. A peça pode ter sido removida.");

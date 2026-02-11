@@ -5,7 +5,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -22,7 +24,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private static final Logger logger = Logger.getLogger(JwtAuthenticationFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     @Override
     protected void doFilterInternal(
@@ -81,6 +83,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     tecstock_spring.util.TenantContext.setCurrentEmpresaId(empresaId);
                 }
 
+                MDC.put("userId", username);
+                if (userId != null) {
+                    MDC.put("userIdNum", userId.toString());
+                }
+                if (empresaId != null) {
+                    MDC.put("empresaId", empresaId.toString());
+                }
+                MDC.put("nivelAcesso", nivelAcesso.toString());
+
                 SecurityContextHolder.getContext().setAuthentication(authToken);
                 
                 logger.debug("Token JWT validado para usuário: " + username + " (Nível: " + nivelAcesso + ")");
@@ -92,6 +103,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             filterChain.doFilter(request, response);
         } finally {
+            MDC.clear();
             tecstock_spring.util.TenantContext.clear();
         }
     }

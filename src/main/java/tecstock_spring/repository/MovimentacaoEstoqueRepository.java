@@ -13,24 +13,24 @@ public interface MovimentacaoEstoqueRepository extends JpaRepository<Movimentaca
     List<MovimentacaoEstoque> findByEmpresaId(Long empresaId);
     Optional<MovimentacaoEstoque> findByIdAndEmpresaId(Long id, Long empresaId);
     
-    @Query("SELECT m FROM MovimentacaoEstoque m WHERE m.codigoPeca = ?1 ORDER BY COALESCE(m.dataSaida, m.dataEntrada) DESC")
-    List<MovimentacaoEstoque> findByCodigoPecaOrderByDataEntradaDesc(String codigoPeca);
+    @Query("SELECT m FROM MovimentacaoEstoque m WHERE m.codigoPeca = ?1 AND m.empresa.id = ?2 ORDER BY COALESCE(m.dataSaida, m.dataEntrada) DESC")
+    List<MovimentacaoEstoque> findByCodigoPecaAndEmpresaIdOrderByDataEntradaDesc(String codigoPeca, Long empresaId);
     
-    @Query("SELECT m FROM MovimentacaoEstoque m WHERE m.fornecedor.id = ?1 ORDER BY COALESCE(m.dataSaida, m.dataEntrada) DESC")
-    List<MovimentacaoEstoque> findByFornecedorIdOrderByDataEntradaDesc(Long fornecedorId);
+    @Query("SELECT m FROM MovimentacaoEstoque m WHERE m.fornecedor.id = ?1 AND m.empresa.id = ?2 ORDER BY COALESCE(m.dataSaida, m.dataEntrada) DESC")
+    List<MovimentacaoEstoque> findByFornecedorIdAndEmpresaIdOrderByDataEntradaDesc(Long fornecedorId, Long empresaId);
     
-    @Query("SELECT m FROM MovimentacaoEstoque m WHERE m.codigoPeca = ?1 AND m.fornecedor.id = ?2 ORDER BY COALESCE(m.dataSaida, m.dataEntrada) DESC")
-    List<MovimentacaoEstoque> findByCodigoPecaAndFornecedorIdOrderByDataEntradaDesc(String codigoPeca, Long fornecedorId);
+    @Query("SELECT m FROM MovimentacaoEstoque m WHERE m.codigoPeca = ?1 AND m.fornecedor.id = ?2 AND m.empresa.id = ?3 ORDER BY COALESCE(m.dataSaida, m.dataEntrada) DESC")
+    List<MovimentacaoEstoque> findByCodigoPecaAndFornecedorIdAndEmpresaIdOrderByDataEntradaDesc(String codigoPeca, Long fornecedorId, Long empresaId);
     
-    @Query("SELECT m FROM MovimentacaoEstoque m ORDER BY COALESCE(m.dataSaida, m.dataEntrada) DESC")
-    List<MovimentacaoEstoque> findAllByOrderByDataEntradaDesc();
+    @Query("SELECT m FROM MovimentacaoEstoque m WHERE m.empresa.id = ?1 ORDER BY COALESCE(m.dataSaida, m.dataEntrada) DESC")
+    List<MovimentacaoEstoque> findAllByEmpresaIdOrderByDataEntradaDesc(Long empresaId);
     
-    boolean existsByNumeroNotaFiscal(String numeroNotaFiscal);
+    boolean existsByNumeroNotaFiscalAndEmpresaId(String numeroNotaFiscal, Long empresaId);
     
-    boolean existsByNumeroNotaFiscalAndFornecedorId(String numeroNotaFiscal, Long fornecedorId);
+    boolean existsByNumeroNotaFiscalAndFornecedorIdAndEmpresaId(String numeroNotaFiscal, Long fornecedorId, Long empresaId);
     
-    @Query("SELECT COUNT(m) > 0 FROM MovimentacaoEstoque m WHERE m.numeroNotaFiscal = ?1 AND m.fornecedor.id = ?2 AND DATE(COALESCE(m.dataSaida, m.dataEntrada)) != ?3")
-    boolean existsByNumeroNotaFiscalAndFornecedorIdAndDataEntradaNot(String numeroNotaFiscal, Long fornecedorId, java.time.LocalDate dataAtual);
+    @Query("SELECT COUNT(m) > 0 FROM MovimentacaoEstoque m WHERE m.numeroNotaFiscal = ?1 AND m.fornecedor.id = ?2 AND DATE(COALESCE(m.dataSaida, m.dataEntrada)) != ?3 AND m.empresa.id = ?4")
+    boolean existsByNumeroNotaFiscalAndFornecedorIdAndDataEntradaNotAndEmpresaId(String numeroNotaFiscal, Long fornecedorId, java.time.LocalDate dataAtual, Long empresaId);
     
     @Query("SELECT m FROM MovimentacaoEstoque m WHERE m.observacoes LIKE %?1% ORDER BY COALESCE(m.dataSaida, m.dataEntrada) DESC")
     List<MovimentacaoEstoque> findByObservacoesContainingOrderByDataEntradaDesc(String observacoes);

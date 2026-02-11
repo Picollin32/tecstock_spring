@@ -1,6 +1,7 @@
 package tecstock_spring.service;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,15 +20,15 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RateLimitService rateLimitService;
-    private static final Logger logger = Logger.getLogger(AuthServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     @Override
-    public LoginResponseDTO login(LoginRequestDTO loginRequest) {
+    public LoginResponseDTO login(LoginRequestDTO loginRequest, String clientIp) {
         String username = loginRequest.getNomeUsuario();
         logger.info("Tentativa de login recebida");
 
-        if (rateLimitService.isBlocked(username)) {
-            long minutesRemaining = rateLimitService.getBlockedMinutesRemaining(username);
+        if (rateLimitService.isBlocked(username, clientIp)) {
+            long minutesRemaining = rateLimitService.getBlockedMinutesRemaining(username, clientIp);
             logger.warn("Tentativa de login bloqueada - Bloqueado por mais " + minutesRemaining + " minutos");
             throw new RuntimeException("Muitas tentativas de login. Tente novamente em " + minutesRemaining + " minutos.");
         }
@@ -35,19 +36,19 @@ public class AuthServiceImpl implements AuthService {
         Usuario usuario = usuarioRepository.findByNomeUsuario(username);
         
         if (usuario == null) {
-            rateLimitService.recordFailedAttempt(username);
-            int remainingAttempts = rateLimitService.getRemainingAttempts(username);
+            rateLimitService.recordFailedAttempt(username, clientIp);
+            int remainingAttempts = rateLimitService.getRemainingAttempts(username, clientIp);
             logger.warn("Tentativa de login com credenciais inválidas - Tentativas restantes: " + remainingAttempts);
             throw new RuntimeException("Credenciais inválidas");
         }
 
         if (!passwordEncoder.matches(loginRequest.getSenha(), usuario.getSenha())) {
-            rateLimitService.recordFailedAttempt(username);
-            int remainingAttempts = rateLimitService.getRemainingAttempts(username);
+            rateLimitService.recordFailedAttempt(username, clientIp);
+            int remainingAttempts = rateLimitService.getRemainingAttempts(username, clientIp);
             logger.warn("Tentativa de login com credenciais inválidas - Tentativas restantes: " + remainingAttempts);
             throw new RuntimeException("Credenciais inválidas");
         }
-        rateLimitService.resetAttempts(username);
+        rateLimitService.resetAttempts(username, clientIp);
 
         String nomeCompleto;
         Integer nivelAcesso;

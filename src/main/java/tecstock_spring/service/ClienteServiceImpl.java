@@ -2,7 +2,8 @@ package tecstock_spring.service;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.ClienteController;
@@ -27,7 +28,7 @@ public class ClienteServiceImpl implements ClienteService {
     private final OrdemServicoRepository ordemServicoRepository;
     private final OrcamentoRepository orcamentoRepository;
     private final ChecklistRepository checklistRepository;
-    Logger logger = Logger.getLogger(ClienteController.class);
+    Logger logger = LoggerFactory.getLogger(ClienteController.class);
 
     @Override
     public Cliente salvar(Cliente cliente) {
@@ -85,6 +86,7 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public Cliente atualizar(Long id, Cliente novoCliente) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
@@ -103,6 +105,7 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public void deletar(Long id) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
@@ -114,9 +117,9 @@ public class ClienteServiceImpl implements ClienteService {
         
         String cpf = cliente.getCpf();
 
-        boolean temOrdem = ordemServicoRepository.existsByClienteCpf(cpf);
-        boolean temOrcamento = orcamentoRepository.existsByClienteCpf(cpf);
-        boolean temChecklist = checklistRepository.existsByClienteCpf(cpf);
+        boolean temOrdem = ordemServicoRepository.existsByClienteCpfAndEmpresaId(cpf, empresaId);
+        boolean temOrcamento = orcamentoRepository.existsByClienteCpfAndEmpresaId(cpf, empresaId);
+        boolean temChecklist = checklistRepository.existsByClienteCpfAndEmpresaId(cpf, empresaId);
 
         if (temOrdem) {
             throw new ClienteEmUsoException("Cliente não pode ser excluído pois está vinculado a uma Ordem de Serviço");

@@ -1,7 +1,8 @@
 package tecstock_spring.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,7 @@ import java.util.Map;
 public class EmpresaController {
     
     private final EmpresaService service;
-    private static final Logger logger = Logger.getLogger(EmpresaController.class);
+    private static final Logger logger = LoggerFactory.getLogger(EmpresaController.class);
     
     @PostMapping("/salvar")
     @PreAuthorize("hasAuthority('NIVEL_ACESSO_0')")

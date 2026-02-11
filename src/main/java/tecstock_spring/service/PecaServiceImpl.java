@@ -1,6 +1,7 @@
 package tecstock_spring.service;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.BeanUtils;
 import tecstock_spring.controller.PecaController;
@@ -39,9 +40,10 @@ public class PecaServiceImpl implements PecaService {
     private final MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
     private final EmpresaRepository empresaRepository;
     
-    Logger logger = Logger.getLogger(PecaController.class);
+    Logger logger = LoggerFactory.getLogger(PecaController.class);
 
     @Override
+    @SuppressWarnings("null")
     public Peca salvar(Peca peca) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
@@ -74,44 +76,33 @@ public class PecaServiceImpl implements PecaService {
     }
 
     private void validarCodigoDuplicado(Peca peca) {
-        logger.info("Validando código duplicado para peça: " + peca.getCodigoFabricante());
-        logger.info("Fornecedor da peça: " + (peca.getFornecedor() != null ? peca.getFornecedor().getId() + " - " + peca.getFornecedor().getNome() : "null"));
-        
-        List<Peca> pecasComMesmoCodigo = pecaRepository.findByCodigoFabricante(peca.getCodigoFabricante());
-        logger.info("Encontradas " + pecasComMesmoCodigo.size() + " peças com código " + peca.getCodigoFabricante());
-        for (Peca p : pecasComMesmoCodigo) {
-            logger.info("  Peça ID " + p.getId() + ", fornecedor: " + (p.getFornecedor() != null ? p.getFornecedor().getId() + " - " + p.getFornecedor().getNome() : "null"));
-        }
-        
-        Optional<Peca> pecaExistente;
-        
-        if (peca.getFornecedor() != null && peca.getFornecedor().getId() != null) {
-            logger.info("Buscando peça com código " + peca.getCodigoFabricante() + " e fornecedor ID " + peca.getFornecedor().getId());
-            pecaExistente = pecaRepository.findByCodigoFabricanteAndFornecedorId(
-                peca.getCodigoFabricante(), peca.getFornecedor().getId());
-        } else {
-            logger.info("Buscando peça com código " + peca.getCodigoFabricante() + " e sem fornecedor");
-            pecaExistente = pecaRepository.findByCodigoFabricanteAndFornecedorIsNull(
-                peca.getCodigoFabricante());
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
         }
 
-        logger.info("Peça existente encontrada: " + pecaExistente.isPresent());
-        if (pecaExistente.isPresent()) {
-            logger.info("Peça existente ID: " + pecaExistente.get().getId() + ", Peça atual ID: " + peca.getId());
+        logger.info("Validando código duplicado para peça: " + peca.getCodigoFabricante());
+
+        Optional<Peca> pecaExistente;
+
+        if (peca.getFornecedor() != null && peca.getFornecedor().getId() != null) {
+            logger.info("Buscando peça com código " + peca.getCodigoFabricante() + " e fornecedor ID " + peca.getFornecedor().getId() + " na empresa " + empresaId);
+            pecaExistente = pecaRepository.findByCodigoFabricanteAndFornecedorIdAndEmpresaId(
+                peca.getCodigoFabricante(), peca.getFornecedor().getId(), empresaId);
+        } else {
+            logger.info("Buscando peça com código " + peca.getCodigoFabricante() + " sem fornecedor na empresa " + empresaId);
+            pecaExistente = pecaRepository.findByCodigoFabricanteAndFornecedorIsNullAndEmpresaId(
+                peca.getCodigoFabricante(), empresaId);
         }
 
         if (pecaExistente.isPresent() && !pecaExistente.get().getId().equals(peca.getId())) {
             String fornecedorInfo = peca.getFornecedor() != null ? 
                 "fornecedor " + peca.getFornecedor().getNome() : "sem fornecedor";
-            logger.error("ERRO: Código duplicado detectado!");
             throw new CodigoPecaDuplicadoException(
                 "Já existe uma peça cadastrada com o código '" + peca.getCodigoFabricante() + 
-                "' para o " + fornecedorInfo + ". Não é possível cadastrar o mesmo código de peça " +
-                "para o mesmo fornecedor."
+                "' para o " + fornecedorInfo + " nesta empresa."
             );
         }
-        
-        logger.info("Validação de código duplicado concluída com sucesso");
     }
 
     @Override
@@ -127,7 +118,11 @@ public class PecaServiceImpl implements PecaService {
 
     @Override
     public Peca buscarPorCodigo(String codigo) {
-        return pecaRepository.findByCodigoFabricante(codigo).stream()
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        return pecaRepository.findByCodigoFabricanteAndEmpresaId(codigo, empresaId).stream()
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Peça com código " + codigo + " não encontrada"));
     }
@@ -149,6 +144,7 @@ public class PecaServiceImpl implements PecaService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public Peca atualizar(Long id, Peca novaPeca) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
@@ -180,6 +176,7 @@ public class PecaServiceImpl implements PecaService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public void deletar(Long id) {
         Peca peca = buscarPorId(id);
         
@@ -284,7 +281,7 @@ public class PecaServiceImpl implements PecaService {
         logger.info("Atualizando unidades usadas em OSs para todas as peças");
         
         List<Peca> todasPecas = pecaRepository.findByEmpresaId(empresaId);
-        List<OrdemServico> osNaoEncerradas = ordemServicoRepository.findByStatusNot("Encerrada");
+        List<OrdemServico> osNaoEncerradas = ordemServicoRepository.findByStatusNotAndEmpresaId("Encerrada", empresaId);
         
         for (Peca peca : todasPecas) {
             int unidadesUsadas = 0;
@@ -299,7 +296,7 @@ public class PecaServiceImpl implements PecaService {
                 }
             }
             
-            pecaRepository.atualizarUnidadesUsadasSemTriggerUpdate(peca.getId(), unidadesUsadas);
+            pecaRepository.atualizarUnidadesUsadasSemTriggerUpdate(peca.getId(), unidadesUsadas, empresaId);
             
             if (unidadesUsadas > 0) {
                 logger.info("Peça '" + peca.getNome() + "' tem " + unidadesUsadas + " unidades em OSs não encerradas");

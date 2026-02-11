@@ -1,7 +1,8 @@
 package tecstock_spring.service;
 
 import java.util.List;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.VeiculoController;
@@ -26,7 +27,7 @@ public class VeiculoServiceImpl implements VeiculoService {
     private final ChecklistRepository checklistRepository;
     private final AgendamentoRepository agendamentoRepository;
     private final OrdemServicoRepository ordemServicoRepository;
-    Logger logger = Logger.getLogger(VeiculoController.class);
+    Logger logger = LoggerFactory.getLogger(VeiculoController.class);
 
     @Override
     public Veiculo salvar(Veiculo veiculo) {
@@ -76,6 +77,7 @@ public class VeiculoServiceImpl implements VeiculoService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public Veiculo atualizar(Long id, Veiculo novoVeiculo) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
@@ -94,6 +96,7 @@ public class VeiculoServiceImpl implements VeiculoService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public void deletar(Long id) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
@@ -103,15 +106,15 @@ public class VeiculoServiceImpl implements VeiculoService {
         Veiculo veiculo = repository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new RuntimeException("Veículo não encontrado ou não pertence à sua empresa"));
         
-        if (ordemServicoRepository != null && ordemServicoRepository.existsByVeiculoPlaca(veiculo.getPlaca())) {
+        if (ordemServicoRepository != null && ordemServicoRepository.existsByVeiculoPlacaAndEmpresaId(veiculo.getPlaca(), empresaId)) {
             throw new VeiculoEmUsoException("Veículo não pode ser excluído: está em uso em uma Ordem de Serviço (OS) com placa " + veiculo.getPlaca());
         }
 
-        if (checklistRepository.existsByVeiculoPlaca(veiculo.getPlaca())) {
+        if (checklistRepository.existsByVeiculoPlacaAndEmpresaId(veiculo.getPlaca(), empresaId)) {
             throw new VeiculoEmUsoException("Veículo não pode ser excluído: está em uso em um Checklist com placa " + veiculo.getPlaca());
         }
 
-        if (agendamentoRepository.existsByPlacaVeiculo(veiculo.getPlaca())) {
+        if (agendamentoRepository.existsByPlacaVeiculoAndEmpresaId(veiculo.getPlaca(), empresaId)) {
             throw new VeiculoEmUsoException("Veículo não pode ser excluído: está em uso em um Agendamento com placa " + veiculo.getPlaca());
         }
         

@@ -8,10 +8,10 @@ import java.util.Optional;
 public interface ChecklistRepository extends JpaRepository<Checklist, Long> {
     List<Checklist> findByEmpresaId(Long empresaId);
     Optional<Checklist> findByIdAndEmpresaId(Long id, Long empresaId);
-    boolean existsByVeiculoPlaca(String veiculoPlaca);
-    boolean existsByClienteCpf(String clienteCpf);
-    boolean existsByConsultorId(Long consultorId);
-    java.util.Optional<Checklist> findFirstByClienteCpfOrderByCreatedAtDesc(String clienteCpf);
-    java.util.Optional<Checklist> findFirstByVeiculoPlacaOrderByCreatedAtDesc(String veiculoPlaca);
-    java.util.Optional<Checklist> findFirstByConsultorIdOrderByCreatedAtDesc(Long consultorId);
+    boolean existsByVeiculoPlacaAndEmpresaId(String veiculoPlaca, Long empresaId);
+    boolean existsByClienteCpfAndEmpresaId(String clienteCpf, Long empresaId);
+    boolean existsByConsultorIdAndEmpresaId(Long consultorId, Long empresaId);
+    java.util.Optional<Checklist> findFirstByClienteCpfAndEmpresaIdOrderByCreatedAtDesc(String clienteCpf, Long empresaId);
+    java.util.Optional<Checklist> findFirstByVeiculoPlacaAndEmpresaIdOrderByCreatedAtDesc(String veiculoPlaca, Long empresaId);
+    java.util.Optional<Checklist> findFirstByConsultorIdAndEmpresaIdOrderByCreatedAtDesc(Long consultorId, Long empresaId);
 }

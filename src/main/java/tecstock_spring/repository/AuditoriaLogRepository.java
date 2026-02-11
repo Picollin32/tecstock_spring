@@ -14,19 +14,20 @@ import java.util.List;
 @Repository
 public interface AuditoriaLogRepository extends JpaRepository<AuditoriaLog, Long> {
 
-    Page<AuditoriaLog> findAllByOrderByDataHoraDesc(Pageable pageable);
+    Page<AuditoriaLog> findByEmpresaIdOrderByDataHoraDesc(Long empresaId, Pageable pageable);
 
-    Page<AuditoriaLog> findByUsuarioOrderByDataHoraDesc(String usuario, Pageable pageable);
+    Page<AuditoriaLog> findByUsuarioAndEmpresaIdOrderByDataHoraDesc(String usuario, Long empresaId, Pageable pageable);
 
-    Page<AuditoriaLog> findByEntidadeOrderByDataHoraDesc(String entidade, Pageable pageable);
+    Page<AuditoriaLog> findByEntidadeAndEmpresaIdOrderByDataHoraDesc(String entidade, Long empresaId, Pageable pageable);
 
-    List<AuditoriaLog> findByEntidadeAndEntidadeIdOrderByDataHoraDesc(String entidade, Long entidadeId);
+    List<AuditoriaLog> findByEntidadeAndEntidadeIdAndEmpresaIdOrderByDataHoraDesc(String entidade, Long entidadeId, Long empresaId);
 
-    Page<AuditoriaLog> findByOperacaoOrderByDataHoraDesc(String operacao, Pageable pageable);
+    Page<AuditoriaLog> findByOperacaoAndEmpresaIdOrderByDataHoraDesc(String operacao, Long empresaId, Pageable pageable);
 
-    @Query("SELECT a FROM AuditoriaLog a WHERE a.dataHora BETWEEN :dataInicio AND :dataFim ORDER BY a.dataHora DESC")
+    @Query("SELECT a FROM AuditoriaLog a WHERE a.dataHora BETWEEN :dataInicio AND :dataFim AND a.empresa.id = :empresaId ORDER BY a.dataHora DESC")
     Page<AuditoriaLog> findByPeriodo(@Param("dataInicio") LocalDateTime dataInicio, 
                                      @Param("dataFim") LocalDateTime dataFim, 
+                                     @Param("empresaId") Long empresaId,
                                      Pageable pageable);
 
     @Query(value = "SELECT * FROM auditoria_log a WHERE " +
@@ -41,7 +42,7 @@ public interface AuditoriaLogRepository extends JpaRepository<AuditoriaLog, Long
            "(CAST(:entidadeId AS BIGINT) IS NULL OR a.entidade_id = CAST(:entidadeId AS BIGINT)) AND " +
            "(CAST(:dataInicio AS TIMESTAMP) IS NULL OR a.data_hora >= CAST(:dataInicio AS TIMESTAMP)) AND " +
            "(CAST(:dataFim AS TIMESTAMP) IS NULL OR a.data_hora <= CAST(:dataFim AS TIMESTAMP)) AND " +
-           "(CAST(:empresaId AS BIGINT) IS NULL OR a.empresa_id = CAST(:empresaId AS BIGINT))",
+            "a.empresa_id = CAST(:empresaId AS BIGINT)",
            nativeQuery = true)
     Page<AuditoriaLog> findComFiltros(@Param("usuario") String usuario,
                                       @Param("entidade") String entidade,
@@ -55,9 +56,5 @@ public interface AuditoriaLogRepository extends JpaRepository<AuditoriaLog, Long
     Long countByUsuario(String usuario);
 
     Long countByEntidade(String entidade);
-    
-    Page<AuditoriaLog> findByEmpresaIdOrderByDataHoraDesc(Long empresaId, Pageable pageable);
-    Page<AuditoriaLog> findByUsuarioAndEmpresaIdOrderByDataHoraDesc(String usuario, Long empresaId, Pageable pageable);
-    Page<AuditoriaLog> findByEntidadeAndEmpresaIdOrderByDataHoraDesc(String entidade, Long empresaId, Pageable pageable);
-    List<AuditoriaLog> findByEntidadeAndEntidadeIdAndEmpresaIdOrderByDataHoraDesc(String entidade, Long entidadeId, Long empresaId);
+
 }

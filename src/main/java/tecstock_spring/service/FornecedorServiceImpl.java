@@ -1,7 +1,8 @@
 package tecstock_spring.service;
 
 import java.util.List;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.FornecedorController;
@@ -21,7 +22,7 @@ public class FornecedorServiceImpl implements FornecedorService {
     private final FornecedorRepository repository;
     private final EmpresaRepository empresaRepository;
     private final PecaRepository pecaRepository;
-    Logger logger = Logger.getLogger(FornecedorController.class);
+    Logger logger = LoggerFactory.getLogger(FornecedorController.class);
 
     @Override
     public Fornecedor salvar(Fornecedor fornecedor) {
@@ -71,6 +72,7 @@ public class FornecedorServiceImpl implements FornecedorService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public Fornecedor atualizar(Long id, Fornecedor novoFornecedor) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
@@ -89,6 +91,7 @@ public class FornecedorServiceImpl implements FornecedorService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public void deletar(Long id) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {

@@ -1,7 +1,8 @@
 package tecstock_spring.service;
 
 import java.util.List;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.ChecklistController;
@@ -14,11 +15,12 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class ChecklistServiceImpl implements ChecklistService {
 
     private final ChecklistRepository repository;
     private final EmpresaRepository empresaRepository;
-    Logger logger = Logger.getLogger(ChecklistController.class);
+    Logger logger = LoggerFactory.getLogger(ChecklistController.class);
 
     @Override
     public Checklist salvar(Checklist checklist) {

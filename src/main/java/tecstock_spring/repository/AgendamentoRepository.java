@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {
-    boolean existsByPlacaVeiculo(String placaVeiculo);
+    boolean existsByPlacaVeiculoAndEmpresaId(String placaVeiculo, Long empresaId);
 
     List<Agendamento> findByEmpresaId(Long empresaId);
     Optional<Agendamento> findByIdAndEmpresaId(Long id, Long empresaId);

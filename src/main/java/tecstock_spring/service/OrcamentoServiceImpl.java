@@ -1,7 +1,8 @@
 package tecstock_spring.service;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import tecstock_spring.exception.OrcamentoNotFoundException;
 import tecstock_spring.model.*;
@@ -20,7 +21,7 @@ public class OrcamentoServiceImpl implements OrcamentoService {
     private final OrcamentoRepository repository;
     private final OrdemServicoService ordemServicoService;
     private final EmpresaRepository empresaRepository;
-    private static final Logger logger = Logger.getLogger(OrcamentoServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrcamentoServiceImpl.class);
 
     @Override
     public Orcamento salvar(Orcamento orcamento) {
@@ -66,7 +67,8 @@ public class OrcamentoServiceImpl implements OrcamentoService {
     
     @Override
     public Orcamento buscarPorNumeroOrcamento(String numeroOrcamento) {
-        return repository.findByNumeroOrcamento(numeroOrcamento)
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        return repository.findByNumeroOrcamentoAndEmpresaId(numeroOrcamento, empresaId)
                 .orElseThrow(() -> new OrcamentoNotFoundException("Orçamento não encontrado com número: " + numeroOrcamento));
     }
 
@@ -84,17 +86,20 @@ public class OrcamentoServiceImpl implements OrcamentoService {
     
     @Override
     public List<Orcamento> listarPorCliente(String clienteCpf) {
-        return repository.findByClienteCpfOrderByDataHoraDesc(clienteCpf);
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        return repository.findByClienteCpfAndEmpresaIdOrderByDataHoraDesc(clienteCpf, empresaId);
     }
     
     @Override
     public List<Orcamento> listarPorVeiculo(String veiculoPlaca) {
-        return repository.findByVeiculoPlacaOrderByDataHoraDesc(veiculoPlaca);
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        return repository.findByVeiculoPlacaAndEmpresaIdOrderByDataHoraDesc(veiculoPlaca, empresaId);
     }
     
     @Override
     public List<Orcamento> listarPorPeriodo(LocalDateTime inicio, LocalDateTime fim) {
-        return repository.findByDataHoraBetween(inicio, fim);
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        return repository.findByDataHoraBetweenAndEmpresaId(inicio, fim, empresaId);
     }
 
     @Override
@@ -147,6 +152,7 @@ public class OrcamentoServiceImpl implements OrcamentoService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public void deletar(Long id) {
         Orcamento orcamento = buscarPorId(id);
         repository.delete(orcamento);

@@ -5,7 +5,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,7 +27,7 @@ import lombok.RequiredArgsConstructor;
 public class MovimentacaoEstoqueController {
 
     private final MovimentacaoEstoqueService service;
-    private static final Logger logger = Logger.getLogger(MovimentacaoEstoqueController.class);
+    private static final Logger logger = LoggerFactory.getLogger(MovimentacaoEstoqueController.class);
 
     @PostMapping("/entrada")
     public MovimentacaoEstoque registrarEntrada(

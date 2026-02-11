@@ -1,7 +1,8 @@
 package tecstock_spring.service;
 
 import java.util.List;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tecstock_spring.exception.UsuarioDuplicadoException;
@@ -32,9 +33,10 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final ChecklistRepository checklistRepository;
     private final CustomRevisionEntityRepository customRevisionEntityRepository;
     private final PasswordEncoder passwordEncoder;
-    Logger logger = Logger.getLogger(UsuarioServiceImpl.class);
+    Logger logger = LoggerFactory.getLogger(UsuarioServiceImpl.class);
 
     @Override
+    @SuppressWarnings("null")
     public Usuario salvar(Usuario usuario) {
  
         Empresa empresa;
@@ -93,6 +95,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public Usuario buscarPorId(Long id) {
 
         if (TenantContext.isSuperAdmin()) {
@@ -135,6 +138,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public Usuario atualizar(Long id, Usuario novoUsuario) {
 
         if (!TenantContext.isSuperAdmin()) {
@@ -198,6 +202,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
+    @SuppressWarnings("null")
     public void deletar(Long id) {
 
         if (!TenantContext.isSuperAdmin()) {
@@ -215,12 +220,13 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         if (usuario.getNivelAcesso() == 2 && usuario.getConsultor() != null) {
             Long consultorId = usuario.getConsultor().getId();
+            Long empresaId = TenantContext.getCurrentEmpresaId();
             
-            boolean emOrdemComoMecanico = ordemServicoRepository.existsByMecanicoId(consultorId);
-            boolean emOrdemComoConsultor = ordemServicoRepository.existsByConsultorId(consultorId);
-            boolean emOrcamentoComoMecanico = orcamentoRepository.existsByMecanicoId(consultorId);
-            boolean emOrcamentoComoConsultor = orcamentoRepository.existsByConsultorId(consultorId);
-            boolean emChecklistComoConsultor = checklistRepository.existsByConsultorId(consultorId);
+            boolean emOrdemComoMecanico = ordemServicoRepository.existsByMecanicoIdAndEmpresaId(consultorId, empresaId);
+            boolean emOrdemComoConsultor = ordemServicoRepository.existsByConsultorIdAndEmpresaId(consultorId, empresaId);
+            boolean emOrcamentoComoMecanico = orcamentoRepository.existsByMecanicoIdAndEmpresaId(consultorId, empresaId);
+            boolean emOrcamentoComoConsultor = orcamentoRepository.existsByConsultorIdAndEmpresaId(consultorId, empresaId);
+            boolean emChecklistComoConsultor = checklistRepository.existsByConsultorIdAndEmpresaId(consultorId, empresaId);
 
             if (emOrdemComoMecanico) {
                 throw new UsuarioEmUsoException("Usuário não pode ser excluído pois o consultor vinculado está registrado como mecânico em uma Ordem de Serviço");
