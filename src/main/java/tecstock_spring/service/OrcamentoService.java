@@ -1,5 +1,7 @@
 package tecstock_spring.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import tecstock_spring.model.Orcamento;
 import tecstock_spring.model.OrdemServico;
 
@@ -16,6 +18,8 @@ public interface OrcamentoService {
 
     List<Orcamento> listarTodos();
     
+    List<Orcamento> pesquisarPorNumeroExato(String numero);
+    
     List<Orcamento> listarPorCliente(String clienteCpf);
     
     List<Orcamento> listarPorVeiculo(String veiculoPlaca);
@@ -28,4 +32,6 @@ public interface OrcamentoService {
     void deletar(Long id);
     
     OrdemServico transformarEmOrdemServico(Long orcamentoId);
+    
+    Page<Orcamento> buscarPaginado(String query, String tipo, Pageable pageable);
 }

@@ -3,6 +3,8 @@ package tecstock_spring.service;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import tecstock_spring.exception.OrcamentoNotFoundException;
 import tecstock_spring.model.*;
@@ -100,6 +102,21 @@ public class OrcamentoServiceImpl implements OrcamentoService {
     public List<Orcamento> listarPorPeriodo(LocalDateTime inicio, LocalDateTime fim) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         return repository.findByDataHoraBetweenAndEmpresaId(inicio, fim, empresaId);
+    }
+    
+    @Override
+    public List<Orcamento> pesquisarPorNumeroExato(String numero) {
+        try {
+            Orcamento orcamento = buscarPorNumeroOrcamento(numero);
+            logger.info("Orçamento encontrado com número exato: " + numero);
+            return List.of(orcamento);
+        } catch (OrcamentoNotFoundException e) {
+            logger.info("Nenhum orçamento encontrado com número: " + numero);
+            return List.of();
+        } catch (Exception e) {
+            logger.error("Erro ao pesquisar orçamento por número " + numero + ": " + e.getMessage());
+            return List.of();
+        }
     }
 
     @Override
@@ -223,5 +240,29 @@ public class OrcamentoServiceImpl implements OrcamentoService {
         logger.info("Orçamento " + orcamento.getNumeroOrcamento() + " marcado como transformado");
         
         return osSalva;
+    }
+    
+    @Override
+    public Page<Orcamento> buscarPaginado(String query, String tipo, Pageable pageable) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        if (query == null || query.trim().isEmpty()) {
+            return repository.findByEmpresaIdOrderByCreatedAtDesc(empresaId, pageable);
+        }
+
+        String tipoBusca = tipo == null ? "numero" : tipo.trim().toLowerCase();
+        String termo = query.trim();
+        switch (tipoBusca) {
+            case "cliente":
+                return repository.searchByClienteNomeAndEmpresaId(termo, empresaId, pageable);
+            case "placa":
+                return repository.searchByVeiculoPlacaAndEmpresaId(termo, empresaId, pageable);
+            case "numero":
+            default:
+                return repository.searchByNumeroOrcamentoAndEmpresaId(termo, empresaId, pageable);
+        }
     }
 }

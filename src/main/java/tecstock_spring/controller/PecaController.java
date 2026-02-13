@@ -5,6 +5,10 @@ import java.util.List;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -103,5 +107,14 @@ public class PecaController {
     public void atualizarUnidadesUsadas() {
         logger.info("Atualizando unidades usadas de todas as peças");
         service.atualizarUnidadesUsadas();
+    }
+    
+    @GetMapping("/buscarPaginado")
+    public Page<tecstock_spring.dto.PecaPesquisaDTO> buscarPaginado(
+            @RequestParam(required = false, defaultValue = "") String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "30") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return service.buscarPaginado(query, pageable);
     }
 }

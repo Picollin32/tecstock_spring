@@ -1,9 +1,12 @@
 package tecstock_spring.service;
 
 import java.util.List;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.VeiculoController;
 import tecstock_spring.exception.PlacaDuplicadaException;
@@ -12,10 +15,12 @@ import tecstock_spring.model.Empresa;
 import tecstock_spring.model.Veiculo;
 import tecstock_spring.repository.EmpresaRepository;
 import tecstock_spring.repository.VeiculoRepository;
+import tecstock_spring.repository.MarcaRepository;
 import tecstock_spring.util.TenantContext;
 import tecstock_spring.repository.ChecklistRepository;
 import tecstock_spring.repository.AgendamentoRepository;
 import tecstock_spring.repository.OrdemServicoRepository;
+import tecstock_spring.model.Marca;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -24,6 +29,7 @@ public class VeiculoServiceImpl implements VeiculoService {
 
     private final VeiculoRepository repository;
     private final EmpresaRepository empresaRepository;
+    private final MarcaRepository marcaRepository;
     private final ChecklistRepository checklistRepository;
     private final AgendamentoRepository agendamentoRepository;
     private final OrdemServicoRepository ordemServicoRepository;
@@ -39,6 +45,15 @@ public class VeiculoServiceImpl implements VeiculoService {
         if (repository.existsByPlacaAndEmpresaId(veiculo.getPlaca(), empresaId)) {
             throw new PlacaDuplicadaException("Placa já cadastrada nesta empresa");
         }
+        
+        if (veiculo.getMarca() == null || veiculo.getMarca().getId() == null) {
+            throw new IllegalArgumentException("A marca do veículo é obrigatória.");
+        }
+        
+        Long marcaId = Objects.requireNonNull(veiculo.getMarca().getId(), "ID da marca não pode ser nulo");
+        Marca marcaGerenciada = marcaRepository.findById(marcaId)
+            .orElseThrow(() -> new RuntimeException("Marca com ID " + marcaId + " não encontrada."));
+        veiculo.setMarca(marcaGerenciada);
         
         Empresa empresa = empresaRepository.findById(empresaId)
             .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
@@ -90,6 +105,15 @@ public class VeiculoServiceImpl implements VeiculoService {
         if (repository.existsByPlacaAndIdNotAndEmpresaId(novoVeiculo.getPlaca(), id, empresaId)) {
             throw new PlacaDuplicadaException("Placa já cadastrada nesta empresa");
         }
+        
+        if (novoVeiculo.getMarca() == null || novoVeiculo.getMarca().getId() == null) {
+            throw new IllegalArgumentException("A marca do veículo é obrigatória.");
+        }
+        
+        Long marcaId = Objects.requireNonNull(novoVeiculo.getMarca().getId(), "ID da marca não pode ser nulo");
+        Marca marcaGerenciada = marcaRepository.findById(marcaId)
+            .orElseThrow(() -> new RuntimeException("Marca com ID " + marcaId + " não encontrada."));
+        novoVeiculo.setMarca(marcaGerenciada);
 
         BeanUtils.copyProperties(novoVeiculo, veiculoExistente, "id", "empresa", "createdAt", "updatedAt");
         return repository.save(veiculoExistente);
@@ -120,5 +144,19 @@ public class VeiculoServiceImpl implements VeiculoService {
         
         repository.deleteById(id);
         logger.info("Veículo excluído com sucesso da empresa " + empresaId + ": " + veiculo.getPlaca());
+    }
+    
+    @Override
+    public Page<tecstock_spring.dto.VeiculoPesquisaDTO> buscarPaginado(String query, Pageable pageable) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        if (query == null || query.trim().isEmpty()) {
+            return repository.findByEmpresaId(empresaId, pageable);
+        }
+        
+        return repository.searchByQueryAndEmpresaId(query.trim(), empresaId, pageable);
     }
 }

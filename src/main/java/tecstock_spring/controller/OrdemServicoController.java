@@ -3,11 +3,16 @@ package tecstock_spring.controller;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tecstock_spring.dto.OrdemServicoResumoDTO;
+import tecstock_spring.dto.OrdemServicoPesquisaDTO;
 import tecstock_spring.model.OrdemServico;
 import tecstock_spring.service.OrdemServicoService;
 import tecstock_spring.util.TenantContext;
@@ -54,11 +59,30 @@ public class OrdemServicoController {
         logger.info("Buscando ordem de serviço por número: " + numeroOS);
         return service.buscarPorNumeroOS(numeroOS);
     }
+    
+    @GetMapping("/api/ordens-servico/pesquisar")
+    public List<OrdemServicoPesquisaDTO> pesquisarPorNumeroExato(@RequestParam String numero) {
+        logger.info("Pesquisando ordem de serviço com número exato: " + numero);
+        List<OrdemServico> ordensServico = service.pesquisarPorNumeroExato(numero);
+        return ordensServico.stream()
+                .map(this::converterParaPesquisaDTO)
+                .collect(Collectors.toList());
+    }
 
     @GetMapping("/api/ordens-servico/listarTodos")
     public List<OrdemServico> listarTodos() {
         logger.info("Listando todas as ordens de serviço no controller.");
         return service.listarTodos();
+    }
+
+    @GetMapping("/api/ordens-servico/buscarPaginado")
+    public Page<OrdemServico> buscarPaginado(
+            @RequestParam(required = false, defaultValue = "") String query,
+            @RequestParam(required = false, defaultValue = "numero") String tipo,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return service.buscarPaginado(query, tipo, pageable);
     }
     
     @GetMapping("/api/ordens-servico/cliente/{cpf}")
@@ -241,6 +265,21 @@ public class OrdemServicoController {
                 .numeroParcelas(os.getNumeroParcelas())
                 .createdAt(os.getCreatedAt())
                 .observacoes(os.getObservacoes())
+                .build();
+    }
+    
+    private OrdemServicoPesquisaDTO converterParaPesquisaDTO(OrdemServico os) {
+        return OrdemServicoPesquisaDTO.builder()
+                .id(os.getId())
+                .numeroOS(os.getNumeroOS())
+                .dataHora(os.getDataHora())
+                .clienteNome(os.getClienteNome())
+                .clienteCpf(os.getClienteCpf())
+                .veiculoNome(os.getVeiculoNome())
+                .veiculoPlaca(os.getVeiculoPlaca())
+                .status(os.getStatus())
+                .precoTotal(os.getPrecoTotal())
+                .tipoPagamento(os.getTipoPagamento() != null ? os.getTipoPagamento().getNome() : null)
                 .build();
     }
 }

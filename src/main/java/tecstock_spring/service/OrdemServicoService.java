@@ -1,5 +1,7 @@
 package tecstock_spring.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import tecstock_spring.model.OrdemServico;
 
 import java.time.LocalDateTime;
@@ -14,6 +16,8 @@ public interface OrdemServicoService {
     OrdemServico buscarPorNumeroOS(String numeroOS);
 
     List<OrdemServico> listarTodos();
+    
+    List<OrdemServico> pesquisarPorNumeroExato(String numero);
     
     List<OrdemServico> listarPorCliente(String clienteCpf);
     
@@ -42,4 +46,6 @@ public interface OrdemServicoService {
     OrdemServico desbloquearParaEdicao(Long id);
     
     OrdemServico reabrirOS(Long id);
+    
+    Page<OrdemServico> buscarPaginado(String query, String tipo, Pageable pageable);
 }

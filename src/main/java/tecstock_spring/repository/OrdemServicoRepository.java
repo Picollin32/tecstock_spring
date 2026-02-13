@@ -1,5 +1,7 @@
 package tecstock_spring.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -47,4 +49,22 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
     List<OrdemServico> findByEmpresaId(Long empresaId);
     Optional<OrdemServico> findByIdAndEmpresaId(Long id, Long empresaId);
     Optional<OrdemServico> findByNumeroOSAndEmpresaId(String numeroOS, Long empresaId);
+
+    @Query("SELECT os FROM OrdemServico os WHERE os.empresa.id = :empresaId AND os.numeroOS LIKE CONCAT(:query, '%')")
+    Page<OrdemServico> searchByNumeroOSAndEmpresaId(@Param("query") String query, @Param("empresaId") Long empresaId, Pageable pageable);
+
+    @Query("SELECT os FROM OrdemServico os WHERE os.empresa.id = :empresaId AND LOWER(os.clienteNome) LIKE LOWER(CONCAT(:query, '%'))")
+    Page<OrdemServico> searchByClienteNomeAndEmpresaId(@Param("query") String query, @Param("empresaId") Long empresaId, Pageable pageable);
+
+    @Query("SELECT os FROM OrdemServico os WHERE os.empresa.id = :empresaId AND LOWER(os.veiculoPlaca) LIKE LOWER(CONCAT(:query, '%'))")
+    Page<OrdemServico> searchByVeiculoPlacaAndEmpresaId(@Param("query") String query, @Param("empresaId") Long empresaId, Pageable pageable);
+
+    Page<OrdemServico> findByEmpresaIdOrderByCreatedAtDesc(Long empresaId, Pageable pageable);
+    
+    @Query("SELECT os FROM OrdemServico os WHERE os.empresa.id = :empresaId AND (" +
+           "os.numeroOS LIKE CONCAT(:query, '%') OR " +
+           "LOWER(os.clienteNome) LIKE LOWER(CONCAT(:query, '%')) OR " +
+           "LOWER(os.veiculoPlaca) LIKE LOWER(CONCAT(:query, '%')))")
+    Page<OrdemServico> searchByQueryAndEmpresaId(@Param("query") String query, @Param("empresaId") Long empresaId, Pageable pageable);
+
 }

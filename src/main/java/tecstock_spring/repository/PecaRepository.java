@@ -2,6 +2,8 @@ package tecstock_spring.repository;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -56,4 +58,10 @@ public interface PecaRepository extends JpaRepository<Peca, Long> {
     
     @Query("SELECT p FROM Peca p WHERE p.codigoFabricante = :codigo AND p.fornecedor.id = :fornecedorId AND p.empresa.id = :empresaId")
     Optional<Peca> findByCodigoFabricanteAndFornecedorIdAndEmpresaId(@Param("codigo") String codigoFabricante, @Param("fornecedorId") Long fornecedorId, @Param("empresaId") Long empresaId);
+    
+    @Query("SELECT new tecstock_spring.dto.PecaPesquisaDTO(p.id, p.nome, p.codigoFabricante, p.precoUnitario, p.precoFinal, p.quantidadeEstoque, p.estoqueSeguranca, COALESCE(p.unidadesUsadasEmOS, 0), p.fabricante.id, p.fabricante.nome, fo.id, fo.nome, fo.cnpj, fo.telefone, fo.email, fo.margemLucro, fo.rua, fo.numeroCasa, fo.bairro, fo.cidade, fo.uf, p.createdAt, p.updatedAt) FROM Peca p LEFT JOIN p.fornecedor fo WHERE p.empresa.id = :empresaId AND (LOWER(p.nome) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.codigoFabricante) LIKE LOWER(CONCAT('%', :query, '%')))")
+    Page<tecstock_spring.dto.PecaPesquisaDTO> searchByQueryAndEmpresaId(@Param("query") String query, @Param("empresaId") Long empresaId, Pageable pageable);
+    
+    @Query("SELECT new tecstock_spring.dto.PecaPesquisaDTO(p.id, p.nome, p.codigoFabricante, p.precoUnitario, p.precoFinal, p.quantidadeEstoque, p.estoqueSeguranca, COALESCE(p.unidadesUsadasEmOS, 0), p.fabricante.id, p.fabricante.nome, fo.id, fo.nome, fo.cnpj, fo.telefone, fo.email, fo.margemLucro, fo.rua, fo.numeroCasa, fo.bairro, fo.cidade, fo.uf, p.createdAt, p.updatedAt) FROM Peca p LEFT JOIN p.fornecedor fo WHERE p.empresa.id = :empresaId")
+    Page<tecstock_spring.dto.PecaPesquisaDTO> findByEmpresaId(@Param("empresaId") Long empresaId, Pageable pageable);
 }

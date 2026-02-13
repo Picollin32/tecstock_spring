@@ -4,6 +4,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.MarcaController;
 import tecstock_spring.exception.NomeDuplicadoException;
@@ -134,5 +136,19 @@ public class MarcaServiceImpl implements MarcaService {
         }
         
         logger.info("Validação de nome concluída com sucesso para marca: " + nomeLimpo);
+    }
+    
+    @Override
+    public Page<tecstock_spring.dto.MarcaPesquisaDTO> buscarPaginado(String query, Pageable pageable) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        if (query == null || query.trim().isEmpty()) {
+            return repository.findByEmpresaId(empresaId, pageable);
+        }
+        
+        return repository.searchByQueryAndEmpresaId(query.trim(), empresaId, pageable);
     }
 }

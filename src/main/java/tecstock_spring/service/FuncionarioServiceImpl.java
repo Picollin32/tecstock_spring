@@ -4,6 +4,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.FuncionarioController;
 import tecstock_spring.exception.CpfDuplicadoException;
@@ -179,5 +181,19 @@ public class FuncionarioServiceImpl implements FuncionarioService {
         }
         
         logger.info("Validação de CPF concluída com sucesso para: " + cpfLimpo);
+    }
+    
+    @Override
+    public Page<tecstock_spring.dto.FuncionarioPesquisaDTO> buscarPaginado(String query, Pageable pageable) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        if (query == null || query.trim().isEmpty()) {
+            return repository.findByEmpresaId(empresaId, pageable);
+        }
+        
+        return repository.searchByQueryAndEmpresaId(query.trim(), empresaId, pageable);
     }
 }

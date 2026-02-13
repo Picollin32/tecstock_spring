@@ -6,6 +6,8 @@ import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tecstock_spring.exception.NomeDuplicadoException;
@@ -122,5 +124,19 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
         
         repository.deleteById(id);
         logger.info("Tipo de pagamento excluído com sucesso: " + tipoPagamento.getNome());
+    }
+    
+    @Override
+    public Page<tecstock_spring.dto.TipoPagamentoPesquisaDTO> buscarPaginado(String query, Pageable pageable) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        if (query == null || query.trim().isEmpty()) {
+            return repository.findByEmpresaId(empresaId, pageable);
+        }
+        
+        return repository.searchByQueryAndEmpresaId(query.trim(), empresaId, pageable);
     }
 }

@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.ServicoController;
 import tecstock_spring.exception.NomeDuplicadoException;
@@ -170,5 +172,19 @@ public class ServicoServiceImpl implements ServicoService {
         }
         
         logger.info("Validação de nome concluída com sucesso para serviço: " + nomeLimpo);
+    }
+    
+    @Override
+    public Page<tecstock_spring.dto.ServicoPesquisaDTO> buscarPaginado(String query, Pageable pageable) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        if (query == null || query.trim().isEmpty()) {
+            return repository.findByEmpresaId(empresaId, pageable);
+        }
+        
+        return repository.searchByQueryAndEmpresaId(query.trim(), empresaId, pageable);
     }
 }

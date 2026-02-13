@@ -1,6 +1,9 @@
 package tecstock_spring.service;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import tecstock_spring.dto.ClientePesquisaDTO;
 import tecstock_spring.model.Cliente;
 
 public interface ClienteService {
@@ -13,4 +16,6 @@ public interface ClienteService {
     Cliente atualizar(Long id, Cliente cliente);
 
     void deletar(Long id);
+    
+    Page<ClientePesquisaDTO> buscarPaginado(String query, Pageable pageable);
 }

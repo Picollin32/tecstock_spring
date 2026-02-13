@@ -4,15 +4,21 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import tecstock_spring.dto.ChecklistPesquisaDTO;
 import tecstock_spring.model.Checklist;
 import tecstock_spring.service.ChecklistService;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +48,16 @@ public class ChecklistController {
         return service.listarTodos();
     }
 
+    @GetMapping("/api/checklists/buscarPaginado")
+    public Page<Checklist> buscarPaginado(
+            @RequestParam(required = false, defaultValue = "") String query,
+            @RequestParam(required = false, defaultValue = "numero") String tipo,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return service.buscarPaginado(query, tipo, pageable);
+    }
+
     @PutMapping("/api/checklists/atualizar/{id}")
     public Checklist atualizar(@PathVariable Long id, @RequestBody Checklist checklist) {
         logger.info("Atualizando checklist no controller. ID: " + id + ", Checklists: " + checklist);
@@ -64,5 +80,28 @@ public class ChecklistController {
     public boolean reabrirChecklist(@PathVariable Long id) {
         logger.info("Reabrindo checklist no controller. ID: " + id);
         return service.reabrirChecklist(id);
+    }
+    
+    @GetMapping("/api/checklists/pesquisar")
+    public List<ChecklistPesquisaDTO> pesquisarPorNumeroExato(@RequestParam Integer numero) {
+        logger.info("Pesquisando checklist com número exato: " + numero);
+        List<Checklist> checklists = service.pesquisarPorNumeroExato(numero);
+        return checklists.stream()
+                .map(this::converterParaPesquisaDTO)
+                .collect(java.util.stream.Collectors.toList());
+    }
+    
+    private ChecklistPesquisaDTO converterParaPesquisaDTO(Checklist c) {
+        return ChecklistPesquisaDTO.builder()
+                .id(c.getId())
+                .numeroChecklist(c.getNumeroChecklist())
+                .createdAt(c.getCreatedAt())
+                .clienteNome(c.getClienteNome())
+                .clienteCpf(c.getClienteCpf())
+                .veiculoNome(c.getVeiculoNome())
+                .veiculoPlaca(c.getVeiculoPlaca())
+                .status(c.getStatus())
+                .consultorNome(c.getConsultor() != null ? c.getConsultor().getNome() : null)
+                .build();
     }
 }

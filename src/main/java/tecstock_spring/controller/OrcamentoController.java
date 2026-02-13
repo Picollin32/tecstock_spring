@@ -3,8 +3,13 @@ package tecstock_spring.controller;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
+import tecstock_spring.dto.OrcamentoPesquisaDTO;
 import tecstock_spring.model.Orcamento;
 import tecstock_spring.model.OrdemServico;
 import tecstock_spring.service.OrcamentoService;
@@ -51,11 +56,30 @@ public class OrcamentoController {
         logger.info("Buscando orçamento por número: " + numeroOrcamento);
         return service.buscarPorNumeroOrcamento(numeroOrcamento);
     }
+    
+    @GetMapping("/api/orcamentos/pesquisar")
+    public List<OrcamentoPesquisaDTO> pesquisarPorNumeroExato(@RequestParam String numero) {
+        logger.info("Pesquisando orçamento com número exato: " + numero);
+        List<Orcamento> orcamentos = service.pesquisarPorNumeroExato(numero);
+        return orcamentos.stream()
+                .map(this::converterParaPesquisaDTO)
+                .collect(java.util.stream.Collectors.toList());
+    }
 
     @GetMapping("/api/orcamentos/listarTodos")
     public List<Orcamento> listarTodos() {
         logger.info("Listando todos os orçamentos no controller.");
         return service.listarTodos();
+    }
+
+    @GetMapping("/api/orcamentos/buscarPaginado")
+    public Page<Orcamento> buscarPaginado(
+            @RequestParam(required = false, defaultValue = "") String query,
+            @RequestParam(required = false, defaultValue = "numero") String tipo,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return service.buscarPaginado(query, tipo, pageable);
     }
     
     @GetMapping("/api/orcamentos/cliente/{cpf}")
@@ -138,5 +162,21 @@ public class OrcamentoController {
             logger.error("ERRO ao transformar orçamento ID " + id + ": " + e.getMessage(), e);
             throw e;
         }
+    }
+    
+    private OrcamentoPesquisaDTO converterParaPesquisaDTO(Orcamento orc) {
+        return OrcamentoPesquisaDTO.builder()
+                .id(orc.getId())
+                .numeroOrcamento(orc.getNumeroOrcamento())
+                .dataHora(orc.getDataHora())
+                .clienteNome(orc.getClienteNome())
+                .clienteCpf(orc.getClienteCpf())
+                .veiculoNome(orc.getVeiculoNome())
+                .veiculoPlaca(orc.getVeiculoPlaca())
+                .precoTotal(orc.getPrecoTotal())
+                .tipoPagamento(orc.getTipoPagamento() != null ? orc.getTipoPagamento().getNome() : null)
+                .transformadoEmOS(orc.getTransformadoEmOS())
+                .numeroOSGerado(orc.getNumeroOSGerado())
+                .build();
     }
 }

@@ -1,6 +1,10 @@
 package tecstock_spring.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import tecstock_spring.model.Orcamento;
 
@@ -35,4 +39,24 @@ public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
     List<Orcamento> findByEmpresaId(Long empresaId);
     Optional<Orcamento> findByIdAndEmpresaId(Long id, Long empresaId);
     Optional<Orcamento> findByNumeroOrcamentoAndEmpresaId(String numeroOrcamento, Long empresaId);
+
+    @Query("SELECT o FROM Orcamento o WHERE o.empresa.id = :empresaId AND o.numeroOrcamento LIKE CONCAT(:query, '%')")
+    Page<Orcamento> searchByNumeroOrcamentoAndEmpresaId(@Param("query") String query, @Param("empresaId") Long empresaId, Pageable pageable);
+
+    @Query("SELECT o FROM Orcamento o WHERE o.empresa.id = :empresaId AND LOWER(o.clienteNome) LIKE LOWER(CONCAT(:query, '%'))")
+    Page<Orcamento> searchByClienteNomeAndEmpresaId(@Param("query") String query, @Param("empresaId") Long empresaId, Pageable pageable);
+
+    @Query("SELECT o FROM Orcamento o WHERE o.empresa.id = :empresaId AND LOWER(o.veiculoPlaca) LIKE LOWER(CONCAT(:query, '%'))")
+    Page<Orcamento> searchByVeiculoPlacaAndEmpresaId(@Param("query") String query, @Param("empresaId") Long empresaId, Pageable pageable);
+    
+    @Query("SELECT o FROM Orcamento o WHERE o.empresa.id = :empresaId AND (" +
+           "o.numeroOrcamento LIKE CONCAT(:query, '%') OR " +
+           "LOWER(o.clienteNome) LIKE LOWER(CONCAT(:query, '%')) OR " +
+           "LOWER(o.veiculoPlaca) LIKE LOWER(CONCAT(:query, '%')))")
+    Page<Orcamento> searchByQueryAndEmpresaId(@Param("query") String query, @Param("empresaId") Long empresaId, Pageable pageable);
+    
+    Page<Orcamento> findByEmpresaIdOrderByCreatedAtDesc(Long empresaId, Pageable pageable);
+    
+    @Query("SELECT COUNT(o) > 0 FROM Orcamento o JOIN o.pecasOrcadas po WHERE po.peca.id = :pecaId")
+    boolean existsByPecaId(@Param("pecaId") Long pecaId);
 }

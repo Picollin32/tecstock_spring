@@ -3,12 +3,15 @@ package tecstock_spring.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import tecstock_spring.model.AuditoriaLog;
 import tecstock_spring.service.AuditoriaService;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -134,5 +137,38 @@ public class AuditoriaController {
     public ResponseEntity<List<String>> listarUsuariosAtivos() {
         List<String> usuarios = auditoriaService.listarUsuariosAtivos();
         return ResponseEntity.ok(usuarios);
+    }
+    
+    @GetMapping("/exportar-csv")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<byte[]> exportarRegistrosCSV(
+            @RequestParam(required = false) Integer ano,
+            @RequestParam(required = false) Integer mes,
+            @RequestParam(required = false) String usuario,
+            @RequestParam(required = false) String entidade,
+            @RequestParam(required = false) String operacao,
+            @RequestParam(required = false) Long entidadeId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dia,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataFim) {
+
+        String csv = auditoriaService.exportarRegistrosParaCSV(
+            usuario, entidade, operacao, entidadeId, dataInicio, dataFim, dia, ano, mes);
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("text/csv; charset=UTF-8"));
+        String fileName = "auditoria.csv";
+        if (dia != null) {
+            fileName = String.format("auditoria_%s.csv", dia);
+        } else if (ano != null && mes != null) {
+            fileName = String.format("auditoria_%d_%02d.csv", ano, mes);
+        }
+        headers.setContentDispositionFormData("attachment", fileName);
+        headers.add("Content-Type", "text/csv; charset=UTF-8");
+        
+        byte[] csvBytes = csv.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(csvBytes);
     }
 }

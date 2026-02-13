@@ -29,7 +29,7 @@ public class AuditoriaLog {
     @Column(nullable = false)
     private String entidade;
     
-    @Column(nullable = false)
+    @Column(name = "entidade_id", nullable = false)
     private Long entidadeId;
     
     @Column(nullable = false)
@@ -38,15 +38,15 @@ public class AuditoriaLog {
     @Column(nullable = false)
     private String usuario;
     
-    @Column(nullable = false)
+    @Column(name = "data_hora", nullable = false)
     private LocalDateTime dataHora;
     
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "valores_antigos", columnDefinition = "TEXT")
     private String valoresAntigos;
     
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "valores_novos", columnDefinition = "TEXT")
     private String valoresNovos;
     
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "descricao", columnDefinition = "TEXT")
     private String descricao;
 }

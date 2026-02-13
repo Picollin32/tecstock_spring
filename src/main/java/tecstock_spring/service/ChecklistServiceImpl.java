@@ -4,6 +4,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.ChecklistController;
 import tecstock_spring.model.Checklist;
@@ -132,5 +134,50 @@ public class ChecklistServiceImpl implements ChecklistService {
             logger.error("Erro ao reabrir checklist ID " + id + ": " + e.getMessage());
             return false;
         }
+    }
+    
+    @Override
+    public List<Checklist> pesquisarPorNumeroExato(Integer numero) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        try {
+            List<Checklist> checklists = repository.findByEmpresaId(empresaId);
+            List<Checklist> resultado = checklists.stream()
+                    .filter(c -> c.getNumeroChecklist() == numero)
+                    .collect(java.util.stream.Collectors.toList());
+            
+            if (!resultado.isEmpty()) {
+                logger.info("Checklist encontrado com número exato: " + numero);
+            } else {
+                logger.info("Nenhum checklist encontrado com número: " + numero);
+            }
+            return resultado;
+        } catch (Exception e) {
+            logger.error("Erro ao pesquisar checklist por número " + numero + ": " + e.getMessage());
+            return List.of();
+        }
+    }
+    
+    @Override
+    public Page<Checklist> buscarPaginado(String query, String tipo, Pageable pageable) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        if (query == null || query.trim().isEmpty()) {
+            return repository.findByEmpresaIdOrderByCreatedAtDesc(empresaId, pageable);
+        }
+
+        String tipoBusca = tipo == null ? "numero" : tipo.trim().toLowerCase();
+        String termo = query.trim();
+        if ("placa".equals(tipoBusca)) {
+            return repository.searchByVeiculoPlacaAndEmpresaId(termo, empresaId, pageable);
+        }
+
+        return repository.searchByNumeroChecklistAndEmpresaId(termo, empresaId, pageable);
     }
 }

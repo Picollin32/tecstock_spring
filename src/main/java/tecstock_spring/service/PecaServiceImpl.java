@@ -2,12 +2,15 @@ package tecstock_spring.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 import tecstock_spring.controller.PecaController;
 import tecstock_spring.dto.AjusteEstoqueDTO;
 import tecstock_spring.exception.CodigoPecaDuplicadoException;
 import tecstock_spring.exception.PecaComEstoqueException;
+import tecstock_spring.exception.PecaEmUsoException;
 import tecstock_spring.model.Empresa;
 import tecstock_spring.model.Fabricante;
 import tecstock_spring.model.Fornecedor;
@@ -20,6 +23,8 @@ import tecstock_spring.repository.FabricanteRepository;
 import tecstock_spring.repository.FornecedorRepository;
 import tecstock_spring.repository.MovimentacaoEstoqueRepository;
 import tecstock_spring.repository.OrdemServicoRepository;
+import tecstock_spring.repository.OrcamentoRepository;
+import tecstock_spring.repository.PecaOrdemServicoRepository;
 import tecstock_spring.repository.PecaRepository;
 import tecstock_spring.util.TenantContext;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +42,8 @@ public class PecaServiceImpl implements PecaService {
     private final FabricanteRepository fabricanteRepository; 
     private final FornecedorRepository fornecedorRepository;
     private final OrdemServicoRepository ordemServicoRepository;
+    private final OrcamentoRepository orcamentoRepository;
+    private final PecaOrdemServicoRepository pecaOrdemServicoRepository;
     private final MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
     private final EmpresaRepository empresaRepository;
     
@@ -179,14 +186,24 @@ public class PecaServiceImpl implements PecaService {
     @SuppressWarnings("null")
     public void deletar(Long id) {
         Peca peca = buscarPorId(id);
-        
+
         if (peca.getQuantidadeEstoque() > 0) {
             throw new PecaComEstoqueException("Não é possível excluir a peça '" + peca.getNome() + 
                 "' pois ela ainda possui " + peca.getQuantidadeEstoque() + 
                 " unidades em estoque. Para excluir uma peça, é necessário que seu estoque seja zero.");
         }
+
+        if (pecaOrdemServicoRepository.existsByPecaId(id)) {
+            throw new PecaEmUsoException("Não é possível excluir a peça '" + peca.getNome() + 
+                "' pois ela está vinculada a uma ou mais Ordens de Serviço.");
+        }
+
+        if (orcamentoRepository.existsByPecaId(id)) {
+            throw new PecaEmUsoException("Não é possível excluir a peça '" + peca.getNome() + 
+                "' pois ela está vinculada a um ou mais Orçamentos.");
+        }
         
-        logger.info("Excluindo peça com estoque zero: " + peca.getNome());
+        logger.info("Excluindo peça: " + peca.getNome() + " (ID: " + id + ")");
         pecaRepository.deleteById(id);
     }
     
@@ -304,5 +321,19 @@ public class PecaServiceImpl implements PecaService {
         }
         
         logger.info("Atualização de unidades usadas concluída");
+    }
+    
+    @Override
+    public Page<tecstock_spring.dto.PecaPesquisaDTO> buscarPaginado(String query, Pageable pageable) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        if (query == null || query.trim().isEmpty()) {
+            return pecaRepository.findByEmpresaId(empresaId, pageable);
+        }
+        
+        return pecaRepository.searchByQueryAndEmpresaId(query.trim(), empresaId, pageable);
     }
 }

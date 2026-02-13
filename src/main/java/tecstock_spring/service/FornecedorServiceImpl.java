@@ -4,6 +4,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import tecstock_spring.controller.FornecedorController;
 import tecstock_spring.exception.FornecedorEmUsoException;
@@ -107,5 +109,19 @@ public class FornecedorServiceImpl implements FornecedorService {
         
         repository.deleteById(id);
         logger.info("Fornecedor excluído com sucesso da empresa " + empresaId + ": " + fornecedor.getNome());
+    }
+    
+    @Override
+    public Page<tecstock_spring.dto.FornecedorPesquisaDTO> buscarPaginado(String query, Pageable pageable) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        if (query == null || query.trim().isEmpty()) {
+            return repository.findByEmpresaId(empresaId, pageable);
+        }
+        
+        return repository.searchByQueryAndEmpresaId(query.trim(), empresaId, pageable);
     }
 }
