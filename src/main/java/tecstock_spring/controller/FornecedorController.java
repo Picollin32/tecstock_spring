@@ -1,10 +1,10 @@
 package tecstock_spring.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -60,10 +60,21 @@ public class FornecedorController {
     }
     
     @GetMapping("/api/fornecedores/buscarPaginado")
-    public Page<tecstock_spring.dto.FornecedorPesquisaDTO> buscarPaginado(
+    public Object buscarPaginado(
             @RequestParam(required = false, defaultValue = "") String query,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "30") int size) {
+        // Se não há pesquisa, retorna os últimos 6 cadastros sem paginação
+        if (query == null || query.trim().isEmpty()) {
+            List<tecstock_spring.dto.FornecedorPesquisaDTO> lista = service.listarUltimosParaInicio(6);
+            Map<String, Object> response = new java.util.HashMap<>();
+            response.put("content", lista);
+            response.put("totalElements", lista.size());
+            response.put("totalPages", 1);
+            response.put("number", 0);
+            return response;
+        }
+        // Com pesquisa, usa paginação normal
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return service.buscarPaginado(query, pageable);
     }

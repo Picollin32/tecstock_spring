@@ -36,4 +36,7 @@ public interface ServicoRepository extends JpaRepository<Servico, Long> {
     
     @Query("SELECT new tecstock_spring.dto.ServicoPesquisaDTO(s.id, s.nome, s.precoPasseio, s.precoCaminhonete, s.createdAt, s.updatedAt) FROM Servico s WHERE s.empresa.id = :empresaId")
     org.springframework.data.domain.Page<ServicoPesquisaDTO> findByEmpresaId(Long empresaId, org.springframework.data.domain.Pageable pageable);
+    
+    @Query("SELECT new tecstock_spring.dto.ServicoPesquisaDTO(s.id, s.nome, s.precoPasseio, s.precoCaminhonete, s.createdAt, s.updatedAt) FROM Servico s WHERE s.empresa.id = :empresaId ORDER BY s.id DESC")
+    List<ServicoPesquisaDTO> findTopByEmpresaIdOrderByIdDesc(@Param("empresaId") Long empresaId, org.springframework.data.domain.Pageable pageable);
 }

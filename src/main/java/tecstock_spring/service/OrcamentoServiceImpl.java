@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import tecstock_spring.exception.OrcamentoNotFoundException;
@@ -264,5 +265,16 @@ public class OrcamentoServiceImpl implements OrcamentoService {
             default:
                 return repository.searchByNumeroOrcamentoAndEmpresaId(termo, empresaId, pageable);
         }
+    }
+    
+    @Override
+    public List<Orcamento> listarUltimosParaInicio(int limit) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        Pageable pageable = PageRequest.of(0, limit);
+        return repository.findTopByEmpresaIdOrderByCreatedAtDesc(empresaId, pageable);
     }
 }

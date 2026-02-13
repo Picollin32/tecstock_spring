@@ -18,4 +18,6 @@ public interface FornecedorService {
     void deletar(Long id);
     
     Page<FornecedorPesquisaDTO> buscarPaginado(String query, Pageable pageable);
+    
+    List<FornecedorPesquisaDTO> listarUltimosParaInicio(int limit);
 }

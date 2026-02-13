@@ -27,4 +27,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     
     @Query("SELECT new tecstock_spring.dto.ClientePesquisaDTO(c.id, c.nome, c.cpf, c.telefone, c.email, c.dataNascimento, c.rua, c.numeroCasa, c.bairro, c.cidade, c.uf, c.createdAt, c.updatedAt) FROM Cliente c WHERE c.empresa.id = :empresaId")
     Page<ClientePesquisaDTO> findByEmpresaId(Long empresaId, Pageable pageable);
+    
+    @Query("SELECT new tecstock_spring.dto.ClientePesquisaDTO(c.id, c.nome, c.cpf, c.telefone, c.email, c.dataNascimento, c.rua, c.numeroCasa, c.bairro, c.cidade, c.uf, c.createdAt, c.updatedAt) FROM Cliente c WHERE c.empresa.id = :empresaId ORDER BY c.createdAt DESC")
+    List<ClientePesquisaDTO> findTopByEmpresaIdOrderByCreatedAtDesc(@Param("empresaId") Long empresaId, Pageable pageable);
 }

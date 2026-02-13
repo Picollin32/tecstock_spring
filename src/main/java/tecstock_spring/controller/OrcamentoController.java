@@ -3,7 +3,6 @@ package tecstock_spring.controller;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -17,6 +16,7 @@ import tecstock_spring.util.TenantContext;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -73,11 +73,22 @@ public class OrcamentoController {
     }
 
     @GetMapping("/api/orcamentos/buscarPaginado")
-    public Page<Orcamento> buscarPaginado(
+    public Object buscarPaginado(
             @RequestParam(required = false, defaultValue = "") String query,
             @RequestParam(required = false, defaultValue = "numero") String tipo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
+        // Se não há pesquisa, retorna os últimos 5 sem paginação
+        if (query == null || query.trim().isEmpty()) {
+            List<Orcamento> lista = service.listarUltimosParaInicio(5);
+            Map<String, Object> response = new java.util.HashMap<>();
+            response.put("content", lista);
+            response.put("totalElements", lista.size());
+            response.put("totalPages", 1);
+            response.put("number", 0);
+            return response;
+        }
+        // Com pesquisa, usa paginação com 10 elementos
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return service.buscarPaginado(query, tipo, pageable);
     }

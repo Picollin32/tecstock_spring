@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -138,5 +139,16 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
         }
         
         return repository.searchByQueryAndEmpresaId(query.trim(), empresaId, pageable);
+    }
+    
+    @Override
+    public List<tecstock_spring.dto.TipoPagamentoPesquisaDTO> listarUltimosParaInicio(int limit) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        Pageable pageable = PageRequest.of(0, limit);
+        return repository.findTopByEmpresaIdOrderByCreatedAtDesc(empresaId, pageable);
     }
 }

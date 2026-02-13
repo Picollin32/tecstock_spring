@@ -1,10 +1,10 @@
 package tecstock_spring.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -49,11 +49,22 @@ public class ChecklistController {
     }
 
     @GetMapping("/api/checklists/buscarPaginado")
-    public Page<Checklist> buscarPaginado(
+    public Object buscarPaginado(
             @RequestParam(required = false, defaultValue = "") String query,
             @RequestParam(required = false, defaultValue = "numero") String tipo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
+        // Se não há pesquisa, retorna os últimos 5 sem paginação
+        if (query == null || query.trim().isEmpty()) {
+            List<Checklist> lista = service.listarUltimosParaInicio(5);
+            Map<String, Object> response = new java.util.HashMap<>();
+            response.put("content", lista);
+            response.put("totalElements", lista.size());
+            response.put("totalPages", 1);
+            response.put("number", 0);
+            return response;
+        }
+        // Com pesquisa, usa paginação com 10 elementos
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return service.buscarPaginado(query, tipo, pageable);
     }

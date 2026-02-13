@@ -57,6 +57,9 @@ public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
     
     Page<Orcamento> findByEmpresaIdOrderByCreatedAtDesc(Long empresaId, Pageable pageable);
     
+    @Query("SELECT o FROM Orcamento o WHERE o.empresa.id = :empresaId ORDER BY o.createdAt DESC")
+    List<Orcamento> findTopByEmpresaIdOrderByCreatedAtDesc(@Param("empresaId") Long empresaId, Pageable pageable);
+    
     @Query("SELECT COUNT(o) > 0 FROM Orcamento o JOIN o.pecasOrcadas po WHERE po.peca.id = :pecaId")
     boolean existsByPecaId(@Param("pecaId") Long pecaId);
 }

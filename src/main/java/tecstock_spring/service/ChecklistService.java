@@ -23,4 +23,6 @@ public interface ChecklistService {
     boolean reabrirChecklist(Long id);
     
     Page<Checklist> buscarPaginado(String query, String tipo, Pageable pageable);
+    
+    List<Checklist> listarUltimosParaInicio(int limit);
 }

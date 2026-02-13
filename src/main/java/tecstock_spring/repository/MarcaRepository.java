@@ -35,4 +35,7 @@ public interface MarcaRepository extends JpaRepository<Marca, Long> {
     
     @Query("SELECT new tecstock_spring.dto.MarcaPesquisaDTO(m.id, m.marca, m.createdAt, m.updatedAt) FROM Marca m WHERE m.empresa.id = :empresaId")
     org.springframework.data.domain.Page<MarcaPesquisaDTO> findByEmpresaId(Long empresaId, org.springframework.data.domain.Pageable pageable);
+    
+    @Query("SELECT new tecstock_spring.dto.MarcaPesquisaDTO(m.id, m.marca, m.createdAt, m.updatedAt) FROM Marca m WHERE m.empresa.id = :empresaId ORDER BY m.createdAt DESC")
+    List<MarcaPesquisaDTO> findTopByEmpresaIdOrderByCreatedAtDesc(@org.springframework.data.repository.query.Param("empresaId") Long empresaId, org.springframework.data.domain.Pageable pageable);
 }

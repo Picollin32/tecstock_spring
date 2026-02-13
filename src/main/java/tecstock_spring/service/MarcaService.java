@@ -18,4 +18,6 @@ public interface MarcaService {
     void deletar(Long id);
     
     Page<MarcaPesquisaDTO> buscarPaginado(String query, Pageable pageable);
+    
+    List<MarcaPesquisaDTO> listarUltimosParaInicio(int limit);
 }

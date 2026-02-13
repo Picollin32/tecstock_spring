@@ -18,4 +18,6 @@ public interface TipoPagamentoService {
     void deletar(Long id);
     
     Page<TipoPagamentoPesquisaDTO> buscarPaginado(String query, Pageable pageable);
+    
+    List<TipoPagamentoPesquisaDTO> listarUltimosParaInicio(int limit);
 }

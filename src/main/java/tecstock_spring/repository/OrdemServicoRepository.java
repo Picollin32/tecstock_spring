@@ -61,6 +61,9 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
 
     Page<OrdemServico> findByEmpresaIdOrderByCreatedAtDesc(Long empresaId, Pageable pageable);
     
+    @Query("SELECT os FROM OrdemServico os WHERE os.empresa.id = :empresaId ORDER BY os.createdAt DESC")
+    List<OrdemServico> findTopByEmpresaIdOrderByCreatedAtDesc(@Param("empresaId") Long empresaId, Pageable pageable);
+    
     @Query("SELECT os FROM OrdemServico os WHERE os.empresa.id = :empresaId AND (" +
            "os.numeroOS LIKE CONCAT(:query, '%') OR " +
            "LOWER(os.clienteNome) LIKE LOWER(CONCAT(:query, '%')) OR " +

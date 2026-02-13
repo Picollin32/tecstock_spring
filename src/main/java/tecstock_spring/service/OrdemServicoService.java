@@ -48,4 +48,6 @@ public interface OrdemServicoService {
     OrdemServico reabrirOS(Long id);
     
     Page<OrdemServico> buscarPaginado(String query, String tipo, Pageable pageable);
+    
+    List<OrdemServico> listarUltimosParaInicio(int limit);
 }

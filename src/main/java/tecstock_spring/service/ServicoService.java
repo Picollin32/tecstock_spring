@@ -21,4 +21,6 @@ public interface ServicoService {
     void deletar(Long id);
     
     Page<tecstock_spring.dto.ServicoPesquisaDTO> buscarPaginado(String query, Pageable pageable);
+    
+    List<tecstock_spring.dto.ServicoPesquisaDTO> listarUltimosParaInicio(int limit);
 }

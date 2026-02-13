@@ -18,4 +18,6 @@ public interface VeiculoService {
     void deletar(Long id);
     
     Page<VeiculoPesquisaDTO> buscarPaginado(String query, Pageable pageable);
+    
+    List<VeiculoPesquisaDTO> listarUltimosParaInicio(int limit);
 }

@@ -31,4 +31,7 @@ public interface ChecklistRepository extends JpaRepository<Checklist, Long> {
     Page<Checklist> searchByQueryAndEmpresaId(@Param("query") String query, @Param("empresaId") Long empresaId, Pageable pageable);
     
     Page<Checklist> findByEmpresaIdOrderByCreatedAtDesc(Long empresaId, Pageable pageable);
+    
+    @Query("SELECT c FROM Checklist c WHERE c.empresa.id = :empresaId ORDER BY c.createdAt DESC")
+    List<Checklist> findTopByEmpresaIdOrderByCreatedAtDesc(@Param("empresaId") Long empresaId, Pageable pageable);
 }

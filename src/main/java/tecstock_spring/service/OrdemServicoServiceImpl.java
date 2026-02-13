@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -662,5 +663,16 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             default:
                 return repository.searchByNumeroOSAndEmpresaId(termo, empresaId, pageable);
         }
+    }
+    
+    @Override
+    public List<OrdemServico> listarUltimosParaInicio(int limit) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+        
+        Pageable pageable = PageRequest.of(0, limit);
+        return repository.findTopByEmpresaIdOrderByCreatedAtDesc(empresaId, pageable);
     }
 }

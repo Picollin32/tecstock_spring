@@ -64,4 +64,7 @@ public interface PecaRepository extends JpaRepository<Peca, Long> {
     
     @Query("SELECT new tecstock_spring.dto.PecaPesquisaDTO(p.id, p.nome, p.codigoFabricante, p.precoUnitario, p.precoFinal, p.quantidadeEstoque, p.estoqueSeguranca, COALESCE(p.unidadesUsadasEmOS, 0), p.fabricante.id, p.fabricante.nome, fo.id, fo.nome, fo.cnpj, fo.telefone, fo.email, fo.margemLucro, fo.rua, fo.numeroCasa, fo.bairro, fo.cidade, fo.uf, p.createdAt, p.updatedAt) FROM Peca p LEFT JOIN p.fornecedor fo WHERE p.empresa.id = :empresaId")
     Page<tecstock_spring.dto.PecaPesquisaDTO> findByEmpresaId(@Param("empresaId") Long empresaId, Pageable pageable);
+    
+    @Query("SELECT new tecstock_spring.dto.PecaPesquisaDTO(p.id, p.nome, p.codigoFabricante, p.precoUnitario, p.precoFinal, p.quantidadeEstoque, p.estoqueSeguranca, COALESCE(p.unidadesUsadasEmOS, 0), p.fabricante.id, p.fabricante.nome, fo.id, fo.nome, fo.cnpj, fo.telefone, fo.email, fo.margemLucro, fo.rua, fo.numeroCasa, fo.bairro, fo.cidade, fo.uf, p.createdAt, p.updatedAt) FROM Peca p LEFT JOIN p.fornecedor fo WHERE p.empresa.id = :empresaId ORDER BY p.createdAt DESC")
+    List<tecstock_spring.dto.PecaPesquisaDTO> findTopByEmpresaIdOrderByCreatedAtDesc(@Param("empresaId") Long empresaId, Pageable pageable);
 }

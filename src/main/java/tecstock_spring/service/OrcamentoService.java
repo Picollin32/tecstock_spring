@@ -34,4 +34,6 @@ public interface OrcamentoService {
     OrdemServico transformarEmOrdemServico(Long orcamentoId);
     
     Page<Orcamento> buscarPaginado(String query, String tipo, Pageable pageable);
+    
+    List<Orcamento> listarUltimosParaInicio(int limit);
 }

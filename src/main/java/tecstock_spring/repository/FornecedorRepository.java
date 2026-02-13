@@ -22,4 +22,7 @@ public interface FornecedorRepository extends JpaRepository<Fornecedor, Long> {
     
     @org.springframework.data.jpa.repository.Query("SELECT new tecstock_spring.dto.FornecedorPesquisaDTO(f.id, f.nome, f.cnpj, f.telefone, f.email, f.margemLucro, f.rua, f.numeroCasa, f.bairro, f.cidade, f.uf, f.createdAt, f.updatedAt) FROM Fornecedor f WHERE f.empresa.id = :empresaId")
     org.springframework.data.domain.Page<FornecedorPesquisaDTO> findByEmpresaId(Long empresaId, org.springframework.data.domain.Pageable pageable);
+    
+    @org.springframework.data.jpa.repository.Query("SELECT new tecstock_spring.dto.FornecedorPesquisaDTO(f.id, f.nome, f.cnpj, f.telefone, f.email, f.margemLucro, f.rua, f.numeroCasa, f.bairro, f.cidade, f.uf, f.createdAt, f.updatedAt) FROM Fornecedor f WHERE f.empresa.id = :empresaId ORDER BY f.createdAt DESC")
+    List<FornecedorPesquisaDTO> findTopByEmpresaIdOrderByCreatedAtDesc(@org.springframework.data.repository.query.Param("empresaId") Long empresaId, org.springframework.data.domain.Pageable pageable);
 }

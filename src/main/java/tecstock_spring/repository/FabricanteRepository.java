@@ -38,4 +38,7 @@ public interface FabricanteRepository extends JpaRepository<Fabricante, Long> {
     
     @Query("SELECT new tecstock_spring.dto.FabricantePesquisaDTO(f.id, f.nome, f.createdAt, f.updatedAt) FROM Fabricante f WHERE f.empresa.id = :empresaId")
     org.springframework.data.domain.Page<FabricantePesquisaDTO> findByEmpresaId(Long empresaId, org.springframework.data.domain.Pageable pageable);
+    
+    @Query("SELECT new tecstock_spring.dto.FabricantePesquisaDTO(f.id, f.nome, f.createdAt, f.updatedAt) FROM Fabricante f WHERE f.empresa.id = :empresaId ORDER BY f.createdAt DESC")
+    List<FabricantePesquisaDTO> findTopByEmpresaIdOrderByCreatedAtDesc(@Param("empresaId") Long empresaId, org.springframework.data.domain.Pageable pageable);
 }

@@ -23,4 +23,7 @@ public interface VeiculoRepository extends JpaRepository<Veiculo, Long> {
     
     @org.springframework.data.jpa.repository.Query("SELECT new tecstock_spring.dto.VeiculoPesquisaDTO(v.id, v.nome, v.placa, v.modelo, v.ano, v.categoria, v.cor, v.quilometragem, v.marca.id, v.marca.marca, v.createdAt, v.updatedAt) FROM Veiculo v WHERE v.empresa.id = :empresaId")
     org.springframework.data.domain.Page<VeiculoPesquisaDTO> findByEmpresaId(Long empresaId, org.springframework.data.domain.Pageable pageable);
+    
+    @org.springframework.data.jpa.repository.Query("SELECT new tecstock_spring.dto.VeiculoPesquisaDTO(v.id, v.nome, v.placa, v.modelo, v.ano, v.categoria, v.cor, v.quilometragem, v.marca.id, v.marca.marca, v.createdAt, v.updatedAt) FROM Veiculo v WHERE v.empresa.id = :empresaId ORDER BY v.createdAt DESC")
+    List<VeiculoPesquisaDTO> findTopByEmpresaIdOrderByCreatedAtDesc(@org.springframework.data.repository.query.Param("empresaId") Long empresaId, org.springframework.data.domain.Pageable pageable);
 }

@@ -27,4 +27,6 @@ public interface PecaService {
     void deletar(Long id);
     
     Page<PecaPesquisaDTO> buscarPaginado(String query, Pageable pageable);
+    
+    List<PecaPesquisaDTO> listarUltimosParaInicio(int limit);
 }
