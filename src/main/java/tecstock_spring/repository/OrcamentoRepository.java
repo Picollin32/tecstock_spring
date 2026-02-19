@@ -33,6 +33,8 @@ public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
     boolean existsByVeiculoPlacaAndEmpresaId(String veiculoPlaca, Long empresaId);
     boolean existsByMecanicoIdAndEmpresaId(Long mecanicoId, Long empresaId);
     boolean existsByConsultorIdAndEmpresaId(Long consultorId, Long empresaId);
+    @Query("SELECT COUNT(o) > 0 FROM Orcamento o WHERE o.empresa.id = :empresaId AND (o.mecanico.id = :consultorId OR o.consultor.id = :consultorId)")
+    boolean existsByConsultorOrMecanicoInEmpresa(@Param("consultorId") Long consultorId, @Param("empresaId") Long empresaId);
     java.util.Optional<Orcamento> findFirstByMecanicoIdAndEmpresaIdOrderByDataHoraDesc(Long mecanicoId, Long empresaId);
     java.util.Optional<Orcamento> findFirstByConsultorIdAndEmpresaIdOrderByDataHoraDesc(Long consultorId, Long empresaId);
     List<Orcamento> findByEmpresaIdOrderByCreatedAtDesc(Long empresaId);

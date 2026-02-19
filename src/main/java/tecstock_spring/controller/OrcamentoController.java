@@ -78,7 +78,6 @@ public class OrcamentoController {
             @RequestParam(required = false, defaultValue = "numero") String tipo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        // Se não há pesquisa, retorna os últimos 5 sem paginação
         if (query == null || query.trim().isEmpty()) {
             List<Orcamento> lista = service.listarUltimosParaInicio(5);
             Map<String, Object> response = new java.util.HashMap<>();
@@ -88,7 +87,6 @@ public class OrcamentoController {
             response.put("number", 0);
             return response;
         }
-        // Com pesquisa, usa paginação com 10 elementos
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return service.buscarPaginado(query, tipo, pageable);
     }

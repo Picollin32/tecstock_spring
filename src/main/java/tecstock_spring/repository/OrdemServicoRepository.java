@@ -26,6 +26,8 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
     boolean existsByVeiculoPlacaAndEmpresaId(String veiculoPlaca, Long empresaId);
     boolean existsByMecanicoIdAndEmpresaId(Long mecanicoId, Long empresaId);
     boolean existsByConsultorIdAndEmpresaId(Long consultorId, Long empresaId);
+    @Query("SELECT COUNT(os) > 0 FROM OrdemServico os WHERE os.empresa.id = :empresaId AND (os.mecanico.id = :consultorId OR os.consultor.id = :consultorId)")
+    boolean existsByConsultorOrMecanicoInEmpresa(@Param("consultorId") Long consultorId, @Param("empresaId") Long empresaId);
     java.util.Optional<OrdemServico> findFirstByMecanicoIdAndEmpresaIdOrderByDataHoraDesc(Long mecanicoId, Long empresaId);
     java.util.Optional<OrdemServico> findFirstByConsultorIdAndEmpresaIdOrderByDataHoraDesc(Long consultorId, Long empresaId);
     

@@ -114,7 +114,6 @@ public class PecaController {
             @RequestParam(required = false, defaultValue = "") String query,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "30") int size) {
-        // Se não há pesquisa, retorna os últimos 6 cadastros sem paginação
         if (query == null || query.trim().isEmpty()) {
             List<tecstock_spring.dto.PecaPesquisaDTO> lista = service.listarUltimosParaInicio(6);
             Map<String, Object> response = new java.util.HashMap<>();
@@ -124,7 +123,6 @@ public class PecaController {
             response.put("number", 0);
             return response;
         }
-        // Com pesquisa, usa paginação normal
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return service.buscarPaginado(query, pageable);
     }

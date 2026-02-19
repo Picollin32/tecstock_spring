@@ -221,115 +221,20 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (usuario.getNivelAcesso() == 2 && usuario.getConsultor() != null) {
             Long consultorId = usuario.getConsultor().getId();
             Long empresaId = TenantContext.getCurrentEmpresaId();
-            
-            boolean emOrdemComoMecanico = ordemServicoRepository.existsByMecanicoIdAndEmpresaId(consultorId, empresaId);
-            boolean emOrdemComoConsultor = ordemServicoRepository.existsByConsultorIdAndEmpresaId(consultorId, empresaId);
-            boolean emOrcamentoComoMecanico = orcamentoRepository.existsByMecanicoIdAndEmpresaId(consultorId, empresaId);
-            boolean emOrcamentoComoConsultor = orcamentoRepository.existsByConsultorIdAndEmpresaId(consultorId, empresaId);
-            boolean emChecklistComoConsultor = checklistRepository.existsByConsultorIdAndEmpresaId(consultorId, empresaId);
 
-            if (emOrdemComoMecanico) {
-                throw new UsuarioEmUsoException("Usuário não pode ser excluído pois o consultor vinculado está registrado como mecânico em uma Ordem de Serviço");
+            if (ordemServicoRepository.existsByConsultorOrMecanicoInEmpresa(consultorId, empresaId)) {
+                throw new UsuarioEmUsoException("Usuário não pode ser excluído pois o consultor vinculado está registrado em uma Ordem de Serviço");
             }
 
-            if (emOrdemComoConsultor) {
-                throw new UsuarioEmUsoException("Usuário não pode ser excluído pois o consultor vinculado está registrado como consultor em uma Ordem de Serviço");
+            if (orcamentoRepository.existsByConsultorOrMecanicoInEmpresa(consultorId, empresaId)) {
+                throw new UsuarioEmUsoException("Usuário não pode ser excluído pois o consultor vinculado está registrado em um Orçamento");
             }
 
-            if (emChecklistComoConsultor) {
+            if (checklistRepository.existsByConsultorIdAndEmpresaId(consultorId, empresaId)) {
                 throw new UsuarioEmUsoException("Usuário não pode ser excluído pois o consultor vinculado está registrado em um Checklist");
             }
-
-            if (emOrcamentoComoMecanico) {
-                throw new UsuarioEmUsoException("Usuário não pode ser excluído pois o consultor vinculado está registrado como mecânico em um Orçamento");
-            }
-
-            if (emOrcamentoComoConsultor) {
-                throw new UsuarioEmUsoException("Usuário não pode ser excluído pois o consultor vinculado está registrado como consultor em um Orçamento");
-            }
         }
 
-        if (usuario.getNivelAcesso() == 1 && usuario.getEmpresa() != null) {
-            Long empresaId = usuario.getEmpresa().getId();
-            
-            StringBuilder mensagemErro = new StringBuilder("Não é possível excluir este usuário administrador porque a empresa dele possui dados cadastrados:");
-            boolean possuiDados = false;
-
-            if (repository.existsOtherUsuariosInEmpresa(empresaId, id)) {
-                mensagemErro.append("\n- Outros usuários");
-                possuiDados = true;
-            }
-            
-            if (empresaRepository.hasFuncionarios(empresaId)) {
-                mensagemErro.append("\n- Funcionários");
-                possuiDados = true;
-            }
-            
-            if (empresaRepository.hasClientes(empresaId)) {
-                mensagemErro.append("\n- Clientes");
-                possuiDados = true;
-            }
-            
-            if (empresaRepository.hasVeiculos(empresaId)) {
-                mensagemErro.append("\n- Veículos");
-                possuiDados = true;
-            }
-            
-            if (empresaRepository.hasPecas(empresaId)) {
-                mensagemErro.append("\n- Peças");
-                possuiDados = true;
-            }
-            
-            if (empresaRepository.hasServicos(empresaId)) {
-                mensagemErro.append("\n- Serviços");
-                possuiDados = true;
-            }
-            
-            if (empresaRepository.hasOrdensServico(empresaId)) {
-                mensagemErro.append("\n- Ordens de Serviço");
-                possuiDados = true;
-            }
-            
-            if (empresaRepository.hasOrcamentos(empresaId)) {
-                mensagemErro.append("\n- Orçamentos");
-                possuiDados = true;
-            }
-            
-            if (empresaRepository.hasAgendamentos(empresaId)) {
-                mensagemErro.append("\n- Agendamentos");
-                possuiDados = true;
-            }
-            
-            if (empresaRepository.hasChecklists(empresaId)) {
-                mensagemErro.append("\n- Checklists");
-                possuiDados = true;
-            }
-            
-            if (empresaRepository.hasMovimentacoesEstoque(empresaId)) {
-                mensagemErro.append("\n- Movimentações de Estoque");
-                possuiDados = true;
-            }
-            
-            if (empresaRepository.hasFornecedores(empresaId)) {
-                mensagemErro.append("\n- Fornecedores");
-                possuiDados = true;
-            }
-            
-            if (empresaRepository.hasFabricantes(empresaId)) {
-                mensagemErro.append("\n- Fabricantes");
-                possuiDados = true;
-            }
-            
-            if (empresaRepository.hasMarcas(empresaId)) {
-                mensagemErro.append("\n- Marcas");
-                possuiDados = true;
-            }
-            
-            if (possuiDados) {
-                throw new IllegalStateException(mensagemErro.toString());
-            }
-        }
-        
         repository.deleteById(id);
     }
     

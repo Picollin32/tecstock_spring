@@ -24,7 +24,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     List<Usuario> findByEmpresaId(Long empresaId);
     Optional<Usuario> findByIdAndEmpresaId(Long id, Long empresaId);
-    @Query("SELECT COUNT(u) > 0 FROM Usuario u WHERE u.empresa.id = :empresaId AND u.id != :usuarioId")
+    @Query("SELECT COUNT(u) > 0 FROM Usuario u WHERE u.empresa.id = :empresaId AND u.id != :usuarioId AND u.nivelAcesso = 2")
     boolean existsOtherUsuariosInEmpresa(@Param("empresaId") Long empresaId, @Param("usuarioId") Long usuarioId);
     @Query("SELECT COUNT(u) > 0 FROM Usuario u WHERE u.consultor.id = :consultorId AND u.empresa.id = :empresaId")
     boolean existsByConsultorIdAndEmpresaId(@Param("consultorId") Long consultorId, @Param("empresaId") Long empresaId);
