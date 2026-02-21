@@ -1,11 +1,7 @@
-# Environment variables
+# Environment variables (contêm senhas reais - nunca commitar)
 .env
 .env.local
 .env.production
-
-# Spring Configuration (sensitive data)
-application.properties
-application-*.properties
 
 # Maven
 target/

@@ -13,6 +13,11 @@ import jakarta.validation.Valid;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequiredArgsConstructor
@@ -111,6 +116,27 @@ public class EmpresaController {
         }
     }
     
+    @GetMapping("/buscarPaginado")
+    @PreAuthorize("hasAuthority('NIVEL_ACESSO_0')")
+    public ResponseEntity<?> buscarPaginado(
+            @RequestParam(required = false, defaultValue = "") String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "30") int size) {
+        logger.info("Buscando empresas paginado. Query: " + query + ", page: " + page);
+        if (query == null || query.trim().isEmpty()) {
+            List<Empresa> lista = service.listarUltimosParaInicio(6);
+            Map<String, Object> response = new HashMap<>();
+            response.put("content", lista);
+            response.put("totalElements", lista.size());
+            response.put("totalPages", 1);
+            response.put("number", 0);
+            return ResponseEntity.ok(response);
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        Page<Empresa> resultado = service.buscarPaginado(query, pageable);
+        return ResponseEntity.ok(resultado);
+    }
+
     @PutMapping("/ativar-desativar/{id}")
     @PreAuthorize("hasAuthority('NIVEL_ACESSO_0')")
     public ResponseEntity<Map<String, Object>> ativarDesativar(@PathVariable Long id, @RequestParam Boolean ativa) {

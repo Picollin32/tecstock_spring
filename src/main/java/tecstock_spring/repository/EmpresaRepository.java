@@ -1,11 +1,14 @@
 package tecstock_spring.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import tecstock_spring.model.Empresa;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -55,4 +58,10 @@ public interface EmpresaRepository extends JpaRepository<Empresa, Long> {
     
     @Query("SELECT COUNT(m) > 0 FROM Marca m WHERE m.empresa.id = :empresaId")
     boolean hasMarcas(@Param("empresaId") Long empresaId);
+
+    @Query("SELECT e FROM Empresa e WHERE LOWER(e.razaoSocial) LIKE LOWER(CONCAT(:query, '%')) OR LOWER(e.nomeFantasia) LIKE LOWER(CONCAT(:query, '%')) OR e.cnpj LIKE CONCAT(:query, '%') ORDER BY e.id DESC")
+    Page<Empresa> searchByQuery(@Param("query") String query, Pageable pageable);
+
+    @Query("SELECT e FROM Empresa e ORDER BY e.id DESC")
+    List<Empresa> findTopRecentEmpresas(Pageable pageable);
 }

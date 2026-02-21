@@ -3,6 +3,10 @@ package tecstock_spring.service;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tecstock_spring.model.Empresa;
@@ -55,6 +59,20 @@ public class EmpresaServiceImpl implements EmpresaService {
     public List<Empresa> listarTodas() {
         logger.info("Listando todas as empresas");
         return repository.findAll();
+    }
+
+    @Override
+    public Page<Empresa> buscarPaginado(String query, Pageable pageable) {
+        if (query == null || query.trim().isEmpty()) {
+            return repository.findAll(PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "id")));
+        }
+        return repository.searchByQuery(query.trim(), pageable);
+    }
+
+    @Override
+    public List<Empresa> listarUltimosParaInicio(int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        return repository.findTopRecentEmpresas(pageable);
     }
     
     @Override

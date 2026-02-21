@@ -44,6 +44,9 @@ public class TipoPagamento {
     @Column(unique = true, nullable = false)
     private Integer codigo;
     
+    @Column(name = "id_forma_pagamento")
+    private Integer idFormaPagamento;
+    
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     

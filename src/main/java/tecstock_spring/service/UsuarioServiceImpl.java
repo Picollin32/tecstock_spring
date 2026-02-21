@@ -3,6 +3,10 @@ package tecstock_spring.service;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tecstock_spring.exception.UsuarioDuplicadoException;
@@ -236,6 +240,28 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
 
         repository.deleteById(id);
+    }
+
+    @Override
+    public Page<Usuario> buscarPaginado(String query, Pageable pageable) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new RuntimeException("Empresa não encontrada no contexto do usuário");
+        }
+        if (query == null || query.trim().isEmpty()) {
+            return repository.findByEmpresaId(empresaId, PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt")));
+        }
+        return repository.searchByQueryAndEmpresaId(query.trim(), empresaId, pageable);
+    }
+
+    @Override
+    public List<Usuario> listarUltimosParaInicio(int limit) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new RuntimeException("Empresa não encontrada no contexto do usuário");
+        }
+        Pageable pageable = PageRequest.of(0, limit);
+        return repository.findTopUsuariosByEmpresaId(empresaId, pageable);
     }
     
     private void validarNomeUsuarioDuplicado(String nomeUsuario, Long idExcluir) {

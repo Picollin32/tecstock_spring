@@ -1,5 +1,7 @@
 package tecstock_spring.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import tecstock_spring.model.Empresa;
 
 import java.util.List;
@@ -19,4 +21,8 @@ public interface EmpresaService {
     void deletar(Long id);
     
     void ativarDesativar(Long id, Boolean ativa);
+
+    Page<Empresa> buscarPaginado(String query, Pageable pageable);
+
+    List<Empresa> listarUltimosParaInicio(int limit);
 }
