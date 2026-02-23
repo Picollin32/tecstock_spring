@@ -21,9 +21,12 @@ public class FornecedorPesquisaDTO {
     private BigDecimal margemLucro;
     private String rua;
     private String numeroCasa;
+    private String complemento;
     private String bairro;
     private String cidade;
     private String uf;
+    private String cep;
+    private String codigoMunicipio;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

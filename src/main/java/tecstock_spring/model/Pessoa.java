@@ -28,11 +28,14 @@ public abstract class Pessoa {
     private String cpf;
     private Date dataNascimento;
     
+    private String cep;
     private String rua;
     private String numeroCasa;
+    private String complemento;
     private String bairro;
     private String cidade;
     private String uf;
+    private String codigoMunicipio;
     
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

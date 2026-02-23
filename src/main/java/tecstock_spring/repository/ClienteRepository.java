@@ -22,12 +22,12 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     boolean existsByCpfAndEmpresaId(String cpf, Long empresaId);
     boolean existsByCpfAndIdNotAndEmpresaId(String cpf, Long id, Long empresaId);
     
-    @Query("SELECT new tecstock_spring.dto.ClientePesquisaDTO(c.id, c.nome, c.cpf, c.telefone, c.email, c.dataNascimento, c.rua, c.numeroCasa, c.bairro, c.cidade, c.uf, c.createdAt, c.updatedAt) FROM Cliente c WHERE c.empresa.id = :empresaId AND (LOWER(c.nome) LIKE LOWER(CONCAT(:query, '%')) OR c.cpf LIKE CONCAT(:query, '%'))")
+    @Query("SELECT new tecstock_spring.dto.ClientePesquisaDTO(c.id, c.nome, c.cpf, c.telefone, c.email, c.dataNascimento, c.rua, c.numeroCasa, c.complemento, c.bairro, c.cidade, c.uf, c.cep, c.codigoMunicipio, c.createdAt, c.updatedAt) FROM Cliente c WHERE c.empresa.id = :empresaId AND (LOWER(c.nome) LIKE LOWER(CONCAT(:query, '%')) OR c.cpf LIKE CONCAT(:query, '%'))")
     Page<ClientePesquisaDTO> searchByQueryAndEmpresaId(@Param("query") String query, @Param("empresaId") Long empresaId, Pageable pageable);
     
-    @Query("SELECT new tecstock_spring.dto.ClientePesquisaDTO(c.id, c.nome, c.cpf, c.telefone, c.email, c.dataNascimento, c.rua, c.numeroCasa, c.bairro, c.cidade, c.uf, c.createdAt, c.updatedAt) FROM Cliente c WHERE c.empresa.id = :empresaId")
+    @Query("SELECT new tecstock_spring.dto.ClientePesquisaDTO(c.id, c.nome, c.cpf, c.telefone, c.email, c.dataNascimento, c.rua, c.numeroCasa, c.complemento, c.bairro, c.cidade, c.uf, c.cep, c.codigoMunicipio, c.createdAt, c.updatedAt) FROM Cliente c WHERE c.empresa.id = :empresaId")
     Page<ClientePesquisaDTO> findByEmpresaId(Long empresaId, Pageable pageable);
     
-    @Query("SELECT new tecstock_spring.dto.ClientePesquisaDTO(c.id, c.nome, c.cpf, c.telefone, c.email, c.dataNascimento, c.rua, c.numeroCasa, c.bairro, c.cidade, c.uf, c.createdAt, c.updatedAt) FROM Cliente c WHERE c.empresa.id = :empresaId ORDER BY c.createdAt DESC")
+    @Query("SELECT new tecstock_spring.dto.ClientePesquisaDTO(c.id, c.nome, c.cpf, c.telefone, c.email, c.dataNascimento, c.rua, c.numeroCasa, c.complemento, c.bairro, c.cidade, c.uf, c.cep, c.codigoMunicipio, c.createdAt, c.updatedAt) FROM Cliente c WHERE c.empresa.id = :empresaId ORDER BY c.createdAt DESC")
     List<ClientePesquisaDTO> findTopByEmpresaIdOrderByCreatedAtDesc(@Param("empresaId") Long empresaId, Pageable pageable);
 }

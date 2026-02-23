@@ -53,11 +53,14 @@ public class Fornecedor {
     @Column(precision = 10, scale = 4)
     private BigDecimal margemLucro;
     
+    private String cep;
     private String rua;
     private String numeroCasa;
+    private String complemento;
     private String bairro;
     private String cidade;
     private String uf;
+    private String codigoMunicipio;
     
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

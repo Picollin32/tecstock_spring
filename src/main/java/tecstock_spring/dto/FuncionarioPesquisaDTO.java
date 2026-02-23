@@ -20,9 +20,12 @@ public class FuncionarioPesquisaDTO {
     private Date dataNascimento;
     private String rua;
     private String numeroCasa;
+    private String complemento;
     private String bairro;
     private String cidade;
     private String uf;
+    private String cep;
+    private String codigoMunicipio;
     private Integer nivelAcesso;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

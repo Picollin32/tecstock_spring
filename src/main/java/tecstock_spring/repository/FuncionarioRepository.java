@@ -24,12 +24,12 @@ public interface FuncionarioRepository extends JpaRepository<Funcionario, Long> 
     List<Funcionario> findByEmpresaId(Long empresaId);
     Optional<Funcionario> findByIdAndEmpresaId(Long id, Long empresaId);
     
-    @Query("SELECT new tecstock_spring.dto.FuncionarioPesquisaDTO(f.id, f.nome, f.cpf, f.telefone, f.email, f.dataNascimento, f.rua, f.numeroCasa, f.bairro, f.cidade, f.uf, f.nivelAcesso, f.createdAt, f.updatedAt) FROM Funcionario f WHERE f.empresa.id = :empresaId AND (LOWER(f.nome) LIKE LOWER(CONCAT(:query, '%')) OR f.cpf LIKE CONCAT(:query, '%'))")
+    @Query("SELECT new tecstock_spring.dto.FuncionarioPesquisaDTO(f.id, f.nome, f.cpf, f.telefone, f.email, f.dataNascimento, f.rua, f.numeroCasa, f.complemento, f.bairro, f.cidade, f.uf, f.cep, f.codigoMunicipio, f.nivelAcesso, f.createdAt, f.updatedAt) FROM Funcionario f WHERE f.empresa.id = :empresaId AND (LOWER(f.nome) LIKE LOWER(CONCAT(:query, '%')) OR f.cpf LIKE CONCAT(:query, '%'))")
     Page<FuncionarioPesquisaDTO> searchByQueryAndEmpresaId(@Param("query") String query, @Param("empresaId") Long empresaId, Pageable pageable);
     
-    @Query("SELECT new tecstock_spring.dto.FuncionarioPesquisaDTO(f.id, f.nome, f.cpf, f.telefone, f.email, f.dataNascimento, f.rua, f.numeroCasa, f.bairro, f.cidade, f.uf, f.nivelAcesso, f.createdAt, f.updatedAt) FROM Funcionario f WHERE f.empresa.id = :empresaId")
+    @Query("SELECT new tecstock_spring.dto.FuncionarioPesquisaDTO(f.id, f.nome, f.cpf, f.telefone, f.email, f.dataNascimento, f.rua, f.numeroCasa, f.complemento, f.bairro, f.cidade, f.uf, f.cep, f.codigoMunicipio, f.nivelAcesso, f.createdAt, f.updatedAt) FROM Funcionario f WHERE f.empresa.id = :empresaId")
     Page<FuncionarioPesquisaDTO> findByEmpresaId(Long empresaId, Pageable pageable);
     
-    @Query("SELECT new tecstock_spring.dto.FuncionarioPesquisaDTO(f.id, f.nome, f.cpf, f.telefone, f.email, f.dataNascimento, f.rua, f.numeroCasa, f.bairro, f.cidade, f.uf, f.nivelAcesso, f.createdAt, f.updatedAt) FROM Funcionario f WHERE f.empresa.id = :empresaId ORDER BY f.createdAt DESC")
+    @Query("SELECT new tecstock_spring.dto.FuncionarioPesquisaDTO(f.id, f.nome, f.cpf, f.telefone, f.email, f.dataNascimento, f.rua, f.numeroCasa, f.complemento, f.bairro, f.cidade, f.uf, f.cep, f.codigoMunicipio, f.nivelAcesso, f.createdAt, f.updatedAt) FROM Funcionario f WHERE f.empresa.id = :empresaId ORDER BY f.createdAt DESC")
     List<FuncionarioPesquisaDTO> findTopByEmpresaIdOrderByCreatedAtDesc(@Param("empresaId") Long empresaId, Pageable pageable);
 }

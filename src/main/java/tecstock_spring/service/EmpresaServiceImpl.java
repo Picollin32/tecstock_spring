@@ -10,9 +10,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tecstock_spring.model.Empresa;
+import tecstock_spring.model.TipoPagamento;
 import tecstock_spring.repository.EmpresaRepository;
+import tecstock_spring.repository.TipoPagamentoRepository;
 import tecstock_spring.repository.UsuarioRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -21,6 +24,7 @@ public class EmpresaServiceImpl implements EmpresaService {
     
     private final EmpresaRepository repository;
     private final UsuarioRepository usuarioRepository;
+    private final TipoPagamentoRepository tipoPagamentoRepository;
     private static final Logger logger = LoggerFactory.getLogger(EmpresaServiceImpl.class);
     
     @Override
@@ -36,7 +40,23 @@ public class EmpresaServiceImpl implements EmpresaService {
         empresa.setCep(empresa.getCep().replaceAll("[^0-9]", ""));
         empresa.setUf(empresa.getUf().toUpperCase());
         
-        return repository.save(empresa);
+        Empresa empresaSalva = repository.save(empresa);
+        
+        criarTiposPagamentoPadrao(empresaSalva);
+        
+        return empresaSalva;
+    }
+
+    private void criarTiposPagamentoPadrao(Empresa empresa) {
+        List<TipoPagamento> tipos = List.of(
+            TipoPagamento.builder().empresa(empresa).codigo(1).nome("Dinheiro").idFormaPagamento(null).build(),
+            TipoPagamento.builder().empresa(empresa).codigo(2).nome("PIX").idFormaPagamento(null).build(),
+            TipoPagamento.builder().empresa(empresa).codigo(3).nome("Cartão Débito").idFormaPagamento(null).build(),
+            TipoPagamento.builder().empresa(empresa).codigo(4).nome("Cartão Crédito").idFormaPagamento(1).build(),
+            TipoPagamento.builder().empresa(empresa).codigo(5).nome("Fiado").idFormaPagamento(2).build()
+        );
+        tipoPagamentoRepository.saveAll(new ArrayList<>(tipos));
+        logger.info("Tipos de pagamento padrão criados para empresa ID: " + empresa.getId());
     }
     
     @Override
@@ -191,6 +211,8 @@ public class EmpresaServiceImpl implements EmpresaService {
         if (possuiDados) {
             throw new IllegalStateException(mensagemErro.toString());
         }
+        
+        tipoPagamentoRepository.deleteByEmpresaId(id);
         
         Empresa empresa = buscarPorId(id);
         repository.delete(empresa);

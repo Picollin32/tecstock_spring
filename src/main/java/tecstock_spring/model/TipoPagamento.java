@@ -12,15 +12,20 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Column;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.envers.Audited;
 import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import tecstock_spring.util.AuditListener;
 
 @Entity
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"codigo", "empresa_id"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -35,13 +40,14 @@ public class TipoPagamento {
 
     @JsonIgnore
     @ManyToOne
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "empresa_id", nullable = false)
     private Empresa empresa;
 
     @Column(nullable = false)
     private String nome;
     
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private Integer codigo;
     
     @Column(name = "id_forma_pagamento")

@@ -1,7 +1,10 @@
 package tecstock_spring.exception;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -284,16 +287,32 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, status);
     }
 
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    public ResponseEntity<Map<String, Object>> handleHttpMediaTypeNotAcceptable(
+            HttpMediaTypeNotAcceptableException ex, WebRequest request) {
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", "Tipo de mídia não suportado");
+        body.put("path", request.getDescription(false));
+
+        HttpHeaders headers406 = new HttpHeaders();
+        headers406.setContentType(MediaType.APPLICATION_JSON);
+        return new ResponseEntity<>(body, headers406, HttpStatus.NOT_ACCEPTABLE);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(
             Exception ex, WebRequest request) {
-        
+
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("message", "Erro interno do servidor");
         body.put("details", ex.getMessage());
         body.put("path", request.getDescription(false));
-        
-        return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
+
+        HttpHeaders headers500 = new HttpHeaders();
+        headers500.setContentType(MediaType.APPLICATION_JSON);
+        return new ResponseEntity<>(body, headers500, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

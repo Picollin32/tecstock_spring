@@ -28,6 +28,7 @@ public interface TipoPagamentoRepository extends JpaRepository<TipoPagamento, Lo
     boolean existsByCodigoAndEmpresaId(Integer codigo, Long empresaId);
     boolean existsByNomeAndIdNotAndEmpresaId(String nome, Long id, Long empresaId);
     boolean existsByCodigoAndIdNotAndEmpresaId(Integer codigo, Long id, Long empresaId);
+    void deleteByEmpresaId(Long empresaId);
     
     @Query("SELECT new tecstock_spring.dto.TipoPagamentoPesquisaDTO(t.id, t.nome, t.codigo, t.idFormaPagamento, t.createdAt, t.updatedAt) FROM TipoPagamento t WHERE t.empresa.id = :empresaId AND LOWER(t.nome) LIKE LOWER(CONCAT(:query, '%'))")
     org.springframework.data.domain.Page<TipoPagamentoPesquisaDTO> searchByQueryAndEmpresaId(@org.springframework.data.repository.query.Param("query") String query, @org.springframework.data.repository.query.Param("empresaId") Long empresaId, org.springframework.data.domain.Pageable pageable);
