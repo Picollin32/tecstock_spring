@@ -11,6 +11,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.dao.DataIntegrityViolationException;
 import tecstock_spring.exception.NomeDuplicadoException;
 import tecstock_spring.exception.TipoPagamentoEmUsoException;
 import tecstock_spring.model.Empresa;
@@ -32,33 +34,56 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
     Logger logger = LoggerFactory.getLogger(TipoPagamentoServiceImpl.class);
 
     @Override
-    @Transactional
     public TipoPagamento salvar(TipoPagamento tipoPagamento) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
             throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
         }
 
+        final int maxAttempts = 3;
+        int attempt = 0;
+
+        while (true) {
+            attempt++;
+            try {
+                return salvarComNovaTransacao(tipoPagamento, empresaId);
+            } catch (DataIntegrityViolationException e) {
+                logger.warn("DataIntegrityViolation ao salvar tipo de pagamento (tentativa " + attempt + ")", e);
+                if (attempt >= maxAttempts) {
+                    throw new RuntimeException("Não foi possível salvar tipo de pagamento após " + attempt + " tentativas", e);
+                }
+                try {
+                    Thread.sleep(100L);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Thread interrompida durante retry", ie);
+                }
+            }
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    protected TipoPagamento salvarComNovaTransacao(TipoPagamento tipoPagamento, @org.springframework.lang.NonNull Long empresaId) {
         tipoPagamento.setId(null);
-        
+
         if (repository.existsByNomeAndEmpresaId(tipoPagamento.getNome(), empresaId)) {
             throw new NomeDuplicadoException("Nome de tipo de pagamento já cadastrado nesta empresa");
         }
 
         Empresa empresa = empresaRepository.findById(empresaId)
-            .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
         tipoPagamento.setEmpresa(empresa);
 
         Long maxId = repository.findMaxId();
         if (maxId > 0) {
             entityManager.createNativeQuery(
-                "SELECT setval('tipo_pagamento_id_seq', :maxId, true)"
+                    "SELECT setval('tipo_pagamento_id_seq', :maxId, true)"
             ).setParameter("maxId", maxId).getSingleResult();
         }
         
-        Integer proximoCodigo = repository.findMaxCodigo() + 1;
+        Integer proximoCodigo = repository.findMaxCodigoByEmpresaId(empresaId) + 1;
         tipoPagamento.setCodigo(proximoCodigo);
-        
+
         TipoPagamento tipoPagamentoSalvo = repository.save(tipoPagamento);
         logger.info("Tipo de pagamento salvo com sucesso na empresa " + empresaId + ": " + tipoPagamentoSalvo);
         return tipoPagamentoSalvo;

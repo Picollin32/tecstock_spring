@@ -2,6 +2,7 @@ package tecstock_spring.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import tecstock_spring.dto.TipoPagamentoPesquisaDTO;
 import tecstock_spring.model.TipoPagamento;
 import java.util.List;
@@ -17,6 +18,9 @@ public interface TipoPagamentoRepository extends JpaRepository<TipoPagamento, Lo
     
     @Query("SELECT COALESCE(MAX(t.codigo), 0) FROM TipoPagamento t")
     Integer findMaxCodigo();
+
+    @Query("SELECT COALESCE(MAX(t.codigo), 0) FROM TipoPagamento t WHERE t.empresa.id = :empresaId")
+    Integer findMaxCodigoByEmpresaId(@Param("empresaId") Long empresaId);
     
     @Query("SELECT COALESCE(MAX(t.id), 0) FROM TipoPagamento t")
     Long findMaxId();
