@@ -20,7 +20,6 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class OrcamentoController {
 
     private final OrcamentoService service;

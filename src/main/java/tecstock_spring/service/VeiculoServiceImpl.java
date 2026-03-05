@@ -160,6 +160,24 @@ public class VeiculoServiceImpl implements VeiculoService {
         
         return repository.searchByQueryAndEmpresaId(query.trim(), empresaId, pageable);
     }
+
+    @Override
+    public Page<tecstock_spring.dto.VeiculoPesquisaDTO> buscarPaginado(String query, String searchMode, Pageable pageable) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+
+        if (query == null || query.trim().isEmpty()) {
+            return repository.findByEmpresaId(empresaId, pageable);
+        }
+
+        if ("nome".equalsIgnoreCase(searchMode)) {
+            return repository.searchByNomeAndEmpresaId(query.trim(), empresaId, pageable);
+        }
+
+        return repository.searchByQueryAndEmpresaId(query.trim(), empresaId, pageable);
+    }
     
     @Override
     public List<tecstock_spring.dto.VeiculoPesquisaDTO> listarUltimosParaInicio(int limit) {

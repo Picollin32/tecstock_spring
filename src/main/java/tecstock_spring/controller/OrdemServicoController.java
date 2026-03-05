@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class OrdemServicoController {
 
     private final OrdemServicoService service;

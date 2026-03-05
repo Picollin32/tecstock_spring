@@ -105,6 +105,12 @@ public class OrdemServico {
     @Column(name = "desconto_pecas")
     private Double descontoPecas;
 
+    @Column(name = "tipo_diagnostico")
+    private String tipoDiagnostico;
+
+    @Column(name = "preco_diagnostico")
+    private Double precoDiagnostico;
+
     @Column(nullable = false)
     @Builder.Default
     private Integer garantiaMeses = 3;
@@ -192,27 +198,52 @@ public class OrdemServico {
     }
 
     public void calcularTodosOsPrecos() {
-        if (this.precoTotalServicos == null) {
-            this.precoTotalServicos = calcularPrecoTotalServicos();
+        double taxaDiagnostico = this.precoDiagnostico != null ? this.precoDiagnostico : 0.0;
+
+        if ("diagnostico".equals(this.tipoDiagnostico)) {
+            this.precoTotalServicos = taxaDiagnostico;
+            this.precoTotalPecas = 0.0;
+        } else if ("diagnostico_servico".equals(this.tipoDiagnostico)) {
+            if (this.precoTotalServicos == null) {
+                this.precoTotalServicos = calcularPrecoTotalServicos() + taxaDiagnostico;
+            }
+            if (this.precoTotalPecas == null) {
+                this.precoTotalPecas = calcularPrecoTotalPecas();
+            }
+        } else {
+            if (this.precoTotalServicos == null) {
+                this.precoTotalServicos = calcularPrecoTotalServicos();
+            }
+            if (this.precoTotalPecas == null) {
+                this.precoTotalPecas = calcularPrecoTotalPecas();
+            }
         }
-        
-        if (this.precoTotalPecas == null) {
-            this.precoTotalPecas = calcularPrecoTotalPecas();
-        }
-        
+
         double totalServicosComDesconto = this.precoTotalServicos - (this.descontoServicos != null ? this.descontoServicos : 0.0);
         double totalPecasComDesconto = this.precoTotalPecas - (this.descontoPecas != null ? this.descontoPecas : 0.0);
-        
+
         this.precoTotal = totalServicosComDesconto + totalPecasComDesconto;
     }
     
     public void forcarRecalculoTodosOsPrecos() {
-        this.precoTotalServicos = calcularPrecoTotalServicos();
-        this.precoTotalPecas = calcularPrecoTotalPecas();
-        
+        double taxaDiagnostico = this.precoDiagnostico != null ? this.precoDiagnostico : 0.0;
+
+        if ("diagnostico".equals(this.tipoDiagnostico)) {
+
+            this.precoTotalServicos = taxaDiagnostico;
+            this.precoTotalPecas = 0.0;
+        } else if ("diagnostico_servico".equals(this.tipoDiagnostico)) {
+
+            this.precoTotalServicos = calcularPrecoTotalServicos() + taxaDiagnostico;
+            this.precoTotalPecas = calcularPrecoTotalPecas();
+        } else {
+            this.precoTotalServicos = calcularPrecoTotalServicos();
+            this.precoTotalPecas = calcularPrecoTotalPecas();
+        }
+
         double totalServicosComDesconto = this.precoTotalServicos - (this.descontoServicos != null ? this.descontoServicos : 0.0);
         double totalPecasComDesconto = this.precoTotalPecas - (this.descontoPecas != null ? this.descontoPecas : 0.0);
-        
+
         this.precoTotal = totalServicosComDesconto + totalPecasComDesconto;
     }
     

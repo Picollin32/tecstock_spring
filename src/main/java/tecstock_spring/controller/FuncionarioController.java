@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class FuncionarioController {
 
     private final FuncionarioService service;
@@ -69,8 +67,10 @@ public class FuncionarioController {
     public Object buscarPaginado(
             @RequestParam(required = false, defaultValue = "") String query,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "30") int size) {
-        if (query == null || query.trim().isEmpty()) {
+            @RequestParam(defaultValue = "30") int size,
+            @RequestParam(required = false) Integer nivelAcesso) {
+        boolean hasQuery = query != null && !query.trim().isEmpty();
+        if (!hasQuery && nivelAcesso == null) {
             List<tecstock_spring.dto.FuncionarioPesquisaDTO> lista = service.listarUltimosParaInicio(6);
             Map<String, Object> response = new java.util.HashMap<>();
             response.put("content", lista);
@@ -80,6 +80,6 @@ public class FuncionarioController {
             return response;
         }
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return service.buscarPaginado(query, pageable);
+        return service.buscarPaginado(query, nivelAcesso, pageable);
     }
 }

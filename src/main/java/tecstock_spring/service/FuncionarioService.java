@@ -20,6 +20,8 @@ public interface FuncionarioService {
     void deletar(Long id);
     
     Page<FuncionarioPesquisaDTO> buscarPaginado(String query, Pageable pageable);
+
+    Page<FuncionarioPesquisaDTO> buscarPaginado(String query, Integer nivelAcesso, Pageable pageable);
     
     List<FuncionarioPesquisaDTO> listarUltimosParaInicio(int limit);
 }

@@ -30,8 +30,8 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
 
-        @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:4200,http://localhost:*}")
-        private String allowedOrigins;
+    @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:4200,http://localhost:8080}")
+    private String allowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -40,10 +40,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .headers(headers -> headers
-                        .frameOptions(frameOptions -> frameOptions.disable())
+                    .frameOptions(frameOptions -> frameOptions.sameOrigin())
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/health").permitAll()
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/usuarios/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/usuarios/**").hasAnyRole("SUPER_ADMIN", "ADMIN")

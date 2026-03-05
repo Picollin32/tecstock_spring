@@ -197,6 +197,29 @@ public class FuncionarioServiceImpl implements FuncionarioService {
         
         return repository.searchByQueryAndEmpresaId(query.trim(), empresaId, pageable);
     }
+
+    @Override
+    public Page<tecstock_spring.dto.FuncionarioPesquisaDTO> buscarPaginado(String query, Integer nivelAcesso, Pageable pageable) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+
+        String normalizedQuery = (query != null) ? query.trim() : "";
+        boolean hasQuery = !normalizedQuery.isEmpty();
+        int nivelAcessoVal = (nivelAcesso != null) ? nivelAcesso.intValue() : 0;
+        boolean hasCargo = nivelAcesso != null;
+
+        if (!hasQuery && !hasCargo) {
+            return repository.findByEmpresaId(empresaId, pageable);
+        } else if (!hasQuery) {
+            return repository.findByEmpresaIdAndNivelAcesso(empresaId, nivelAcessoVal, pageable);
+        } else if (!hasCargo) {
+            return repository.searchByQueryAndEmpresaId(normalizedQuery, empresaId, pageable);
+        } else {
+            return repository.searchByQueryAndEmpresaIdAndNivelAcesso(normalizedQuery, empresaId, nivelAcessoVal, pageable);
+        }
+    }
     
     @Override
     public List<tecstock_spring.dto.FuncionarioPesquisaDTO> listarUltimosParaInicio(int limit) {

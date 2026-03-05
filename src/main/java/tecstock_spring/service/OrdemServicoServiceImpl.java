@@ -1,4 +1,4 @@
-package tecstock_spring.service;
+﻿package tecstock_spring.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +33,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final ChecklistService checklistService;
     private final EmpresaRepository empresaRepository;
     private final OrcamentoService orcamentoService;
+    private final ContaService contaService;
     private static final Logger logger = LoggerFactory.getLogger(OrdemServicoServiceImpl.class);
 
     public OrdemServicoServiceImpl(
@@ -45,7 +46,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             PecaService pecaService,
             ChecklistService checklistService,
             EmpresaRepository empresaRepository,
-            @Lazy OrcamentoService orcamentoService) {
+            @Lazy OrcamentoService orcamentoService,
+            @Lazy ContaService contaService) {
         this.repository = repository;
         this.pecaRepository = pecaRepository;
         this.pecaOrdemServicoRepository = pecaOrdemServicoRepository;
@@ -56,6 +58,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         this.checklistService = checklistService;
         this.empresaRepository = empresaRepository;
         this.orcamentoService = orcamentoService;
+        this.contaService = contaService;
     }
 
     @Override
@@ -239,6 +242,12 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         logger.info("Descontos atualizados - Serviços: R$ " + ordemServicoExistente.getDescontoServicos() + 
                    ", Peças: R$ " + ordemServicoExistente.getDescontoPecas());
         
+        ordemServicoExistente.setPrecoTotal(novaOrdemServico.getPrecoTotal());
+        ordemServicoExistente.setPrecoTotalServicos(novaOrdemServico.getPrecoTotalServicos());
+        ordemServicoExistente.setPrecoTotalPecas(novaOrdemServico.getPrecoTotalPecas());
+        ordemServicoExistente.setTipoDiagnostico(novaOrdemServico.getTipoDiagnostico());
+        ordemServicoExistente.setPrecoDiagnostico(novaOrdemServico.getPrecoDiagnostico());
+
         ordemServicoExistente.getServicosRealizados().clear();
         if (novaOrdemServico.getServicosRealizados() != null) {
             ordemServicoExistente.getServicosRealizados().addAll(novaOrdemServico.getServicosRealizados());
@@ -413,7 +422,14 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         logger.info("Atualizando contadores de serviços e peças em uso após encerramento");
         servicoService.atualizarUnidadesUsadas();
         pecaService.atualizarUnidadesUsadas();
-        
+
+        try {
+            contaService.gerarContasParaOS(ordemServicoSalva);
+            logger.info("Contas financeiras geradas para OS {}", ordemServicoSalva.getNumeroOS());
+        } catch (Exception e) {
+            logger.error("Erro ao gerar contas financeiras para OS {}: {}", ordemServicoSalva.getNumeroOS(), e.getMessage());
+        }
+
         return ordemServicoSalva;
     }
 
@@ -606,6 +622,12 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         movimentacaoEstoqueService.removerSaidasDeOrdemServico(ordemServico.getNumeroOS());
         logger.info("Movimentações de saída removidas e peças devolvidas ao estoque com sucesso");
 
+        try {
+            contaService.removerContasDaOS(ordemServico.getId());
+        } catch (Exception e) {
+            logger.error("Erro ao remover contas da OS {}: {}", ordemServico.getNumeroOS(), e.getMessage());
+        }
+
         ordemServico.setStatus("Aberta");
         ordemServico.setDataHoraEncerramento(null);
         
@@ -676,3 +698,4 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         return repository.findTopByEmpresaIdOrderByCreatedAtDesc(empresaId, pageable);
     }
 }
+

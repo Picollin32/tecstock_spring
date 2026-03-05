@@ -18,7 +18,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auditoria")
-@CrossOrigin(origins = "*")
 public class AuditoriaController {
     
     @Autowired

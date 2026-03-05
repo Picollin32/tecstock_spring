@@ -270,21 +270,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleRuntimeException(
             RuntimeException ex, WebRequest request) {
         
-        String message = ex.getMessage() != null ? ex.getMessage() : "Erro interno do servidor";
+        String message = "Operação não pôde ser concluída";
         
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("message", message);
         body.put("path", request.getDescription(false));
-        
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        if (message.contains("não encontrado")) {
-            status = HttpStatus.NOT_FOUND;
-        } else if (message.contains("já cadastrado")) {
-            status = HttpStatus.CONFLICT;
-        }
-        
-        return new ResponseEntity<>(body, status);
+
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
@@ -308,7 +301,6 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("message", "Erro interno do servidor");
-        body.put("details", ex.getMessage());
         body.put("path", request.getDescription(false));
 
         HttpHeaders headers500 = new HttpHeaders();

@@ -18,7 +18,6 @@ import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/relatorios")
-@CrossOrigin(origins = "*")
 public class RelatorioController {
 
     @Autowired

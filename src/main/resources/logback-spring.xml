@@ -26,8 +26,9 @@
             <appender-ref ref="FILE"/>
         </root>
         
-        <logger name="tecstock_spring" level="DEBUG"/>
-        <logger name="org.springframework.security" level="DEBUG"/>
+        <logger name="tecstock_spring" level="INFO"/>
+        <logger name="org.springframework.security" level="WARN"/>
+        <logger name="org.hibernate.SQL" level="WARN"/>
     </springProfile>
 
     <!-- PRODUÇÃO (Dokploy/Hostinger): APENAS Console em JSON -->
