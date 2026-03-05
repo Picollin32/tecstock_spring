@@ -269,14 +269,23 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(
             RuntimeException ex, WebRequest request) {
-        
-        String message = "Operação não pôde ser concluída";
-        
+
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
-        body.put("message", message);
         body.put("path", request.getDescription(false));
 
+        String raw = ex.getMessage();
+        if (raw != null && raw.startsWith("Muitas tentativas")) {
+            body.put("message", raw);
+            return new ResponseEntity<>(body, HttpStatus.TOO_MANY_REQUESTS);
+        }
+
+        if (raw != null && raw.equals("Credenciais inválidas")) {
+            body.put("message", raw);
+            return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+        }
+
+        body.put("message", "Operação não pôde ser concluída");
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 

@@ -46,9 +46,14 @@ public class AuthController {
             logger.info("Login bem-sucedido");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.error("Falha no login", e);
+            String message = e.getMessage();
+            if (message != null && message.startsWith("Muitas tentativas")) {
+                logger.warn("Login bloqueado por rate limit: {}", message);
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(message);
+            }
+            logger.error("Falha no login: {}", message);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Falha na autenticação");
+                    .body(message != null ? message : "Falha na autenticação");
         }
     }
 
