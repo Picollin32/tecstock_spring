@@ -32,4 +32,7 @@ public interface ContaRepository extends JpaRepository<Conta, Long> {
     List<Conta> findByEmpresaIdAndOrdemServicoId(Long empresaId, Long ordemServicoId);
 
     List<Conta> findByEmpresaIdAndFiadoGrupoId(Long empresaId, String fiadoGrupoId);
+
+    @Query("SELECT c FROM Conta c WHERE c.empresa.id = :empresaId AND c.descricao LIKE CONCAT('Compra NF ', :numeroNota, ' %') AND c.tipo = 'A_PAGAR'")
+    List<Conta> findContasCompraByNumeroNota(@Param("empresaId") Long empresaId, @Param("numeroNota") String numeroNota);
 }

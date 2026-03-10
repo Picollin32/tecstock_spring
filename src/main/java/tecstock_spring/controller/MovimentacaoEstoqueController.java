@@ -7,7 +7,10 @@ import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import tecstock_spring.model.MovimentacaoEstoque;
+import tecstock_spring.service.ContaService;
 import tecstock_spring.service.MovimentacaoEstoqueService;
 import lombok.RequiredArgsConstructor;
 
@@ -25,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class MovimentacaoEstoqueController {
 
     private final MovimentacaoEstoqueService service;
+    private final ContaService contaService;
     private static final Logger logger = LoggerFactory.getLogger(MovimentacaoEstoqueController.class);
 
     @PostMapping("/entrada")
@@ -94,7 +99,54 @@ public class MovimentacaoEstoqueController {
                     logger.error("Erro ao registrar peça " + peca.get("codigoPeca") + ": " + e.getMessage());
                 }
             }
-            
+
+            if (sucessos > 0) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> pagamento = dadosEntrada.get("pagamento") instanceof Map
+                        ? (Map<String, Object>) dadosEntrada.get("pagamento")
+                        : null;
+                if (pagamento != null && pagamento.get("formaPagamento") != null) {
+                    String formaPagamento = pagamento.get("formaPagamento").toString();
+
+                    double valorTotalCompra = 0.0;
+                    for (Map<String, Object> peca : pecas) {
+                        try {
+                            int qtd = Integer.parseInt(peca.get("quantidade").toString());
+                            double preco = Double.parseDouble(peca.get("precoUnitario").toString());
+                            valorTotalCompra += qtd * preco;
+                        } catch (Exception ignored) {}
+                    }
+                    String descNota = "Compra NF " + numeroNotaFiscal;
+                    try {
+                        contaService.gerarContasParaCompra(pagamento, valorTotalCompra, descNota);
+                        logger.info("Contas a pagar geradas para compra NF {} – R$ {} ({})", numeroNotaFiscal, valorTotalCompra, formaPagamento);
+                    } catch (Exception ex) {
+                        logger.error("Erro ao gerar contas para compra NF {}: {}", numeroNotaFiscal, ex.getMessage());
+                    }
+                }
+
+                @SuppressWarnings("unchecked")
+                Map<String, Object> freteData = dadosEntrada.get("frete") instanceof Map
+                        ? (Map<String, Object>) dadosEntrada.get("frete") : null;
+                if (freteData != null && freteData.get("valor") != null) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> fretePagamento = freteData.get("pagamento") instanceof Map
+                            ? (Map<String, Object>) freteData.get("pagamento") : null;
+                    if (fretePagamento != null && fretePagamento.get("formaPagamento") != null) {
+                        try {
+                            double valorFrete = Double.parseDouble(freteData.get("valor").toString());
+                            if (valorFrete > 0) {
+                                String descFrete = "Frete NF " + numeroNotaFiscal;
+                                contaService.gerarContasParaCompra(fretePagamento, valorFrete, descFrete);
+                                logger.info("Conta de frete gerada para NF {} – R$ {}", numeroNotaFiscal, valorFrete);
+                            }
+                        } catch (Exception ex) {
+                            logger.error("Erro ao gerar conta de frete para NF {}: {}", numeroNotaFiscal, ex.getMessage());
+                        }
+                    }
+                }
+            }
+
             Map<String, Object> response = new HashMap<>();
             response.put("sucesso", sucessos > 0);
             response.put("sucessos", sucessos);
@@ -135,5 +187,49 @@ public class MovimentacaoEstoqueController {
     public List<MovimentacaoEstoque> listarPorFornecedor(@PathVariable Long fornecedorId) {
         logger.info("Listando movimentações para o fornecedor ID: " + fornecedorId);
         return service.listarPorFornecedor(fornecedorId);
+    }
+
+    @GetMapping("/notas-entrada")
+    public List<Map<String, Object>> listarNotasEntrada() {
+        logger.info("Listando notas de entrada agrupadas");
+        return service.listarNotasEntrada();
+    }
+
+    @PatchMapping("/notas-entrada/{fornecedorId}")
+    public ResponseEntity<Map<String, Object>> atualizarNota(
+            @PathVariable Long fornecedorId,
+            @RequestParam String numeroNota,
+            @RequestBody Map<String, Object> dados) {
+        logger.info("Atualizando nota de entrada {} do fornecedor {}", numeroNota, fornecedorId);
+        try {
+            Map<String, Object> resultado = service.atualizarNota(fornecedorId, numeroNota, dados);
+            return ResponseEntity.ok(resultado);
+        } catch (RuntimeException e) {
+            logger.warn("Erro ao atualizar nota {}: {}", numeroNota, e.getMessage());
+            Map<String, Object> erro = new HashMap<>();
+            erro.put("sucesso", false);
+            erro.put("mensagem", e.getMessage());
+            return ResponseEntity.badRequest().body(erro);
+        }
+    }
+
+    @DeleteMapping("/notas-entrada/{fornecedorId}")
+    public ResponseEntity<Map<String, Object>> deletarNota(
+            @PathVariable Long fornecedorId,
+            @RequestParam String numeroNota) {
+        logger.info("Excluindo nota de entrada {} do fornecedor {}", numeroNota, fornecedorId);
+        try {
+            service.deletarNota(fornecedorId, numeroNota);
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("sucesso", true);
+            resp.put("mensagem", "Nota excluída com sucesso");
+            return ResponseEntity.ok(resp);
+        } catch (RuntimeException e) {
+            logger.warn("Erro ao excluir nota {}: {}", numeroNota, e.getMessage());
+            Map<String, Object> erro = new HashMap<>();
+            erro.put("sucesso", false);
+            erro.put("mensagem", e.getMessage());
+            return ResponseEntity.badRequest().body(erro);
+        }
     }
 }

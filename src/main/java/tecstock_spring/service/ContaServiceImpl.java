@@ -208,6 +208,116 @@ public class ContaServiceImpl implements ContaService {
         return contaRepository.findContasAtrasadas(empresaId, LocalDate.now());
     }
 
+    @SuppressWarnings("null")
+    @Override
+    @Transactional
+    public void gerarContasParaCompra(Map<String, Object> dadosPagamento, double valorTotal, String descricaoBase) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            logger.warn("EmpresaId nulo ao gerar contas para compra. Ignorando.");
+            return;
+        }
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+
+        String formaPagamento = dadosPagamento.getOrDefault("formaPagamento", "AVISTA").toString();
+        LocalDate hoje = LocalDate.now();
+
+        switch (formaPagamento) {
+            case "CREDITO" -> {
+                int parcelas = Integer.parseInt(dadosPagamento.getOrDefault("numeroParcelas", "1").toString());
+                double valorParcela = Math.round((valorTotal / parcelas) * 100.0) / 100.0;
+                for (int i = 0; i < parcelas; i++) {
+                    LocalDate venc = hoje.plusMonths(i + 1);
+                    Conta conta = Conta.builder()
+                            .empresa(empresa)
+                            .tipo("A_PAGAR")
+                            .descricao(descricaoBase + " (Crédito " + (i + 1) + "/" + parcelas + ")")
+                            .valor(valorParcela)
+                            .mesReferencia(venc.getMonthValue())
+                            .anoReferencia(venc.getYear())
+                            .dataVencimento(venc)
+                            .pago(false)
+                            .parcelaNumero(i + 1)
+                            .totalParcelas(parcelas)
+                            .origemTipo("COMPRA_CREDITO")
+                            .build();
+                    contaRepository.save(conta);
+                }
+                logger.info("Contas de crédito (compra) geradas: {} parcelas de R$ {}", parcelas, valorParcela);
+            }
+            case "BOLETO30" -> {
+                LocalDate venc = LocalDate.parse(dadosPagamento.get("boleto30Vencimento").toString());
+                Conta conta = Conta.builder()
+                        .empresa(empresa)
+                        .tipo("A_PAGAR")
+                        .descricao(descricaoBase + " (Boleto 30 dias)")
+                        .valor(valorTotal)
+                        .mesReferencia(venc.getMonthValue())
+                        .anoReferencia(venc.getYear())
+                        .dataVencimento(venc)
+                        .pago(false)
+                        .origemTipo("COMPRA_BOLETO")
+                        .build();
+                contaRepository.save(conta);
+                logger.info("Conta boleto 30 dias gerada: vencimento {}", venc);
+            }
+            case "BOLETO30_60" -> {
+                double valor1 = Double.parseDouble(dadosPagamento.get("boleto30_60Parcela1Valor").toString());
+                LocalDate venc1 = LocalDate.parse(dadosPagamento.get("boleto30_60Parcela1Vencimento").toString());
+                double valor2 = Double.parseDouble(dadosPagamento.get("boleto30_60Parcela2Valor").toString());
+                LocalDate venc2 = LocalDate.parse(dadosPagamento.get("boleto30_60Parcela2Vencimento").toString());
+
+                Conta c1 = Conta.builder()
+                        .empresa(empresa)
+                        .tipo("A_PAGAR")
+                        .descricao(descricaoBase + " (Boleto 30/60 – 1/2)")
+                        .valor(valor1)
+                        .mesReferencia(venc1.getMonthValue())
+                        .anoReferencia(venc1.getYear())
+                        .dataVencimento(venc1)
+                        .pago(false)
+                        .parcelaNumero(1)
+                        .totalParcelas(2)
+                        .origemTipo("COMPRA_BOLETO")
+                        .build();
+                Conta c2 = Conta.builder()
+                        .empresa(empresa)
+                        .tipo("A_PAGAR")
+                        .descricao(descricaoBase + " (Boleto 30/60 – 2/2)")
+                        .valor(valor2)
+                        .mesReferencia(venc2.getMonthValue())
+                        .anoReferencia(venc2.getYear())
+                        .dataVencimento(venc2)
+                        .pago(false)
+                        .parcelaNumero(2)
+                        .totalParcelas(2)
+                        .origemTipo("COMPRA_BOLETO")
+                        .build();
+                contaRepository.save(c1);
+                contaRepository.save(c2);
+                logger.info("Contas boleto 30/60 geradas: R$ {} em {} | R$ {} em {}", valor1, venc1, valor2, venc2);
+            }
+            default -> {
+
+                Conta conta = Conta.builder()
+                        .empresa(empresa)
+                        .tipo("A_PAGAR")
+                        .descricao(descricaoBase + " (" + formaPagamento + ")")
+                        .valor(valorTotal)
+                        .mesReferencia(hoje.getMonthValue())
+                        .anoReferencia(hoje.getYear())
+                        .dataVencimento(hoje)
+                        .pago(true)
+                        .dataPagamento(LocalDateTime.now())
+                        .origemTipo("COMPRA_AVISTA")
+                        .build();
+                contaRepository.save(conta);
+                logger.info("Conta de compra à vista gerada ({}): R$ {}", formaPagamento, valorTotal);
+            }
+        }
+    }
+
     @Override
     @Transactional
     public Conta adicionarContaPagar(Conta conta) {
@@ -436,6 +546,39 @@ public class ContaServiceImpl implements ContaService {
     private void validarEmpresa(Conta conta, Long empresaId) {
         if (!conta.getEmpresa().getId().equals(empresaId)) {
             throw new SecurityException("Acesso negado: conta pertence a outra empresa");
+        }
+    }
+
+    @Override
+    public List<Conta> buscarContasCompra(String numeroNota) {
+        Long empresaId = requireEmpresaId();
+        return contaRepository.findContasCompraByNumeroNota(empresaId, numeroNota);
+    }
+
+    @Override
+    @Transactional
+    public void atualizarNumeroNotaEmContas(String antigoNumero, String novoNumero) {
+        Long empresaId = requireEmpresaId();
+        List<Conta> contas = contaRepository.findContasCompraByNumeroNota(empresaId, antigoNumero);
+        String prefixoAntigo = "Compra NF " + antigoNumero;
+        String prefixoNovo = "Compra NF " + novoNumero;
+        for (Conta conta : contas) {
+            if (conta.getDescricao() != null && conta.getDescricao().startsWith(prefixoAntigo)) {
+                conta.setDescricao(prefixoNovo + conta.getDescricao().substring(prefixoAntigo.length()));
+                contaRepository.save(conta);
+            }
+        }
+        logger.info("Número da nota fiscal atualizado em {} conta(s): {} → {}", contas.size(), antigoNumero, novoNumero);
+    }
+
+    @Override
+    @Transactional
+    public void deletarContasCompra(String numeroNota) {
+        Long empresaId = requireEmpresaId();
+        List<Conta> contas = contaRepository.findContasCompraByNumeroNota(empresaId, numeroNota);
+        if (!contas.isEmpty()) {
+            contaRepository.deleteAll(contas);
+            logger.info("Removidas {} conta(s) a pagar da nota fiscal {}", contas.size(), numeroNota);
         }
     }
 }

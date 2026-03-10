@@ -10,6 +10,8 @@ public interface ContaService {
 
     void gerarContasParaOS(OrdemServico ordemServico);
 
+    void gerarContasParaCompra(Map<String, Object> dadosPagamento, double valorTotal, String descricaoBase);
+
     List<Conta> listarPorMesAno(int mes, int ano);
 
     List<Conta> listarAPagarPorMesAno(int mes, int ano);
@@ -33,4 +35,10 @@ public interface ContaService {
     Map<String, Double> resumoMes(int mes, int ano);
 
     Conta registrarPagamentoParcial(Long id, Double valorPago);
+
+    List<Conta> buscarContasCompra(String numeroNota);
+
+    void atualizarNumeroNotaEmContas(String antigoNumero, String novoNumero);
+
+    void deletarContasCompra(String numeroNota);
 }

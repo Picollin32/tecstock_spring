@@ -34,4 +34,11 @@ public interface MovimentacaoEstoqueRepository extends JpaRepository<Movimentaca
     
     @Query("SELECT m FROM MovimentacaoEstoque m WHERE m.observacoes LIKE %?1% ORDER BY COALESCE(m.dataSaida, m.dataEntrada) DESC")
     List<MovimentacaoEstoque> findByObservacoesContainingOrderByDataEntradaDesc(String observacoes);
+
+    List<MovimentacaoEstoque> findByEmpresaIdAndTipoMovimentacaoOrderByDataEntradaDesc(
+            Long empresaId, MovimentacaoEstoque.TipoMovimentacao tipoMovimentacao);
+
+    List<MovimentacaoEstoque> findByNumeroNotaFiscalAndFornecedorIdAndEmpresaIdAndTipoMovimentacao(
+            String numeroNotaFiscal, Long fornecedorId, Long empresaId,
+            MovimentacaoEstoque.TipoMovimentacao tipoMovimentacao);
 }

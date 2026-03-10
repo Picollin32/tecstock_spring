@@ -14,8 +14,12 @@ import tecstock_spring.repository.MovimentacaoEstoqueRepository;
 import tecstock_spring.repository.PecaRepository;
 import tecstock_spring.util.TenantContext;
 import lombok.RequiredArgsConstructor;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +27,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
 
     private final MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
     private final PecaRepository pecaRepository;
+    private final ContaService contaService;
     private final FornecedorRepository fornecedorRepository;
     
     private static final Logger logger = LoggerFactory.getLogger(MovimentacaoEstoqueServiceImpl.class);
@@ -340,6 +345,145 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         return movimentacaoEstoqueRepository.existsByNumeroNotaFiscalAndFornecedorIdAndEmpresaId(numeroNotaFiscal, fornecedorId, empresaId);
     }
     
+    @Override
+    public List<Map<String, Object>> listarNotasEntrada() {
+        Long empresaId = requireEmpresaId();
+        List<MovimentacaoEstoque> entradas = movimentacaoEstoqueRepository
+                .findByEmpresaIdAndTipoMovimentacaoOrderByDataEntradaDesc(
+                        empresaId, MovimentacaoEstoque.TipoMovimentacao.ENTRADA);
+
+        Map<String, List<MovimentacaoEstoque>> grouped = new LinkedHashMap<>();
+        for (MovimentacaoEstoque m : entradas) {
+            String key = m.getFornecedor().getId() + "||" + m.getNumeroNotaFiscal();
+            grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(m);
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map.Entry<String, List<MovimentacaoEstoque>> entry : grouped.entrySet()) {
+            List<MovimentacaoEstoque> movs = entry.getValue();
+            MovimentacaoEstoque first = movs.get(0);
+
+            double valorTotal = movs.stream().mapToDouble(m -> {
+                double pu = m.getPrecoUnitario() != null ? m.getPrecoUnitario() : 0.0;
+                return m.getQuantidade() * pu;
+            }).sum();
+
+            List<Map<String, Object>> itens = movs.stream().map(m -> {
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("id", m.getId());
+                item.put("codigoPeca", m.getCodigoPeca());
+                item.put("quantidade", m.getQuantidade());
+                item.put("precoUnitario", m.getPrecoUnitario());
+                item.put("valorItem", m.getQuantidade() * (m.getPrecoUnitario() != null ? m.getPrecoUnitario() : 0.0));
+                item.put("dataEntrada", m.getDataEntrada());
+                return item;
+            }).collect(Collectors.toList());
+
+            Map<String, Object> nota = new LinkedHashMap<>();
+            nota.put("numeroNotaFiscal", first.getNumeroNotaFiscal());
+            nota.put("fornecedor", first.getFornecedor());
+            nota.put("dataEntrada", first.getDataEntrada());
+            nota.put("valorTotal", valorTotal);
+            nota.put("observacoes", first.getObservacoes());
+            nota.put("itens", itens);
+            nota.put("contas", contaService.buscarContasCompra(first.getNumeroNotaFiscal()));
+            result.add(nota);
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> atualizarNota(Long fornecedorId, String numeroNotaAtual, Map<String, Object> dados) {
+        Long empresaId = requireEmpresaId();
+
+        List<MovimentacaoEstoque> movimentacoes = movimentacaoEstoqueRepository
+                .findByNumeroNotaFiscalAndFornecedorIdAndEmpresaIdAndTipoMovimentacao(
+                        numeroNotaAtual, fornecedorId, empresaId, MovimentacaoEstoque.TipoMovimentacao.ENTRADA);
+
+        if (movimentacoes.isEmpty()) {
+            throw new RuntimeException("Nota fiscal não encontrada: " + numeroNotaAtual);
+        }
+
+        String novoNumero = dados.get("novoNumero") != null ? dados.get("novoNumero").toString().trim() : null;
+        @SuppressWarnings("unchecked")
+        Map<String, Object> pagamento = dados.get("pagamento") instanceof Map
+                ? (Map<String, Object>) dados.get("pagamento") : null;
+
+        String numeroVigente = numeroNotaAtual;
+
+        if (novoNumero != null && !novoNumero.equals(numeroNotaAtual)) {
+            boolean exists = movimentacaoEstoqueRepository
+                    .existsByNumeroNotaFiscalAndFornecedorIdAndEmpresaId(novoNumero, fornecedorId, empresaId);
+            if (exists) {
+                throw new RuntimeException("O número de nota '" + novoNumero + "' já está em uso para este fornecedor.");
+            }
+            for (MovimentacaoEstoque m : movimentacoes) {
+                m.setNumeroNotaFiscal(novoNumero);
+                movimentacaoEstoqueRepository.save(m);
+            }
+            contaService.atualizarNumeroNotaEmContas(numeroNotaAtual, novoNumero);
+            logger.info("Número da nota fiscal atualizado: {} → {} (fornecedor {})", numeroNotaAtual, novoNumero, fornecedorId);
+            numeroVigente = novoNumero;
+        }
+
+        if (pagamento != null) {
+            double valorTotal = movimentacoes.stream().mapToDouble(m -> {
+                double pu = m.getPrecoUnitario() != null ? m.getPrecoUnitario() : 0.0;
+                return m.getQuantidade() * pu;
+            }).sum();
+            contaService.deletarContasCompra(numeroVigente);
+            String descNota = "Compra NF " + numeroVigente;
+            String formaPagamento = pagamento.getOrDefault("formaPagamento", "AVISTA").toString();
+            if (!"AVISTA".equals(formaPagamento)) {
+                contaService.gerarContasParaCompra(pagamento, valorTotal, descNota);
+            } else {
+                contaService.gerarContasParaCompra(pagamento, valorTotal, descNota);
+            }
+            logger.info("Pagamento da nota {} atualizado: {}", numeroVigente, formaPagamento);
+        }
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("sucesso", true);
+        response.put("mensagem", "Nota atualizada com sucesso");
+        response.put("numeroNotaFiscal", numeroVigente);
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public void deletarNota(Long fornecedorId, String numeroNota) {
+        Long empresaId = requireEmpresaId();
+
+        List<MovimentacaoEstoque> movimentacoes = movimentacaoEstoqueRepository
+                .findByNumeroNotaFiscalAndFornecedorIdAndEmpresaIdAndTipoMovimentacao(
+                        numeroNota, fornecedorId, empresaId, MovimentacaoEstoque.TipoMovimentacao.ENTRADA);
+
+        if (movimentacoes.isEmpty()) {
+            throw new RuntimeException("Nota fiscal não encontrada: " + numeroNota);
+        }
+
+        for (MovimentacaoEstoque m : movimentacoes) {
+            Optional<Peca> pecaOpt = pecaRepository.findByCodigoFabricanteAndFornecedorIdAndEmpresaId(
+                    m.getCodigoPeca(), fornecedorId, empresaId);
+            if (pecaOpt.isPresent()) {
+                Peca peca = pecaOpt.get();
+                if (peca.getQuantidadeEstoque() < m.getQuantidade()) {
+                    throw new RuntimeException(
+                            "Estoque insuficiente para reverter a entrada da peça '" + m.getCodigoPeca()
+                            + "'. Atual: " + peca.getQuantidadeEstoque()
+                            + ", Necessário: " + m.getQuantidade());
+                }
+                pecaRepository.decrementarEstoqueAtomico(peca.getId(), m.getQuantidade(), empresaId);
+                logger.info("Estoque revertido para peça {}: -{}", m.getCodigoPeca(), m.getQuantidade());
+            }
+        }
+
+        movimentacaoEstoqueRepository.deleteAll(movimentacoes);
+        contaService.deletarContasCompra(numeroNota);
+        logger.info("Nota de entrada {} excluída: {} movimentação(ões) removida(s)", numeroNota, movimentacoes.size());
+    }
+
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     @SuppressWarnings("null")

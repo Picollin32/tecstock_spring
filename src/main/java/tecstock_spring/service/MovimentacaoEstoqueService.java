@@ -34,4 +34,10 @@ public interface MovimentacaoEstoqueService {
     boolean verificarNotaFiscalJaUtilizada(String numeroNotaFiscal, Long fornecedorId);
     
     MovimentacaoEstoque registrarEntradaSemValidacaoNota(String codigoPeca, Long fornecedorId, int quantidade, Double precoUnitario, String numeroNotaFiscal, String observacoes);
+
+    List<java.util.Map<String, Object>> listarNotasEntrada();
+
+    java.util.Map<String, Object> atualizarNota(Long fornecedorId, String numeroNotaAtual, java.util.Map<String, Object> dados);
+
+    void deletarNota(Long fornecedorId, String numeroNota);
 }

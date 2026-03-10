@@ -109,6 +109,25 @@ public class ContaController {
         }
     }
 
+    @PostMapping("/a-pagar/frete")
+    public ResponseEntity<?> adicionarFrete(@RequestBody Map<String, Object> body) {
+        logger.info("Adicionando frete avulso");
+        try {
+            String descricao = body.get("descricao").toString();
+            double valor = Double.parseDouble(body.get("valor").toString());
+            @SuppressWarnings("unchecked")
+            Map<String, Object> pagamento = (Map<String, Object>) body.get("pagamento");
+            if (pagamento == null || pagamento.get("formaPagamento") == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Forma de pagamento obrigatória"));
+            }
+            contaService.gerarContasParaCompra(pagamento, valor, descricao);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("sucesso", true));
+        } catch (Exception e) {
+            logger.error("Erro ao adicionar frete: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
     @PatchMapping("/{id}/pagamento-parcial")
     public ResponseEntity<?> registrarPagamentoParcial(@PathVariable Long id, @RequestBody Map<String, Double> body) {
         Double valor = body.get("valor");
