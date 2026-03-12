@@ -299,7 +299,7 @@ public class RelatorioService {
 
 
         List<RelatorioEstoqueDTO.ItemEstoqueDTO> pecasEstoqueBaixo = pecas.stream()
-                .filter(p -> p.getQuantidadeEstoque() < 10)
+                .filter(p -> p.getQuantidadeEstoque() < p.getEstoqueSeguranca())
                 .map(p -> new RelatorioEstoqueDTO.ItemEstoqueDTO(
                         p.getId(),
                         p.getNome(),
