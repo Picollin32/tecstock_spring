@@ -31,6 +31,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     @Query("SELECT COUNT(u) > 0 FROM Usuario u WHERE u.consultor.id = :consultorId AND u.empresa.id = :empresaId")
     boolean existsByConsultorIdAndEmpresaId(@Param("consultorId") Long consultorId, @Param("empresaId") Long empresaId);
 
+    @Query("SELECT COUNT(u) > 0 FROM Usuario u WHERE u.consultor.id = :consultorId AND u.empresa.id = :empresaId AND u.id != :id")
+    boolean existsByConsultorIdAndEmpresaIdAndIdNot(@Param("consultorId") Long consultorId, @Param("empresaId") Long empresaId, @Param("id") Long id);
+
     @Query("SELECT u FROM Usuario u WHERE u.empresa.id = :empresaId AND (LOWER(u.nomeUsuario) LIKE LOWER(CONCAT(:query, '%')) OR (u.consultor IS NOT NULL AND LOWER(u.consultor.nome) LIKE LOWER(CONCAT(:query, '%'))))")
     Page<Usuario> searchByQueryAndEmpresaId(@Param("query") String query, @Param("empresaId") Long empresaId, Pageable pageable);
 

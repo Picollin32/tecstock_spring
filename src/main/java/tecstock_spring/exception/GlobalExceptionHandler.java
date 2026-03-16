@@ -214,6 +214,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(UsuarioDuplicadoException.class)
+    public ResponseEntity<Map<String, Object>> handleUsuarioDuplicadoException(
+            UsuarioDuplicadoException ex, WebRequest request) {
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        body.put("error", "Usuário Duplicado");
+
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(OrdemServicoNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleOrdemServicoNotFoundException(
             OrdemServicoNotFoundException ex, WebRequest request) {

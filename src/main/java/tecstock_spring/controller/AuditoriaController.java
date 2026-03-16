@@ -137,6 +137,13 @@ public class AuditoriaController {
         List<String> usuarios = auditoriaService.listarUsuariosAtivos();
         return ResponseEntity.ok(usuarios);
     }
+
+    @GetMapping("/meses")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<String>> listarMesesDisponiveis() {
+        List<String> meses = auditoriaService.listarMesesDisponiveis();
+        return ResponseEntity.ok(meses);
+    }
     
     @GetMapping("/exportar-csv")
     @PreAuthorize("hasRole('ADMIN')")

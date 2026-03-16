@@ -180,13 +180,8 @@ public class AuditoriaService {
         if (empresaId == null) {
             throw new RuntimeException("Empresa não encontrada no contexto do usuário");
         }
-        
-        Page<AuditoriaLog> logs = auditoriaLogRepository.findByEmpresaIdOrderByDataHoraDesc(empresaId, PageRequest.of(0, 10000));
-        return logs.getContent().stream()
-            .map(AuditoriaLog::getEntidade)
-            .distinct()
-            .sorted()
-            .collect(Collectors.toList());
+
+        return auditoriaLogRepository.findEntidadesAuditadasByEmpresaId(empresaId);
     }
 
     public List<String> listarUsuariosAtivos() {
@@ -194,13 +189,17 @@ public class AuditoriaService {
         if (empresaId == null) {
             throw new RuntimeException("Empresa não encontrada no contexto do usuário");
         }
-        
-        Page<AuditoriaLog> logs = auditoriaLogRepository.findByEmpresaIdOrderByDataHoraDesc(empresaId, PageRequest.of(0, 10000));
-        return logs.getContent().stream()
-            .map(AuditoriaLog::getUsuario)
-            .distinct()
-            .sorted()
-            .collect(Collectors.toList());
+
+        return auditoriaLogRepository.findUsuariosAtivosByEmpresaId(empresaId);
+    }
+
+    public List<String> listarMesesDisponiveis() {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new RuntimeException("Empresa não encontrada no contexto do usuário");
+        }
+
+        return auditoriaLogRepository.findMesesDisponiveisByEmpresaId(empresaId);
     }
     
     public String exportarRegistrosParaCSV(String usuario, String entidade, String operacao,

@@ -57,4 +57,30 @@ public interface AuditoriaLogRepository extends JpaRepository<AuditoriaLog, Long
 
     Long countByEntidade(String entidade);
 
+    @Query(value = "SELECT TO_CHAR(DATE_TRUNC('month', a.data_hora), 'YYYY-MM') " +
+            "FROM auditoria_log a " +
+            "WHERE a.empresa_id = CAST(:empresaId AS BIGINT) " +
+            "GROUP BY 1 " +
+            "ORDER BY 1 DESC",
+            nativeQuery = true)
+    List<String> findMesesDisponiveisByEmpresaId(@Param("empresaId") Long empresaId);
+
+        @Query(value = "SELECT DISTINCT a.entidade " +
+            "FROM auditoria_log a " +
+            "WHERE a.empresa_id = CAST(:empresaId AS BIGINT) " +
+            "AND a.entidade IS NOT NULL " +
+            "AND a.entidade <> '' " +
+            "ORDER BY a.entidade",
+            nativeQuery = true)
+        List<String> findEntidadesAuditadasByEmpresaId(@Param("empresaId") Long empresaId);
+
+        @Query(value = "SELECT DISTINCT a.usuario " +
+            "FROM auditoria_log a " +
+            "WHERE a.empresa_id = CAST(:empresaId AS BIGINT) " +
+            "AND a.usuario IS NOT NULL " +
+            "AND a.usuario <> '' " +
+            "ORDER BY a.usuario",
+            nativeQuery = true)
+        List<String> findUsuariosAtivosByEmpresaId(@Param("empresaId") Long empresaId);
+
 }

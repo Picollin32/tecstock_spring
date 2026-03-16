@@ -125,6 +125,7 @@ public class EmpresaServiceImpl implements EmpresaService {
         empresaExistente.setCodigoMunicipio(empresaAtualizada.getCodigoMunicipio());
         empresaExistente.setRegimeTributario(empresaAtualizada.getRegimeTributario());
         empresaExistente.setCnae(empresaAtualizada.getCnae());
+        empresaExistente.setAtiva(empresaAtualizada.getAtiva());
         
         return repository.save(empresaExistente);
     }

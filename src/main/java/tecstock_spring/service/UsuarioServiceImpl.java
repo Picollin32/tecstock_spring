@@ -85,7 +85,19 @@ public class UsuarioServiceImpl implements UsuarioService {
             if (consultor.getNivelAcesso() != 2) {
                 throw new RuntimeException("O funcionário informado não é um consultor");
             }
+
+            validarVinculoUnicoConsultorUsuario(consultor.getId(), empresa.getId(), null);
             
+            usuario.setConsultor(consultor);
+        } else if (usuario.getConsultor() != null && usuario.getConsultor().getId() != null) {
+            Funcionario consultor = funcionarioRepository.findById(usuario.getConsultor().getId())
+                    .orElseThrow(() -> new RuntimeException("Consultor não encontrado"));
+
+            if (consultor.getNivelAcesso() != 2) {
+                throw new RuntimeException("O funcionário informado não é um consultor");
+            }
+
+            validarVinculoUnicoConsultorUsuario(consultor.getId(), empresa.getId(), null);
             usuario.setConsultor(consultor);
         }
 
@@ -176,6 +188,8 @@ public class UsuarioServiceImpl implements UsuarioService {
                 if (consultor.getNivelAcesso() != 2) {
                     throw new RuntimeException("O funcionário informado não é um consultor");
                 }
+
+                validarVinculoUnicoConsultorUsuario(consultor.getId(), usuarioExistente.getEmpresa().getId(), usuarioExistente.getId());
                 
                 usuarioExistente.setConsultor(consultor);
             }
@@ -187,6 +201,8 @@ public class UsuarioServiceImpl implements UsuarioService {
             if (consultor.getNivelAcesso() != 2) {
                 throw new RuntimeException("O funcionário informado não é um consultor");
             }
+
+            validarVinculoUnicoConsultorUsuario(consultor.getId(), usuarioExistente.getEmpresa().getId(), usuarioExistente.getId());
             
             usuarioExistente.setConsultor(consultor);
         }
@@ -288,5 +304,19 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
         
         logger.info("Validação de Nome de Usuario concluída com sucesso");
+    }
+
+    private void validarVinculoUnicoConsultorUsuario(Long consultorId, Long empresaId, Long idExcluir) {
+        if (consultorId == null || empresaId == null) {
+            return;
+        }
+
+        final boolean vinculoJaExiste = idExcluir == null
+                ? repository.existsByConsultorIdAndEmpresaId(consultorId, empresaId)
+                : repository.existsByConsultorIdAndEmpresaIdAndIdNot(consultorId, empresaId, idExcluir);
+
+        if (vinculoJaExiste) {
+            throw new UsuarioDuplicadoException("Este funcionário já possui um usuário vinculado");
+        }
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import tecstock_spring.dto.LoginRequestDTO;
 import tecstock_spring.dto.LoginResponseDTO;
+import tecstock_spring.model.Empresa;
 import tecstock_spring.model.Usuario;
 import tecstock_spring.repository.UsuarioRepository;
 import tecstock_spring.util.JwtUtil;
@@ -48,6 +49,19 @@ public class AuthServiceImpl implements AuthService {
             logger.warn("Tentativa de login com credenciais inválidas - Tentativas restantes: " + remainingAttempts);
             throw new RuntimeException("Credenciais inválidas");
         }
+
+        Empresa empresaVinculada = null;
+        if (usuario.getConsultor() != null && usuario.getConsultor().getEmpresa() != null) {
+            empresaVinculada = usuario.getConsultor().getEmpresa();
+        } else if (usuario.getEmpresa() != null) {
+            empresaVinculada = usuario.getEmpresa();
+        }
+
+        if (empresaVinculada != null && Boolean.FALSE.equals(empresaVinculada.getAtiva())) {
+            logger.warn("Login bloqueado para usuário {}: empresa {} inativa", usuario.getNomeUsuario(), empresaVinculada.getId());
+            throw new RuntimeException("Sua empresa está inativa, contate o administrador do sistema.");
+        }
+
         rateLimitService.resetAttempts(username, clientIp);
 
         String nomeCompleto;
