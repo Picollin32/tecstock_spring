@@ -3,6 +3,7 @@ package tecstock_spring.service;
 import tecstock_spring.model.Conta;
 import tecstock_spring.model.OrdemServico;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +23,7 @@ public interface ContaService {
 
     Conta adicionarContaPagar(Conta conta);
 
-    Conta marcarComoPago(Long id);
+    Conta marcarComoPago(Long id, LocalDate dataPagamento, Double acrescimo, Double desconto);
 
     Conta desmarcarPagamento(Long id);
 

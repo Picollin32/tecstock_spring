@@ -33,8 +33,28 @@ public class FornecedorServiceImpl implements FornecedorService {
         if (empresaId == null) {
             throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
         }
+
+        if (fornecedor.getNome() == null || fornecedor.getNome().trim().isEmpty()) {
+            throw new IllegalArgumentException("Nome do fornecedor é obrigatório");
+        }
+
+        fornecedor.setNome(fornecedor.getNome().trim());
+        fornecedor.setServico(fornecedor.getServico());
+        fornecedor.setCnpj(normalizarTextoNulo(fornecedor.getCnpj()));
+        fornecedor.setTelefone(normalizarTextoNulo(fornecedor.getTelefone()));
+        fornecedor.setEmail(normalizarTextoNulo(fornecedor.getEmail()));
+        fornecedor.setRua(normalizarTextoNulo(fornecedor.getRua()));
+        fornecedor.setNumeroCasa(normalizarTextoNulo(fornecedor.getNumeroCasa()));
+        fornecedor.setComplemento(normalizarTextoNulo(fornecedor.getComplemento()));
+        fornecedor.setBairro(normalizarTextoNulo(fornecedor.getBairro()));
+        fornecedor.setCidade(normalizarTextoNulo(fornecedor.getCidade()));
+        fornecedor.setUf(normalizarTextoNulo(fornecedor.getUf()));
+        fornecedor.setCep(normalizarTextoNulo(fornecedor.getCep()));
+        fornecedor.setCodigoMunicipio(normalizarTextoNulo(fornecedor.getCodigoMunicipio()));
+
+        validarCamposObrigatorios(fornecedor);
         
-        if (repository.existsByCnpjAndEmpresaId(fornecedor.getCnpj(), empresaId)) {
+        if (fornecedor.getCnpj() != null && repository.existsByCnpjAndEmpresaId(fornecedor.getCnpj(), empresaId)) {
             throw new RuntimeException("CNPJ já cadastrado nesta empresa: " + fornecedor.getCnpj());
         }
         
@@ -85,7 +105,27 @@ public class FornecedorServiceImpl implements FornecedorService {
         Fornecedor fornecedorExistente = repository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado ou não pertence à sua empresa"));
         
-        if (repository.existsByCnpjAndIdNotAndEmpresaId(novoFornecedor.getCnpj(), id, empresaId)) {
+        if (novoFornecedor.getNome() == null || novoFornecedor.getNome().trim().isEmpty()) {
+            throw new IllegalArgumentException("Nome do fornecedor é obrigatório");
+        }
+
+        novoFornecedor.setNome(novoFornecedor.getNome().trim());
+        novoFornecedor.setServico(novoFornecedor.getServico());
+        novoFornecedor.setCnpj(normalizarTextoNulo(novoFornecedor.getCnpj()));
+        novoFornecedor.setTelefone(normalizarTextoNulo(novoFornecedor.getTelefone()));
+        novoFornecedor.setEmail(normalizarTextoNulo(novoFornecedor.getEmail()));
+        novoFornecedor.setRua(normalizarTextoNulo(novoFornecedor.getRua()));
+        novoFornecedor.setNumeroCasa(normalizarTextoNulo(novoFornecedor.getNumeroCasa()));
+        novoFornecedor.setComplemento(normalizarTextoNulo(novoFornecedor.getComplemento()));
+        novoFornecedor.setBairro(normalizarTextoNulo(novoFornecedor.getBairro()));
+        novoFornecedor.setCidade(normalizarTextoNulo(novoFornecedor.getCidade()));
+        novoFornecedor.setUf(normalizarTextoNulo(novoFornecedor.getUf()));
+        novoFornecedor.setCep(normalizarTextoNulo(novoFornecedor.getCep()));
+        novoFornecedor.setCodigoMunicipio(normalizarTextoNulo(novoFornecedor.getCodigoMunicipio()));
+
+        validarCamposObrigatorios(novoFornecedor);
+
+        if (novoFornecedor.getCnpj() != null && repository.existsByCnpjAndIdNotAndEmpresaId(novoFornecedor.getCnpj(), id, empresaId)) {
             throw new RuntimeException("CNPJ já cadastrado em outro fornecedor desta empresa: " + novoFornecedor.getCnpj());
         }
         
@@ -113,17 +153,17 @@ public class FornecedorServiceImpl implements FornecedorService {
     }
     
     @Override
-    public Page<tecstock_spring.dto.FornecedorPesquisaDTO> buscarPaginado(String query, Pageable pageable) {
+    public Page<tecstock_spring.dto.FornecedorPesquisaDTO> buscarPaginado(String query, Boolean servico, Pageable pageable) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
             throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
         }
         
         if (query == null || query.trim().isEmpty()) {
-            return repository.findByEmpresaId(empresaId, pageable);
+            return repository.findByEmpresaId(empresaId, servico, pageable);
         }
         
-        return repository.searchByQueryAndEmpresaId(query.trim(), empresaId, pageable);
+        return repository.searchByQueryAndEmpresaId(query.trim(), empresaId, servico, pageable);
     }
     
     @Override
@@ -135,5 +175,43 @@ public class FornecedorServiceImpl implements FornecedorService {
         
         Pageable pageable = PageRequest.of(0, limit);
         return repository.findTopByEmpresaIdOrderByCreatedAtDesc(empresaId, pageable);
+    }
+
+    private String normalizarTextoNulo(String valor) {
+        if (valor == null) return null;
+        String limpo = valor.trim();
+        return limpo.isEmpty() ? null : limpo;
+    }
+
+    private void validarCamposObrigatorios(Fornecedor fornecedor) {
+        boolean isServico = Boolean.TRUE.equals(fornecedor.getServico());
+        if (isServico) {
+            return;
+        }
+
+        if (fornecedor.getCnpj() == null) {
+            throw new IllegalArgumentException("CNPJ é obrigatório para fornecedor de peças.");
+        }
+        if (fornecedor.getTelefone() == null) {
+            throw new IllegalArgumentException("Telefone é obrigatório para fornecedor de peças.");
+        }
+        if (fornecedor.getEmail() == null) {
+            throw new IllegalArgumentException("E-mail é obrigatório para fornecedor de peças.");
+        }
+        if (fornecedor.getMargemLucro() == null) {
+            throw new IllegalArgumentException("Margem de lucro é obrigatória para fornecedor de peças.");
+        }
+        if (fornecedor.getRua() == null) {
+            throw new IllegalArgumentException("Rua é obrigatória para fornecedor de peças.");
+        }
+        if (fornecedor.getNumeroCasa() == null) {
+            throw new IllegalArgumentException("Número é obrigatório para fornecedor de peças.");
+        }
+        if (fornecedor.getBairro() == null) {
+            throw new IllegalArgumentException("Bairro é obrigatório para fornecedor de peças.");
+        }
+        if (fornecedor.getCidade() == null) {
+            throw new IllegalArgumentException("Cidade é obrigatória para fornecedor de peças.");
+        }
     }
 }

@@ -155,6 +155,14 @@ public class OrcamentoServiceImpl implements OrcamentoService {
         if (novoOrcamento.getPecasOrcadas() != null) {
             orcamentoExistente.getPecasOrcadas().addAll(novoOrcamento.getPecasOrcadas());
         }
+
+        if (orcamentoExistente.getDiagnosticosOrcados() == null) {
+            orcamentoExistente.setDiagnosticosOrcados(new ArrayList<>());
+        }
+        orcamentoExistente.getDiagnosticosOrcados().clear();
+        if (novoOrcamento.getDiagnosticosOrcados() != null) {
+            orcamentoExistente.getDiagnosticosOrcados().addAll(novoOrcamento.getDiagnosticosOrcados());
+        }
         
         orcamentoExistente.setDescontoServicos(novoOrcamento.getDescontoServicos());
         orcamentoExistente.setDescontoPecas(novoOrcamento.getDescontoPecas());
@@ -229,6 +237,20 @@ public class OrcamentoServiceImpl implements OrcamentoService {
                 pecaOS.setValorUnitario(pecaOrc.getValorUnitario());
                 pecaOS.setValorTotal(pecaOrc.getValorTotal());
                 ordemServico.getPecasUtilizadas().add(pecaOS);
+            }
+        }
+
+        if (orcamento.getDiagnosticosOrcados() != null && !orcamento.getDiagnosticosOrcados().isEmpty()) {
+            ordemServico.setTipoDiagnostico(
+                ordemServico.getServicosRealizados().isEmpty() ? "diagnostico" : "diagnostico_servico"
+            );
+            ordemServico.setDiagnosticosOS(new ArrayList<>());
+
+            for (DiagnosticoOrcamento diagnosticoOrc : orcamento.getDiagnosticosOrcados()) {
+                DiagnosticoOrdemServico diagnosticoOS = new DiagnosticoOrdemServico();
+                diagnosticoOS.setDescricao(diagnosticoOrc.getDescricao());
+                diagnosticoOS.setValor(diagnosticoOrc.getValor());
+                ordemServico.getDiagnosticosOS().add(diagnosticoOS);
             }
         }
 

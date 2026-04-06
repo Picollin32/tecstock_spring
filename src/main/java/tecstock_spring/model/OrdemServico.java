@@ -11,6 +11,7 @@ import org.hibernate.annotations.Filter;
 import tecstock_spring.util.AuditListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -89,6 +90,11 @@ public class OrdemServico {
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @JoinColumn(name = "ordem_servico_id")
     private List<PecaOrdemServico> pecasUtilizadas;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name = "ordem_servico_id")
+    @Builder.Default
+    private List<DiagnosticoOrdemServico> diagnosticosOS = new ArrayList<>();
 
     @Column(name = "preco_total")
     private Double precoTotal;
@@ -197,8 +203,20 @@ public class OrdemServico {
             .sum();
     }
 
+    public Double calcularTotalDiagnosticos() {
+        if (this.diagnosticosOS != null && !this.diagnosticosOS.isEmpty()) {
+            return this.diagnosticosOS.stream()
+                .filter(diagnostico -> diagnostico != null && diagnostico.getValor() != null)
+                .mapToDouble(DiagnosticoOrdemServico::getValor)
+                .sum();
+        }
+
+        return this.precoDiagnostico != null ? this.precoDiagnostico : 0.0;
+    }
+
     public void calcularTodosOsPrecos() {
-        double taxaDiagnostico = this.precoDiagnostico != null ? this.precoDiagnostico : 0.0;
+        double taxaDiagnostico = calcularTotalDiagnosticos();
+        this.precoDiagnostico = taxaDiagnostico;
 
         if ("diagnostico".equals(this.tipoDiagnostico)) {
             this.precoTotalServicos = taxaDiagnostico;
@@ -226,7 +244,8 @@ public class OrdemServico {
     }
     
     public void forcarRecalculoTodosOsPrecos() {
-        double taxaDiagnostico = this.precoDiagnostico != null ? this.precoDiagnostico : 0.0;
+        double taxaDiagnostico = calcularTotalDiagnosticos();
+        this.precoDiagnostico = taxaDiagnostico;
 
         if ("diagnostico".equals(this.tipoDiagnostico)) {
 

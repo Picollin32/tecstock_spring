@@ -6,15 +6,23 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tecstock_spring.model.Conta;
+import tecstock_spring.model.CategoriaFinanceira;
 import tecstock_spring.model.Empresa;
+import tecstock_spring.model.Fornecedor;
 import tecstock_spring.model.OrdemServico;
+import tecstock_spring.repository.CategoriaFinanceiraRepository;
 import tecstock_spring.repository.ContaRepository;
 import tecstock_spring.repository.EmpresaRepository;
+import tecstock_spring.repository.FornecedorRepository;
 import tecstock_spring.util.TenantContext;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -26,6 +34,8 @@ import org.springframework.lang.NonNull;
 public class ContaServiceImpl implements ContaService {
 
     private final ContaRepository contaRepository;
+    private final CategoriaFinanceiraRepository categoriaFinanceiraRepository;
+    private final FornecedorRepository fornecedorRepository;
     private final EmpresaRepository empresaRepository;
     private static final Logger logger = LoggerFactory.getLogger(ContaServiceImpl.class);
 
@@ -141,21 +151,20 @@ public class ContaServiceImpl implements ContaService {
                                    LocalDateTime encerramento) {
         int diasPrazo = os.getPrazoFiadoDias();
 
-        int totalMeses = (int) Math.ceil(diasPrazo / 30.0);
+        LocalDate dataEncerramento = encerramento.toLocalDate();
+        LocalDate vencimentoFinal = dataEncerramento.plusDays(diasPrazo);
+        YearMonth inicio = YearMonth.from(dataEncerramento);
+        YearMonth fim = YearMonth.from(vencimentoFinal);
+
+        int totalMeses = (int) ChronoUnit.MONTHS.between(inicio, fim) + 1;
         if (totalMeses < 1) totalMeses = 1;
 
         String grupoId = UUID.randomUUID().toString();
 
         for (int i = 0; i < totalMeses; i++) {
-            int mes = mesBase + i;
-            int ano = anoBase;
-            while (mes > 12) {
-                mes -= 12;
-                ano++;
-            }
-
-            LocalDate vencimento = LocalDate.of(ano, mes, Math.min(encerramento.getDayOfMonth(),
-                    LocalDate.of(ano, mes, 1).lengthOfMonth()));
+            YearMonth referencia = inicio.plusMonths(i);
+            int mes = referencia.getMonthValue();
+            int ano = referencia.getYear();
 
             String descricao = "Fiado – OS #" + os.getNumeroOS() + " – " + os.getClienteNome()
                     + " (mês " + (i + 1) + "/" + totalMeses + ")";
@@ -167,7 +176,7 @@ public class ContaServiceImpl implements ContaService {
                     .valor(valorTotal)
                     .mesReferencia(mes)
                     .anoReferencia(ano)
-                    .dataVencimento(vencimento)
+                    .dataVencimento(vencimentoFinal)
                     .pago(false)
                     .ordemServicoId(os.getId())
                     .ordemServicoNumero(os.getNumeroOS())
@@ -177,8 +186,8 @@ public class ContaServiceImpl implements ContaService {
 
             contaRepository.save(Objects.requireNonNull(conta));
         }
-        logger.info("Contas de fiado geradas para OS {} – {} meses (R$ {} cada) – grupoId: {}",
-                os.getNumeroOS(), totalMeses, valorTotal, grupoId);
+        logger.info("Contas de fiado geradas para OS {} – {} meses até {} (R$ {} cada) – grupoId: {}",
+            os.getNumeroOS(), totalMeses, vencimentoFinal, valorTotal, grupoId);
     }
 
     @Override
@@ -198,8 +207,64 @@ public class ContaServiceImpl implements ContaService {
     @Override
     public List<Conta> listarAReceberPorMesAno(int mes, int ano) {
         Long empresaId = requireEmpresaId();
-        return contaRepository.findByEmpresaIdAndTipoAndMesReferenciaAndAnoReferenciaOrderByDataVencimentoAsc(
+        List<Conta> doMes = contaRepository.findByEmpresaIdAndTipoAndMesReferenciaAndAnoReferenciaOrderByDataVencimentoAsc(
                 empresaId, "A_RECEBER", mes, ano);
+
+        LocalDate inicioMes = LocalDate.of(ano, mes, 1);
+        List<Conta> atrasadasAnteriores = contaRepository
+                .findByEmpresaIdAndTipoAndPagoFalseAndDataVencimentoBeforeOrderByDataVencimentoAsc(
+                        empresaId, "A_RECEBER", inicioMes);
+
+        return deduplicarFiadoAgrupado(mergeSemDuplicarPorId(doMes, atrasadasAnteriores));
+    }
+
+    private List<Conta> mergeSemDuplicarPorId(List<Conta> principal, List<Conta> extras) {
+        Map<Long, Conta> mapa = new LinkedHashMap<>();
+        for (Conta conta : principal) {
+            mapa.put(conta.getId(), conta);
+        }
+        for (Conta conta : extras) {
+            mapa.putIfAbsent(conta.getId(), conta);
+        }
+        return new ArrayList<>(mapa.values());
+    }
+
+    private List<Conta> deduplicarFiadoAgrupado(List<Conta> contas) {
+        Map<String, Conta> fiadoPorGrupo = new LinkedHashMap<>();
+        List<Conta> resultado = new ArrayList<>();
+
+        for (Conta conta : contas) {
+            if ("OS_FIADO".equals(conta.getOrigemTipo()) && conta.getFiadoGrupoId() != null) {
+                String chave = conta.getFiadoGrupoId();
+                Conta existente = fiadoPorGrupo.get(chave);
+                if (existente == null || ehReferenciaMaisRecente(conta, existente)) {
+                    fiadoPorGrupo.put(chave, conta);
+                }
+                continue;
+            }
+            resultado.add(conta);
+        }
+
+        resultado.addAll(fiadoPorGrupo.values());
+        resultado.sort((a, b) -> {
+            LocalDate dataA = a.getDataVencimento() != null ? a.getDataVencimento() : LocalDate.MAX;
+            LocalDate dataB = b.getDataVencimento() != null ? b.getDataVencimento() : LocalDate.MAX;
+            int cmp = dataA.compareTo(dataB);
+            if (cmp != 0) return cmp;
+            return String.valueOf(a.getDescricao()).compareToIgnoreCase(String.valueOf(b.getDescricao()));
+        });
+        return resultado;
+    }
+
+    private boolean ehReferenciaMaisRecente(Conta nova, Conta atual) {
+        int anoNova = nova.getAnoReferencia() != null ? nova.getAnoReferencia() : 0;
+        int anoAtual = atual.getAnoReferencia() != null ? atual.getAnoReferencia() : 0;
+        if (anoNova != anoAtual) {
+            return anoNova > anoAtual;
+        }
+        int mesNova = nova.getMesReferencia() != null ? nova.getMesReferencia() : 0;
+        int mesAtual = atual.getMesReferencia() != null ? atual.getMesReferencia() : 0;
+        return mesNova > mesAtual;
     }
 
     @Override
@@ -221,7 +286,56 @@ public class ContaServiceImpl implements ContaService {
                 .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
 
         String formaPagamento = dadosPagamento.getOrDefault("formaPagamento", "AVISTA").toString();
+        String origemTipoBase = dadosPagamento.getOrDefault("origemTipoBase", "COMPRA").toString();
+        CategoriaFinanceira categoriaFinanceira = resolverCategoriaFinanceira(dadosPagamento.get("categoriaFinanceiraId"), empresaId);
+        Fornecedor fornecedor = resolverFornecedor(dadosPagamento.get("fornecedorId"), empresaId);
         LocalDate hoje = LocalDate.now();
+
+        Object parcelasDetalhadasObj = dadosPagamento.get("parcelasDetalhadas");
+        if (parcelasDetalhadasObj instanceof List<?> parcelasDetalhadas && !parcelasDetalhadas.isEmpty()) {
+            int totalParcelas = parcelasDetalhadas.size();
+            for (int i = 0; i < totalParcelas; i++) {
+                Object itemObj = parcelasDetalhadas.get(i);
+                if (!(itemObj instanceof Map<?, ?> itemMapRaw)) {
+                    throw new IllegalArgumentException("Parcela inválida no índice " + (i + 1));
+                }
+
+                @SuppressWarnings("unchecked")
+                Map<String, Object> itemMap = (Map<String, Object>) itemMapRaw;
+
+                double valorParcela;
+                LocalDate vencimento;
+                try {
+                    valorParcela = Double.parseDouble(itemMap.getOrDefault("valor", "0").toString());
+                    vencimento = LocalDate.parse(itemMap.get("vencimento").toString());
+                } catch (RuntimeException e) {
+                    throw new IllegalArgumentException("Dados inválidos para a parcela " + (i + 1));
+                }
+
+                if (valorParcela <= 0) {
+                    throw new IllegalArgumentException("Valor da parcela " + (i + 1) + " deve ser maior que zero");
+                }
+
+                Conta conta = Conta.builder()
+                        .empresa(empresa)
+                    .categoriaFinanceira(categoriaFinanceira)
+                        .fornecedor(fornecedor)
+                        .tipo("A_PAGAR")
+                        .descricao(descricaoBase + " (" + formaPagamento + " " + (i + 1) + "/" + totalParcelas + ")")
+                        .valor(roundCurrency(valorParcela))
+                        .mesReferencia(vencimento.getMonthValue())
+                        .anoReferencia(vencimento.getYear())
+                        .dataVencimento(vencimento)
+                        .pago(false)
+                        .parcelaNumero(i + 1)
+                        .totalParcelas(totalParcelas)
+                        .origemTipo(origemTipoBase + "_PARCELADO")
+                        .build();
+                contaRepository.save(conta);
+            }
+            logger.info("Lançamento parcelado gerado: {} parcelas para {}", totalParcelas, descricaoBase);
+            return;
+        }
 
         switch (formaPagamento) {
             case "CREDITO" -> {
@@ -231,6 +345,8 @@ public class ContaServiceImpl implements ContaService {
                     LocalDate venc = hoje.plusMonths(i + 1);
                     Conta conta = Conta.builder()
                             .empresa(empresa)
+                            .categoriaFinanceira(categoriaFinanceira)
+                            .fornecedor(fornecedor)
                             .tipo("A_PAGAR")
                             .descricao(descricaoBase + " (Crédito " + (i + 1) + "/" + parcelas + ")")
                             .valor(valorParcela)
@@ -240,7 +356,7 @@ public class ContaServiceImpl implements ContaService {
                             .pago(false)
                             .parcelaNumero(i + 1)
                             .totalParcelas(parcelas)
-                            .origemTipo("COMPRA_CREDITO")
+                            .origemTipo(origemTipoBase + "_CREDITO")
                             .build();
                     contaRepository.save(conta);
                 }
@@ -250,6 +366,8 @@ public class ContaServiceImpl implements ContaService {
                 LocalDate venc = LocalDate.parse(dadosPagamento.get("boleto30Vencimento").toString());
                 Conta conta = Conta.builder()
                         .empresa(empresa)
+                    .categoriaFinanceira(categoriaFinanceira)
+                        .fornecedor(fornecedor)
                         .tipo("A_PAGAR")
                         .descricao(descricaoBase + " (Boleto 30 dias)")
                         .valor(valorTotal)
@@ -257,7 +375,7 @@ public class ContaServiceImpl implements ContaService {
                         .anoReferencia(venc.getYear())
                         .dataVencimento(venc)
                         .pago(false)
-                        .origemTipo("COMPRA_BOLETO")
+                        .origemTipo(origemTipoBase + "_BOLETO")
                         .build();
                 contaRepository.save(conta);
                 logger.info("Conta boleto 30 dias gerada: vencimento {}", venc);
@@ -270,6 +388,8 @@ public class ContaServiceImpl implements ContaService {
 
                 Conta c1 = Conta.builder()
                         .empresa(empresa)
+                    .categoriaFinanceira(categoriaFinanceira)
+                        .fornecedor(fornecedor)
                         .tipo("A_PAGAR")
                         .descricao(descricaoBase + " (Boleto 30/60 – 1/2)")
                         .valor(valor1)
@@ -279,10 +399,12 @@ public class ContaServiceImpl implements ContaService {
                         .pago(false)
                         .parcelaNumero(1)
                         .totalParcelas(2)
-                        .origemTipo("COMPRA_BOLETO")
+                        .origemTipo(origemTipoBase + "_BOLETO")
                         .build();
                 Conta c2 = Conta.builder()
                         .empresa(empresa)
+                    .categoriaFinanceira(categoriaFinanceira)
+                        .fornecedor(fornecedor)
                         .tipo("A_PAGAR")
                         .descricao(descricaoBase + " (Boleto 30/60 – 2/2)")
                         .valor(valor2)
@@ -292,28 +414,32 @@ public class ContaServiceImpl implements ContaService {
                         .pago(false)
                         .parcelaNumero(2)
                         .totalParcelas(2)
-                        .origemTipo("COMPRA_BOLETO")
+                        .origemTipo(origemTipoBase + "_BOLETO")
                         .build();
                 contaRepository.save(c1);
                 contaRepository.save(c2);
                 logger.info("Contas boleto 30/60 geradas: R$ {} em {} | R$ {} em {}", valor1, venc1, valor2, venc2);
             }
             default -> {
+                boolean manterPagoAutomatico = "COMPRA".equalsIgnoreCase(origemTipoBase);
 
                 Conta conta = Conta.builder()
                         .empresa(empresa)
+                    .categoriaFinanceira(categoriaFinanceira)
+                        .fornecedor(fornecedor)
                         .tipo("A_PAGAR")
                         .descricao(descricaoBase + " (" + formaPagamento + ")")
                         .valor(valorTotal)
                         .mesReferencia(hoje.getMonthValue())
                         .anoReferencia(hoje.getYear())
                         .dataVencimento(hoje)
-                        .pago(true)
-                        .dataPagamento(LocalDateTime.now())
-                        .origemTipo("COMPRA_AVISTA")
+                        .pago(manterPagoAutomatico)
+                        .dataPagamento(manterPagoAutomatico ? hoje.atStartOfDay() : null)
+                        .origemTipo(origemTipoBase + "_AVISTA")
                         .build();
                 contaRepository.save(conta);
-                logger.info("Conta de compra à vista gerada ({}): R$ {}", formaPagamento, valorTotal);
+                logger.info("Conta à vista gerada ({} | origem={}): R$ {} | pagoAutomatico={}",
+                        formaPagamento, origemTipoBase, valorTotal, manterPagoAutomatico);
             }
         }
     }
@@ -340,15 +466,36 @@ public class ContaServiceImpl implements ContaService {
 
     @Override
     @Transactional
-    public Conta marcarComoPago(Long id) {
+    public Conta marcarComoPago(Long id, LocalDate dataPagamento, Double acrescimo, Double desconto) {
         Long empresaId = requireEmpresaId();
         Conta conta = contaRepository.findById(Objects.requireNonNull(id))
                 .orElseThrow(() -> new RuntimeException("Conta não encontrada: " + id));
 
         validarEmpresa(conta, empresaId);
 
+        LocalDate dataEfetiva = dataPagamento != null ? dataPagamento : LocalDate.now();
+        if (dataEfetiva.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("A data de pagamento não pode estar no futuro.");
+        }
+
+        double acrescimoEfetivo = acrescimo != null ? acrescimo : 0.0;
+        double descontoEfetivo = desconto != null ? desconto : 0.0;
+        if (acrescimoEfetivo < 0 || descontoEfetivo < 0) {
+            throw new IllegalArgumentException("Acréscimo e desconto devem ser valores positivos.");
+        }
+
+        double valorOriginal = conta.getValor() != null ? conta.getValor() : 0.0;
+        double valorFinal = roundCurrency(valorOriginal + acrescimoEfetivo - descontoEfetivo);
+        if (valorFinal <= 0) {
+            throw new IllegalArgumentException("O valor final da conta deve ser maior que zero.");
+        }
+
+        conta.setValor(valorFinal);
+        conta.setAcrescimo(acrescimoEfetivo > 0 ? roundCurrency(acrescimoEfetivo) : null);
+        conta.setDesconto(descontoEfetivo > 0 ? roundCurrency(descontoEfetivo) : null);
+
         conta.setPago(true);
-        conta.setDataPagamento(LocalDateTime.now());
+        conta.setDataPagamento(dataEfetiva.atStartOfDay());
         Conta salva = contaRepository.save(conta);
 
         if ("OS_FIADO".equals(conta.getOrigemTipo()) && conta.getFiadoGrupoId() != null) {
@@ -375,6 +522,16 @@ public class ContaServiceImpl implements ContaService {
         if ("A_RECEBER".equals(conta.getTipo()) && !"OS_FIADO".equals(conta.getOrigemTipo())) {
             throw new IllegalArgumentException("Não é possível desmarcar recebimento de OS que não seja fiado.");
         }
+
+        double valorAtual = conta.getValor() != null ? conta.getValor() : 0.0;
+        double acrescimo = conta.getAcrescimo() != null ? conta.getAcrescimo() : 0.0;
+        double desconto = conta.getDesconto() != null ? conta.getDesconto() : 0.0;
+        if (acrescimo > 0 || desconto > 0) {
+            conta.setValor(roundCurrency(valorAtual - acrescimo + desconto));
+            conta.setAcrescimo(null);
+            conta.setDesconto(null);
+        }
+
         conta.setPago(false);
         conta.setDataPagamento(null);
         return contaRepository.save(conta);
@@ -580,5 +737,40 @@ public class ContaServiceImpl implements ContaService {
             contaRepository.deleteAll(contas);
             logger.info("Removidas {} conta(s) a pagar da nota fiscal {}", contas.size(), numeroNota);
         }
+    }
+
+    private double roundCurrency(double value) {
+        return Math.round(value * 100.0) / 100.0;
+    }
+
+    private CategoriaFinanceira resolverCategoriaFinanceira(Object categoriaIdObj, Long empresaId) {
+        if (categoriaIdObj == null) {
+            return null;
+        }
+        Long categoriaId;
+        try {
+            categoriaId = Long.parseLong(categoriaIdObj.toString());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Categoria financeira inválida.");
+        }
+
+        return categoriaFinanceiraRepository.findByIdAndEmpresaId(categoriaId, empresaId)
+                .orElseThrow(() -> new IllegalArgumentException("Categoria financeira não encontrada."));
+    }
+
+    private Fornecedor resolverFornecedor(Object fornecedorIdObj, Long empresaId) {
+        if (fornecedorIdObj == null) {
+            return null;
+        }
+
+        Long fornecedorId;
+        try {
+            fornecedorId = Long.parseLong(fornecedorIdObj.toString());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Fornecedor inválido.");
+        }
+
+        return fornecedorRepository.findByIdAndEmpresaId(fornecedorId, empresaId)
+                .orElseThrow(() -> new IllegalArgumentException("Fornecedor não encontrado."));
     }
 }

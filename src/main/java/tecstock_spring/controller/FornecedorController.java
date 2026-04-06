@@ -60,9 +60,10 @@ public class FornecedorController {
     @GetMapping("/api/fornecedores/buscarPaginado")
     public Object buscarPaginado(
             @RequestParam(required = false, defaultValue = "") String query,
+            @RequestParam(required = false) Boolean servico,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "30") int size) {
-        if (query == null || query.trim().isEmpty()) {
+        if ((query == null || query.trim().isEmpty()) && servico == null) {
             List<tecstock_spring.dto.FornecedorPesquisaDTO> lista = service.listarUltimosParaInicio(6);
             Map<String, Object> response = new java.util.HashMap<>();
             response.put("content", lista);
@@ -72,6 +73,6 @@ public class FornecedorController {
             return response;
         }
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return service.buscarPaginado(query, pageable);
+        return service.buscarPaginado(query, servico, pageable);
     }
 }

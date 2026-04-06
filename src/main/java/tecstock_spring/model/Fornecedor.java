@@ -52,6 +52,9 @@ public class Fornecedor {
     
     @Column(precision = 10, scale = 4)
     private BigDecimal margemLucro;
+
+    @Column(name = "servico")
+    private Boolean servico;
     
     private String cep;
     private String rua;

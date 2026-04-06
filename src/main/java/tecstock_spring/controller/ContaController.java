@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import tecstock_spring.model.Conta;
 import tecstock_spring.service.ContaService;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -59,11 +60,30 @@ public class ContaController {
     }
 
     @PatchMapping("/{id}/pagar")
-    public ResponseEntity<Conta> marcarComoPago(@PathVariable Long id) {
+    public ResponseEntity<?> marcarComoPago(@PathVariable Long id, @RequestBody(required = false) Map<String, Object> body) {
         logger.info("Marcando conta {} como paga", id);
         try {
-            Conta conta = contaService.marcarComoPago(id);
+            LocalDate dataPagamento = LocalDate.now();
+            Double acrescimo = null;
+            Double desconto = null;
+
+            if (body != null) {
+                if (body.get("dataPagamento") != null) {
+                    dataPagamento = LocalDate.parse(body.get("dataPagamento").toString());
+                }
+                if (body.get("acrescimo") != null) {
+                    acrescimo = Double.parseDouble(body.get("acrescimo").toString());
+                }
+                if (body.get("desconto") != null) {
+                    desconto = Double.parseDouble(body.get("desconto").toString());
+                }
+            }
+
+            Conta conta = contaService.marcarComoPago(id, dataPagamento, acrescimo, desconto);
             return ResponseEntity.ok(conta);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Validação ao pagar conta {}: {}", id, e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (RuntimeException e) {
             logger.error("Erro ao pagar conta {}: {}", id, e.getMessage());
             return ResponseEntity.notFound().build();
@@ -124,6 +144,33 @@ public class ContaController {
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("sucesso", true));
         } catch (Exception e) {
             logger.error("Erro ao adicionar frete: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/a-pagar/lancamento")
+    public ResponseEntity<?> adicionarLancamentoAPagar(@RequestBody Map<String, Object> body) {
+        logger.info("Adicionando lançamento avulso a pagar");
+        try {
+            String descricao = body.get("descricao").toString();
+            double valor = Double.parseDouble(body.get("valor").toString());
+            String origem = body.getOrDefault("origem", "DESPESA").toString();
+            @SuppressWarnings("unchecked")
+            Map<String, Object> pagamento = (Map<String, Object>) body.get("pagamento");
+            if (pagamento == null || pagamento.get("formaPagamento") == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Forma de pagamento obrigatória"));
+            }
+            if (body.get("categoriaFinanceiraId") != null) {
+                pagamento.put("categoriaFinanceiraId", body.get("categoriaFinanceiraId"));
+            }
+            if (body.get("fornecedorId") != null) {
+                pagamento.put("fornecedorId", body.get("fornecedorId"));
+            }
+            pagamento.put("origemTipoBase", origem);
+            contaService.gerarContasParaCompra(pagamento, valor, descricao);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("sucesso", true));
+        } catch (Exception e) {
+            logger.error("Erro ao adicionar lançamento: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }

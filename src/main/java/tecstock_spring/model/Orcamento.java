@@ -11,6 +11,7 @@ import org.hibernate.annotations.Filter;
 import tecstock_spring.util.AuditListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -85,6 +86,11 @@ public class Orcamento {
     @JoinColumn(name = "orcamento_id")
     private List<PecaOrcamento> pecasOrcadas;
 
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name = "orcamento_id")
+    @Builder.Default
+    private List<DiagnosticoOrcamento> diagnosticosOrcados = new ArrayList<>();
+
     @Column(name = "preco_total")
     private Double precoTotal;
     
@@ -150,14 +156,23 @@ public class Orcamento {
     }
     
     public Double calcularPrecoTotalServicos() {
-        if (this.servicosOrcados == null || this.servicosOrcados.isEmpty()) {
-            return 0.0;
-        }
-        
-        return this.servicosOrcados.stream()
+        double totalServicos = 0.0;
+
+        if (this.servicosOrcados != null && !this.servicosOrcados.isEmpty()) {
+            totalServicos = this.servicosOrcados.stream()
             .filter(servico -> servico != null)
             .mapToDouble(servico -> servico.precoParaCategoria(this.veiculoCategoria))
             .sum();
+        }
+
+        if (this.diagnosticosOrcados != null && !this.diagnosticosOrcados.isEmpty()) {
+            totalServicos += this.diagnosticosOrcados.stream()
+                .filter(diagnostico -> diagnostico != null && diagnostico.getValor() != null)
+                .mapToDouble(DiagnosticoOrcamento::getValor)
+                .sum();
+        }
+
+        return totalServicos;
     }
     
 

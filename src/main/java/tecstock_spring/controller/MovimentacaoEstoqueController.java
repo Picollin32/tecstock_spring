@@ -105,17 +105,18 @@ public class MovimentacaoEstoqueController {
                 Map<String, Object> pagamento = dadosEntrada.get("pagamento") instanceof Map
                         ? (Map<String, Object>) dadosEntrada.get("pagamento")
                         : null;
-                if (pagamento != null && pagamento.get("formaPagamento") != null) {
-                    String formaPagamento = pagamento.get("formaPagamento").toString();
+                double valorTotalCompra = 0.0;
+                for (Map<String, Object> peca : pecas) {
+                    try {
+                        int qtd = Integer.parseInt(peca.get("quantidade").toString());
+                        double preco = Double.parseDouble(peca.get("precoUnitario").toString());
+                        valorTotalCompra += qtd * preco;
+                    } catch (Exception ignored) {}
+                }
 
-                    double valorTotalCompra = 0.0;
-                    for (Map<String, Object> peca : pecas) {
-                        try {
-                            int qtd = Integer.parseInt(peca.get("quantidade").toString());
-                            double preco = Double.parseDouble(peca.get("precoUnitario").toString());
-                            valorTotalCompra += qtd * preco;
-                        } catch (Exception ignored) {}
-                    }
+                String formaPagamento = "AVISTA";
+                if (pagamento != null && pagamento.get("formaPagamento") != null) {
+                    formaPagamento = pagamento.get("formaPagamento").toString();
                     String descNota = "Compra NF " + numeroNotaFiscal;
                     try {
                         contaService.gerarContasParaCompra(pagamento, valorTotalCompra, descNota);
@@ -128,6 +129,7 @@ public class MovimentacaoEstoqueController {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> freteData = dadosEntrada.get("frete") instanceof Map
                         ? (Map<String, Object>) dadosEntrada.get("frete") : null;
+                Double valorFreteRegistrado = null;
                 if (freteData != null && freteData.get("valor") != null) {
                     @SuppressWarnings("unchecked")
                     Map<String, Object> fretePagamento = freteData.get("pagamento") instanceof Map
@@ -136,6 +138,7 @@ public class MovimentacaoEstoqueController {
                         try {
                             double valorFrete = Double.parseDouble(freteData.get("valor").toString());
                             if (valorFrete > 0) {
+                                valorFreteRegistrado = valorFrete;
                                 String descFrete = "Frete NF " + numeroNotaFiscal;
                                 contaService.gerarContasParaCompra(fretePagamento, valorFrete, descFrete);
                                 logger.info("Conta de frete gerada para NF {} – R$ {}", numeroNotaFiscal, valorFrete);
@@ -144,6 +147,19 @@ public class MovimentacaoEstoqueController {
                             logger.error("Erro ao gerar conta de frete para NF {}: {}", numeroNotaFiscal, ex.getMessage());
                         }
                     }
+                }
+
+                try {
+                    service.registrarOuAtualizarNotaEntrada(
+                            fornecedorId,
+                            numeroNotaFiscal,
+                            observacoes,
+                            formaPagamento,
+                            valorTotalCompra,
+                            valorFreteRegistrado
+                    );
+                } catch (Exception ex) {
+                    logger.error("Erro ao registrar tabela de nota de entrada {}: {}", numeroNotaFiscal, ex.getMessage());
                 }
             }
 

@@ -248,6 +248,14 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         ordemServicoExistente.setTipoDiagnostico(novaOrdemServico.getTipoDiagnostico());
         ordemServicoExistente.setPrecoDiagnostico(novaOrdemServico.getPrecoDiagnostico());
 
+        if (ordemServicoExistente.getDiagnosticosOS() == null) {
+            ordemServicoExistente.setDiagnosticosOS(new java.util.ArrayList<>());
+        }
+        ordemServicoExistente.getDiagnosticosOS().clear();
+        if (novaOrdemServico.getDiagnosticosOS() != null) {
+            ordemServicoExistente.getDiagnosticosOS().addAll(novaOrdemServico.getDiagnosticosOS());
+        }
+
         ordemServicoExistente.getServicosRealizados().clear();
         if (novaOrdemServico.getServicosRealizados() != null) {
             ordemServicoExistente.getServicosRealizados().addAll(novaOrdemServico.getServicosRealizados());

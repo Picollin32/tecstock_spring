@@ -18,6 +18,12 @@ public interface ContaRepository extends JpaRepository<Conta, Long> {
     List<Conta> findByEmpresaIdAndTipoAndMesReferenciaAndAnoReferenciaOrderByDataVencimentoAsc(
             Long empresaId, String tipo, Integer mes, Integer ano);
 
+    @Query("SELECT c FROM Conta c WHERE c.empresa.id = :empresaId AND c.tipo = :tipo AND c.pago = false AND c.dataVencimento < :dataLimite ORDER BY c.dataVencimento ASC")
+    List<Conta> findByEmpresaIdAndTipoAndPagoFalseAndDataVencimentoBeforeOrderByDataVencimentoAsc(
+            @Param("empresaId") Long empresaId,
+            @Param("tipo") String tipo,
+            @Param("dataLimite") LocalDate dataLimite);
+
     @Query("SELECT c FROM Conta c WHERE c.empresa.id = :empresaId AND c.pago = false AND c.dataVencimento < :hoje")
     List<Conta> findContasAtrasadas(@Param("empresaId") Long empresaId, @Param("hoje") LocalDate hoje);
 
@@ -35,4 +41,7 @@ public interface ContaRepository extends JpaRepository<Conta, Long> {
 
     @Query("SELECT c FROM Conta c WHERE c.empresa.id = :empresaId AND c.descricao LIKE CONCAT('Compra NF ', :numeroNota, ' %') AND c.tipo = 'A_PAGAR'")
     List<Conta> findContasCompraByNumeroNota(@Param("empresaId") Long empresaId, @Param("numeroNota") String numeroNota);
+
+        @Query("SELECT COUNT(c) > 0 FROM Conta c WHERE c.empresa.id = :empresaId AND c.categoriaFinanceira.id = :categoriaId")
+        boolean existsByEmpresaIdAndCategoriaFinanceiraId(@Param("empresaId") Long empresaId, @Param("categoriaId") Long categoriaId);
 }

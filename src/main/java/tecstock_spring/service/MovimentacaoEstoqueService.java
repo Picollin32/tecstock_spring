@@ -40,4 +40,13 @@ public interface MovimentacaoEstoqueService {
     java.util.Map<String, Object> atualizarNota(Long fornecedorId, String numeroNotaAtual, java.util.Map<String, Object> dados);
 
     void deletarNota(Long fornecedorId, String numeroNota);
+
+    void registrarOuAtualizarNotaEntrada(
+            Long fornecedorId,
+            String numeroNotaFiscal,
+            String observacoes,
+            String formaPagamento,
+            double valorTotalCompra,
+            Double valorFrete
+    );
 }

@@ -1,11 +1,15 @@
 package tecstock_spring.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Filter;
+import org.hibernate.envers.Audited;
+import tecstock_spring.util.AuditListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,6 +20,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Audited
+@Filter(name = "empresaFilter", condition = "empresa_id = :empresaId")
+@EntityListeners(AuditListener.class)
 public class Conta {
 
     @Id
@@ -74,6 +81,22 @@ public class Conta {
     @Builder.Default
     private Double valorPagoParcial = 0.0;
 
+    @Column(name = "acrescimo")
+    private Double acrescimo;
+
+    @Column(name = "desconto")
+    private Double desconto;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "categoria_financeira_id")
+    private CategoriaFinanceira categoriaFinanceira;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "fornecedor_id")
+    private Fornecedor fornecedor;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -93,5 +116,29 @@ public class Conta {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    @Transient
+    @JsonProperty("categoriaId")
+    public Long getCategoriaId() {
+        return categoriaFinanceira != null ? categoriaFinanceira.getId() : null;
+    }
+
+    @Transient
+    @JsonProperty("categoriaNome")
+    public String getCategoriaNome() {
+        return categoriaFinanceira != null ? categoriaFinanceira.getNome() : null;
+    }
+
+    @Transient
+    @JsonProperty("fornecedorId")
+    public Long getFornecedorId() {
+        return fornecedor != null ? fornecedor.getId() : null;
+    }
+
+    @Transient
+    @JsonProperty("fornecedorNome")
+    public String getFornecedorNome() {
+        return fornecedor != null ? fornecedor.getNome() : null;
     }
 }

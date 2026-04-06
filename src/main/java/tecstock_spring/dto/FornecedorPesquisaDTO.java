@@ -16,6 +16,7 @@ public class FornecedorPesquisaDTO {
     private Long id;
     private String nome;
     private String cnpj;
+    private Boolean servico;
     private String telefone;
     private String email;
     private BigDecimal margemLucro;
