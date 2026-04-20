@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tecstock_spring.dto.ContaComParcelasDTO;
 import tecstock_spring.model.Conta;
 import tecstock_spring.service.ContaService;
 
@@ -49,6 +50,18 @@ public class ContaController {
     public Map<String, Double> resumoMes(@PathVariable int mes, @PathVariable int ano) {
         logger.info("Resumo financeiro {}/{}", mes, ano);
         return contaService.resumoMes(mes, ano);
+    }
+
+    @GetMapping("/{id}/com-parcelas")
+    public ResponseEntity<ContaComParcelasDTO> buscarContaComParcelas(@PathVariable Long id) {
+        logger.info("Buscando conta {} com parcelas", id);
+        try {
+            ContaComParcelasDTO dto = contaService.buscarContaComParcelas(id);
+            return ResponseEntity.ok(dto);
+        } catch (RuntimeException e) {
+            logger.error("Erro ao buscar conta {} com parcelas: {}", id, e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
     }
 
 

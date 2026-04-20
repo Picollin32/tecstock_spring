@@ -15,6 +15,8 @@ public class TipoPagamentoPesquisaDTO {
     private String nome;
     private Integer codigo;
     private Integer idFormaPagamento;
+    private Integer quantidadeParcelas;
+    private Integer diasEntreParcelas;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

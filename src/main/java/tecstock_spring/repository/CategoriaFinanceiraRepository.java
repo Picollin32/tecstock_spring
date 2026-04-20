@@ -1,6 +1,8 @@
 package tecstock_spring.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import tecstock_spring.model.CategoriaFinanceira;
 
 import java.util.List;
@@ -15,4 +17,9 @@ public interface CategoriaFinanceiraRepository extends JpaRepository<CategoriaFi
     boolean existsByEmpresaIdAndNomeIgnoreCase(Long empresaId, String nome);
 
     boolean existsByEmpresaIdAndNomeIgnoreCaseAndIdNot(Long empresaId, String nome, Long id);
+
+    Page<CategoriaFinanceira> findByEmpresaIdAndAtivoTrueAndNomeStartingWithIgnoreCase(
+            Long empresaId,
+            String query,
+            Pageable pageable);
 }

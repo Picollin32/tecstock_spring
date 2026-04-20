@@ -74,6 +74,9 @@ public class Orcamento {
 
     private Integer numeroParcelas;
 
+    @Column(name = "parcelas_detalhadas_boleto", length = 2000)
+    private String parcelasDetalhadasBoleto;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "orcamento_servicos",

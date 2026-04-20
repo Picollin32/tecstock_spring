@@ -1,6 +1,8 @@
 package tecstock_spring.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tecstock_spring.model.CategoriaFinanceira;
@@ -26,6 +28,14 @@ public class CategoriaFinanceiraServiceImpl implements CategoriaFinanceiraServic
     public List<CategoriaFinanceira> listarAtivas() {
         Long empresaId = requireEmpresaId();
         return categoriaRepository.findByEmpresaIdAndAtivoTrueOrderByNomeAsc(empresaId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CategoriaFinanceira> buscarPaginado(String query, Pageable pageable) {
+        Long empresaId = requireEmpresaId();
+        String queryNormalizada = query == null ? "" : query.trim();
+        return categoriaRepository.findByEmpresaIdAndAtivoTrueAndNomeStartingWithIgnoreCase(empresaId, queryNormalizada, pageable);
     }
 
     @Override

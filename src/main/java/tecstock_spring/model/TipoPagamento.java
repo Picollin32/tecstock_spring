@@ -52,6 +52,12 @@ public class TipoPagamento {
     
     @Column(name = "id_forma_pagamento")
     private Integer idFormaPagamento;
+
+    @Column(name = "quantidade_parcelas")
+    private Integer quantidadeParcelas;
+
+    @Column(name = "dias_entre_parcelas")
+    private Integer diasEntreParcelas;
     
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -61,6 +67,12 @@ public class TipoPagamento {
     
     @PrePersist
     protected void onCreate() {
+        if (quantidadeParcelas == null || quantidadeParcelas < 1) {
+            quantidadeParcelas = 1;
+        }
+        if (diasEntreParcelas == null || diasEntreParcelas < 0) {
+            diasEntreParcelas = 0;
+        }
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
@@ -69,6 +81,12 @@ public class TipoPagamento {
     
     @PreUpdate
     protected void onUpdate() {
+        if (quantidadeParcelas == null || quantidadeParcelas < 1) {
+            quantidadeParcelas = 1;
+        }
+        if (diasEntreParcelas == null || diasEntreParcelas < 0) {
+            diasEntreParcelas = 0;
+        }
         updatedAt = LocalDateTime.now();
     }
 }

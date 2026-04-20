@@ -33,5 +33,8 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -
 # Forçar porta 8081
 ENV SERVER_PORT=8081
 
+# Garantir execução em produção no container
+ENV SPRING_PROFILES_ACTIVE=prod
+
 # Executar aplicação
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

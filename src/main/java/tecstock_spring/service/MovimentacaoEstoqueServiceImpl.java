@@ -351,7 +351,7 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
     
     @SuppressWarnings("null")
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public List<Map<String, Object>> listarNotasEntrada() {
         Long empresaId = requireEmpresaId();
         List<NotaEntrada> notas = notaEntradaRepository.findByEmpresaIdOrderByDataEntradaDesc(empresaId);
@@ -514,6 +514,13 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
             throw new RuntimeException("Nota fiscal não encontrada: " + numeroNota);
         }
 
+        Map<String, Long> pecasAfetadas = movimentacoes.stream()
+            .collect(Collectors.toMap(
+                MovimentacaoEstoque::getCodigoPeca,
+                m -> m.getFornecedor().getId(),
+                (a, b) -> a,
+                LinkedHashMap::new));
+
         for (MovimentacaoEstoque m : movimentacoes) {
             Optional<Peca> pecaOpt = pecaRepository.findByCodigoFabricanteAndFornecedorIdAndEmpresaId(
                     m.getCodigoPeca(), fornecedorId, empresaId);
@@ -531,6 +538,34 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
         }
 
         movimentacaoEstoqueRepository.deleteAll(movimentacoes);
+
+        for (Map.Entry<String, Long> entry : pecasAfetadas.entrySet()) {
+            String codigoPeca = entry.getKey();
+            Long fornId = entry.getValue();
+
+            Optional<Peca> pecaOpt = pecaRepository.findByCodigoFabricanteAndFornecedorIdAndEmpresaId(
+                    codigoPeca, fornId, empresaId);
+            if (pecaOpt.isEmpty()) {
+                continue;
+            }
+
+            Peca peca = pecaOpt.get();
+            Optional<MovimentacaoEstoque> ultimaEntradaRemanescente = movimentacaoEstoqueRepository
+                    .findByCodigoPecaAndFornecedorIdAndEmpresaIdOrderByDataEntradaDesc(codigoPeca, fornId, empresaId)
+                    .stream()
+                    .filter(m -> m.getTipoMovimentacao() == MovimentacaoEstoque.TipoMovimentacao.ENTRADA)
+                    .findFirst();
+
+            if (ultimaEntradaRemanescente.isPresent()) {
+                Double precoAnterior = ultimaEntradaRemanescente.get().getPrecoUnitario();
+                if (precoAnterior != null && Math.abs(peca.getPrecoUnitario() - precoAnterior) > 0.01) {
+                    peca.setPrecoUnitario(precoAnterior);
+                    pecaRepository.save(peca);
+                    logger.info("Preço restaurado para peça {}: {}", codigoPeca, precoAnterior);
+                }
+            }
+        }
+
         contaService.deletarContasCompra(numeroNota);
         notaEntradaRepository.deleteByNumeroNotaFiscalAndFornecedorIdAndEmpresaId(numeroNota, fornecedorId, empresaId);
         logger.info("Nota de entrada {} excluída: {} movimentação(ões) removida(s)", numeroNota, movimentacoes.size());

@@ -11,6 +11,8 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.envers.Audited;
 import tecstock_spring.util.AuditListener;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -102,6 +104,11 @@ public class Conta {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "conta", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ContaParcela> parcelas = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

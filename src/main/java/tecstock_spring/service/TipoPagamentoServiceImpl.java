@@ -35,6 +35,7 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
 
     @Override
     public TipoPagamento salvar(TipoPagamento tipoPagamento) {
+        normalizarParcelamento(tipoPagamento);
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
             throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
@@ -119,6 +120,7 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
     @Override
     @SuppressWarnings("null")
     public TipoPagamento atualizar(Long id, TipoPagamento novoTipoPagamento) {
+        normalizarParcelamento(novoTipoPagamento);
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
             throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
@@ -175,5 +177,52 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
         
         Pageable pageable = PageRequest.of(0, limit);
         return repository.findTopByEmpresaIdOrderByCreatedAtDesc(empresaId, pageable);
+    }
+
+    private void normalizarParcelamento(TipoPagamento tipoPagamento) {
+        if (tipoPagamento.getQuantidadeParcelas() == null || tipoPagamento.getQuantidadeParcelas() < 1) {
+            tipoPagamento.setQuantidadeParcelas(1);
+        }
+        if (tipoPagamento.getDiasEntreParcelas() == null || tipoPagamento.getDiasEntreParcelas() < 0) {
+            tipoPagamento.setDiasEntreParcelas(0);
+        }
+
+        boolean pagamentoAVista = tipoPagamento.getQuantidadeParcelas() == 1
+                && tipoPagamento.getDiasEntreParcelas() == 0;
+        if (pagamentoAVista) {
+            tipoPagamento.setIdFormaPagamento(1);
+            return;
+        }
+
+        Integer formaInformada = tipoPagamento.getIdFormaPagamento();
+        if (formaInformada != null && formaInformada == 3) {
+            int meses = Math.max(1, Math.min(12, tipoPagamento.getQuantidadeParcelas()));
+            tipoPagamento.setQuantidadeParcelas(meses);
+            tipoPagamento.setDiasEntreParcelas(30);
+            tipoPagamento.setIdFormaPagamento(3);
+            tipoPagamento.setNome(ajustarNomeBoleto(tipoPagamento.getNome(), meses));
+            return;
+        }
+
+        if (tipoPagamento.getQuantidadeParcelas() < 2) {
+            tipoPagamento.setQuantidadeParcelas(2);
+        }
+        if (tipoPagamento.getDiasEntreParcelas() < 1) {
+            tipoPagamento.setDiasEntreParcelas(30);
+        }
+        tipoPagamento.setIdFormaPagamento(2);
+    }
+
+    private String ajustarNomeBoleto(String nomeOriginal, int meses) {
+        String nome = nomeOriginal == null ? "" : nomeOriginal.trim();
+        String nomeBase = nome.replaceFirst("\\s*\\((\\d{1,3}(?:/\\d{1,3})*)\\)\\s*$", "");
+        StringBuilder prazos = new StringBuilder();
+        for (int i = 1; i <= meses; i++) {
+            if (i > 1) {
+                prazos.append('/');
+            }
+            prazos.append(i * 30);
+        }
+        return nomeBase + " (" + prazos + ")";
     }
 }

@@ -49,11 +49,11 @@ public class EmpresaServiceImpl implements EmpresaService {
 
     private void criarTiposPagamentoPadrao(Empresa empresa) {
         List<TipoPagamento> tipos = List.of(
-            TipoPagamento.builder().empresa(empresa).codigo(1).nome("Dinheiro").idFormaPagamento(null).build(),
-            TipoPagamento.builder().empresa(empresa).codigo(2).nome("PIX").idFormaPagamento(null).build(),
-            TipoPagamento.builder().empresa(empresa).codigo(3).nome("Cartão Débito").idFormaPagamento(null).build(),
-            TipoPagamento.builder().empresa(empresa).codigo(4).nome("Cartão Crédito").idFormaPagamento(1).build(),
-            TipoPagamento.builder().empresa(empresa).codigo(5).nome("Fiado").idFormaPagamento(2).build()
+            TipoPagamento.builder().empresa(empresa).codigo(1).nome("Dinheiro").idFormaPagamento(1).quantidadeParcelas(1).diasEntreParcelas(0).build(),
+            TipoPagamento.builder().empresa(empresa).codigo(2).nome("PIX").idFormaPagamento(1).quantidadeParcelas(1).diasEntreParcelas(0).build(),
+            TipoPagamento.builder().empresa(empresa).codigo(3).nome("Cartão Débito").idFormaPagamento(1).quantidadeParcelas(1).diasEntreParcelas(0).build(),
+            TipoPagamento.builder().empresa(empresa).codigo(4).nome("Cartão Crédito").idFormaPagamento(2).quantidadeParcelas(12).diasEntreParcelas(30).build(),
+            TipoPagamento.builder().empresa(empresa).codigo(5).nome("Fiado").idFormaPagamento(2).quantidadeParcelas(12).diasEntreParcelas(30).build()
         );
         tipoPagamentoRepository.saveAll(new ArrayList<>(tipos));
         logger.info("Tipos de pagamento padrão criados para empresa ID: " + empresa.getId());

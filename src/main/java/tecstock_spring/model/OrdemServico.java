@@ -79,6 +79,9 @@ public class OrdemServico {
 
     private Integer numeroParcelas;
 
+    @Column(name = "parcelas_detalhadas_boleto", length = 2000)
+    private String parcelasDetalhadasBoleto;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "ordem_servico_servicos",
