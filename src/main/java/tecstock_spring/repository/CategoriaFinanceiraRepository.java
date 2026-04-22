@@ -18,6 +18,8 @@ public interface CategoriaFinanceiraRepository extends JpaRepository<CategoriaFi
 
     boolean existsByEmpresaIdAndNomeIgnoreCaseAndIdNot(Long empresaId, String nome, Long id);
 
+    Optional<CategoriaFinanceira> findByEmpresaIdAndNomeIgnoreCase(Long empresaId, String nome);
+
     Page<CategoriaFinanceira> findByEmpresaIdAndAtivoTrueAndNomeStartingWithIgnoreCase(
             Long empresaId,
             String query,

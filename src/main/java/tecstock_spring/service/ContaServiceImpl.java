@@ -487,6 +487,9 @@ public class ContaServiceImpl implements ContaService {
         String formaPagamento = dadosPagamento.getOrDefault("formaPagamento", "AVISTA").toString();
         String origemTipoBase = dadosPagamento.getOrDefault("origemTipoBase", "COMPRA").toString();
         CategoriaFinanceira categoriaFinanceira = resolverCategoriaFinanceira(dadosPagamento.get("categoriaFinanceiraId"), empresaId);
+        if (categoriaFinanceira == null && isCompraNotaFiscalDePeca(descricaoBase)) {
+            categoriaFinanceira = resolverOuCriarCategoriaPeca(empresa);
+        }
         Fornecedor fornecedor = resolverFornecedor(dadosPagamento.get("fornecedorId"), empresaId);
         LocalDate hoje = LocalDate.now();
 
@@ -1282,6 +1285,35 @@ public class ContaServiceImpl implements ContaService {
 
     private double roundCurrency(double value) {
         return Math.round(value * 100.0) / 100.0;
+    }
+
+    private boolean isCompraNotaFiscalDePeca(String descricaoBase) {
+        if (descricaoBase == null) {
+            return false;
+        }
+        return descricaoBase.trim().toLowerCase().startsWith("compra nf");
+    }
+
+    private CategoriaFinanceira resolverOuCriarCategoriaPeca(Empresa empresa) {
+        Long empresaId = empresa.getId();
+
+        CategoriaFinanceira categoria = categoriaFinanceiraRepository
+                .findByEmpresaIdAndNomeIgnoreCase(empresaId, "Peça")
+                .orElseGet(() -> {
+                    CategoriaFinanceira nova = new CategoriaFinanceira();
+                    nova.setEmpresa(empresa);
+                    nova.setNome("Peça");
+                    nova.setDescricao("Categoria padrão para compras de peças");
+                    nova.setAtivo(true);
+                    return categoriaFinanceiraRepository.save(nova);
+                });
+
+        if (Boolean.FALSE.equals(categoria.getAtivo())) {
+            categoria.setAtivo(true);
+            categoria = categoriaFinanceiraRepository.save(categoria);
+        }
+
+        return categoria;
     }
 
     private CategoriaFinanceira resolverCategoriaFinanceira(Object categoriaIdObj, Long empresaId) {
