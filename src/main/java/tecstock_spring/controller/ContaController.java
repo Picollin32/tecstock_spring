@@ -116,7 +116,7 @@ public class ContaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Conta> editar(@PathVariable Long id, @RequestBody Conta dados) {
+    public ResponseEntity<Conta> editar(@PathVariable Long id, @RequestBody Map<String, Object> dados) {
         logger.info("Editando conta {}", id);
         try {
             Conta atualizada = contaService.editar(id, dados);
@@ -153,6 +153,13 @@ public class ContaController {
             if (pagamento == null || pagamento.get("formaPagamento") == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Forma de pagamento obrigatória"));
             }
+            if (body.get("categoriaFinanceiraId") != null) {
+                pagamento.put("categoriaFinanceiraId", body.get("categoriaFinanceiraId"));
+            }
+            if (body.get("fornecedorId") != null) {
+                pagamento.put("fornecedorId", body.get("fornecedorId"));
+            }
+            pagamento.put("origemTipoBase", "FRETE");
             contaService.gerarContasParaCompra(pagamento, valor, descricao);
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("sucesso", true));
         } catch (Exception e) {

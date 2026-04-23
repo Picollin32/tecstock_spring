@@ -119,6 +119,8 @@ public class MovimentacaoEstoqueController {
                     formaPagamento = pagamento.get("formaPagamento").toString();
                     String descNota = "Compra NF " + numeroNotaFiscal;
                     try {
+                        pagamento.put("fornecedorId", fornecedorId);
+                        pagamento.put("origemTipoBase", "COMPRA");
                         contaService.gerarContasParaCompra(pagamento, valorTotalCompra, descNota);
                         logger.info("Contas a pagar geradas para compra NF {} – R$ {} ({})", numeroNotaFiscal, valorTotalCompra, formaPagamento);
                     } catch (Exception ex) {
@@ -140,6 +142,8 @@ public class MovimentacaoEstoqueController {
                             if (valorFrete > 0) {
                                 valorFreteRegistrado = valorFrete;
                                 String descFrete = "Frete NF " + numeroNotaFiscal;
+                                fretePagamento.put("fornecedorId", fornecedorId);
+                                fretePagamento.put("origemTipoBase", "FRETE");
                                 contaService.gerarContasParaCompra(fretePagamento, valorFrete, descFrete);
                                 logger.info("Conta de frete gerada para NF {} – R$ {}", numeroNotaFiscal, valorFrete);
                             }

@@ -180,11 +180,14 @@ public class ContaServiceImpl implements ContaService {
         String descricao = "OS #" + os.getNumeroOS() + " – " + os.getClienteNome()
                 + " (" + nomePagamento + (parcelas > 1 ? " " + parcelas + "x" : "") + ")";
 
-        List<Double> valoresInformados = parseValoresParcelasBoleto(os.getParcelasDetalhadasBoleto());
+        List<ParcelaBoletoDetalhe> detalhesInformados = parseDetalhesParcelasBoleto(os.getParcelasDetalhadasBoleto());
+        List<Double> valoresInformados = detalhesInformados.stream().map(ParcelaBoletoDetalhe::valor).toList();
 
         if (parcelas <= 1) {
             double valorUnico = valoresInformados.isEmpty() ? valorTotal : valoresInformados.get(0);
-            LocalDate vencimento = encerramento.toLocalDate().plusDays(Math.max(1, diasEntreParcelas));
+            LocalDate vencimento = detalhesInformados.isEmpty() || detalhesInformados.get(0).vencimento() == null
+                    ? encerramento.toLocalDate().plusDays(Math.max(1, diasEntreParcelas))
+                    : detalhesInformados.get(0).vencimento();
 
             Conta conta = Conta.builder()
                     .empresa(empresa)
@@ -240,7 +243,10 @@ public class ContaServiceImpl implements ContaService {
 
         List<ContaParcela> parcelasGeradas = new ArrayList<>();
         for (int i = 0; i < parcelas; i++) {
-            LocalDate vencimento = encerramento.toLocalDate().plusDays((long) Math.max(1, diasEntreParcelas) * (i + 1));
+            LocalDate vencimentoPadrao = encerramento.toLocalDate().plusDays((long) Math.max(1, diasEntreParcelas) * (i + 1));
+            LocalDate vencimento = (i < detalhesInformados.size() && detalhesInformados.get(i).vencimento() != null)
+                ? detalhesInformados.get(i).vencimento()
+                : vencimentoPadrao;
             ContaParcela parcela = ContaParcela.builder()
                     .conta(contaPai)
                     .parcelaNumero(i + 1)
@@ -274,24 +280,43 @@ public class ContaServiceImpl implements ContaService {
         return 30;
     }
 
-    private List<Double> parseValoresParcelasBoleto(String parcelasDetalhadasBoleto) {
-        List<Double> valores = new ArrayList<>();
+    private record ParcelaBoletoDetalhe(double valor, LocalDate vencimento) {}
+
+    private List<ParcelaBoletoDetalhe> parseDetalhesParcelasBoleto(String parcelasDetalhadasBoleto) {
+        List<ParcelaBoletoDetalhe> valores = new ArrayList<>();
         if (parcelasDetalhadasBoleto == null || parcelasDetalhadasBoleto.isBlank()) {
             return valores;
         }
 
         String[] partes = parcelasDetalhadasBoleto.split(";");
         for (String parte : partes) {
-            String valorTexto = parte != null ? parte.trim().replace(",", ".") : "";
-            if (valorTexto.isEmpty()) {
+            String conteudo = parte != null ? parte.trim() : "";
+            if (conteudo.isEmpty()) {
                 continue;
             }
+
+            String valorTexto = conteudo;
+            LocalDate vencimento = null;
+            int separador = conteudo.indexOf('@');
+            if (separador > 0 && separador < conteudo.length() - 1) {
+                valorTexto = conteudo.substring(0, separador).trim();
+                String vencTexto = conteudo.substring(separador + 1).trim();
+                if (!vencTexto.isEmpty()) {
+                    try {
+                        vencimento = LocalDate.parse(vencTexto);
+                    } catch (RuntimeException e) {
+                        throw new IllegalArgumentException("Formato inválido na data de vencimento das parcelas do boleto.");
+                    }
+                }
+            }
+
+            valorTexto = valorTexto.replace(",", ".");
             try {
                 double valor = Double.parseDouble(valorTexto);
                 if (valor <= 0) {
                     throw new IllegalArgumentException("Valor de parcela de boleto inválido.");
                 }
-                valores.add(valor);
+                valores.add(new ParcelaBoletoDetalhe(valor, vencimento));
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException("Formato inválido nos valores das parcelas do boleto.");
             }
@@ -485,10 +510,22 @@ public class ContaServiceImpl implements ContaService {
                 .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
 
         String formaPagamento = dadosPagamento.getOrDefault("formaPagamento", "AVISTA").toString();
-        String origemTipoBase = dadosPagamento.getOrDefault("origemTipoBase", "COMPRA").toString();
+        String origemTipoBase = dadosPagamento.getOrDefault("origemTipoBase", "COMPRA").toString().toUpperCase();
+        int diasEntreParcelas = extrairDiasEntreParcelas(dadosPagamento, formaPagamento);
+        boolean compraComPagamentoImediato = "COMPRA".equalsIgnoreCase(origemTipoBase) && diasEntreParcelas <= 0;
+        String numeroDocBoleto = extrairNumeroDocBoleto(dadosPagamento);
+
+        String descricaoContaBase = descricaoBase;
+        if (!numeroDocBoleto.isBlank()) {
+            descricaoContaBase = descricaoBase + " [Doc " + numeroDocBoleto + "]";
+        }
+
         CategoriaFinanceira categoriaFinanceira = resolverCategoriaFinanceira(dadosPagamento.get("categoriaFinanceiraId"), empresaId);
         if (categoriaFinanceira == null && isCompraNotaFiscalDePeca(descricaoBase)) {
             categoriaFinanceira = resolverOuCriarCategoriaPeca(empresa);
+        }
+        if (categoriaFinanceira == null && "FRETE".equalsIgnoreCase(origemTipoBase)) {
+            categoriaFinanceira = resolverOuCriarCategoriaFrete(empresa);
         }
         Fornecedor fornecedor = resolverFornecedor(dadosPagamento.get("fornecedorId"), empresaId);
         LocalDate hoje = LocalDate.now();
@@ -507,12 +544,13 @@ public class ContaServiceImpl implements ContaService {
                     .categoriaFinanceira(categoriaFinanceira)
                     .fornecedor(fornecedor)
                     .tipo("A_PAGAR")
-                    .descricao(descricaoBase + " (" + formaPagamento + " " + totalParcelas + "x)")
+                    .descricao(descricaoContaBase)
                     .valor(roundCurrency(valorTotal))
                     .mesReferencia(hoje.getMonthValue())
                     .anoReferencia(hoje.getYear())
                     .dataVencimento(hoje)
-                    .pago(false)
+                    .pago(compraComPagamentoImediato)
+                    .dataPagamento(compraComPagamentoImediato ? hoje.atStartOfDay() : null)
                     .totalParcelas(totalParcelas)
                     .origemTipo(origemTipoBase + "_PARCELADO")
                     .build();
@@ -549,7 +587,8 @@ public class ContaServiceImpl implements ContaService {
                         .totalParcelas(totalParcelas)
                         .dataVencimento(vencimento)
                         .valor(roundCurrency(valorParcela))
-                        .pago(false)
+                    .pago(compraComPagamentoImediato)
+                    .dataPagamento(compraComPagamentoImediato ? hoje.atStartOfDay() : null)
                         .build();
                 parcelas.add(parcela);
             }
@@ -573,12 +612,13 @@ public class ContaServiceImpl implements ContaService {
                         .categoriaFinanceira(categoriaFinanceira)
                         .fornecedor(fornecedor)
                         .tipo("A_PAGAR")
-                        .descricao(descricaoBase + " (Crédito " + parcelas + "x)")
+                        .descricao(descricaoContaBase)
                         .valor(roundCurrency(valorTotal))
                         .mesReferencia(hoje.getMonthValue())
                         .anoReferencia(hoje.getYear())
                         .dataVencimento(hoje)
-                        .pago(false)
+                        .pago(compraComPagamentoImediato)
+                        .dataPagamento(compraComPagamentoImediato ? hoje.atStartOfDay() : null)
                         .totalParcelas(parcelas)
                         .origemTipo(origemTipoBase + "_CREDITO")
                         .build();
@@ -586,14 +626,17 @@ public class ContaServiceImpl implements ContaService {
 
                 List<ContaParcela> parcelasGeradas = new ArrayList<>();
                 for (int i = 0; i < parcelas; i++) {
-                    LocalDate venc = hoje.plusMonths(i);
+                    LocalDate venc = compraComPagamentoImediato
+                            ? hoje
+                            : (diasEntreParcelas > 0 ? hoje.plusDays((long) diasEntreParcelas * i) : hoje.plusMonths(i));
                     ContaParcela parcela = ContaParcela.builder()
                             .conta(contaPai)
                             .parcelaNumero(i + 1)
                             .totalParcelas(parcelas)
                             .dataVencimento(venc)
                             .valor(roundCurrency(valorParcela))
-                            .pago(false)
+                            .pago(compraComPagamentoImediato)
+                            .dataPagamento(compraComPagamentoImediato ? hoje.atStartOfDay() : null)
                             .build();
                     parcelasGeradas.add(parcela);
                 }
@@ -602,32 +645,36 @@ public class ContaServiceImpl implements ContaService {
                 logger.info("Contas de crédito (compra) geradas: {} parcelas de R$ {}", parcelas, valorParcela);
             }
             case "BOLETO" -> {
-                LocalDate venc = extrairDataVencimentoBoleto(dadosPagamento, hoje.plusDays(30));
+                LocalDate venc = extrairDataVencimentoBoleto(dadosPagamento, hoje.plusDays(Math.max(1, diasEntreParcelas)));
+                if (compraComPagamentoImediato) {
+                    venc = hoje;
+                }
                 Conta conta = Conta.builder()
                         .empresa(empresa)
                     .categoriaFinanceira(categoriaFinanceira)
                         .fornecedor(fornecedor)
                         .tipo("A_PAGAR")
-                        .descricao(descricaoBase + " (Boleto)")
+                        .descricao(descricaoContaBase)
                         .valor(roundCurrency(valorTotal))
                         .mesReferencia(venc.getMonthValue())
                         .anoReferencia(venc.getYear())
                         .dataVencimento(venc)
-                        .pago(false)
+                        .pago(compraComPagamentoImediato)
+                        .dataPagamento(compraComPagamentoImediato ? hoje.atStartOfDay() : null)
                         .origemTipo(origemTipoBase + "_BOLETO")
                         .build();
                 contaRepository.save(conta);
                 logger.info("Conta boleto gerada: vencimento {}", venc);
             }
             default -> {
-                boolean manterPagoAutomatico = "COMPRA".equalsIgnoreCase(origemTipoBase);
+                boolean manterPagoAutomatico = "COMPRA".equalsIgnoreCase(origemTipoBase) || diasEntreParcelas <= 0;
 
                 Conta conta = Conta.builder()
                         .empresa(empresa)
                     .categoriaFinanceira(categoriaFinanceira)
                         .fornecedor(fornecedor)
                         .tipo("A_PAGAR")
-                        .descricao(descricaoBase + " (" + formaPagamento + ")")
+                        .descricao(descricaoContaBase)
                         .valor(valorTotal)
                         .mesReferencia(hoje.getMonthValue())
                         .anoReferencia(hoje.getYear())
@@ -863,9 +910,15 @@ public class ContaServiceImpl implements ContaService {
     }
     @Override
     @Transactional
-    public Conta editar(Long id, Conta dados) {
+    public Conta editar(Long id, Map<String, Object> dados) {
         if (id != null && id < 0) {
-            ContaParcelaDTO parcela = editarParcelaDTO(Math.abs(id), dados.getValor(), dados.getDataVencimento());
+            Double valor = dados.get("valor") != null ? Double.parseDouble(dados.get("valor").toString()) : null;
+            LocalDate dataVencimento = null;
+            Object dataVencimentoObj = dados.get("dataVencimento");
+            if (dataVencimentoObj != null) {
+                dataVencimento = LocalDate.parse(dataVencimentoObj.toString());
+            }
+            ContaParcelaDTO parcela = editarParcelaDTO(Math.abs(id), valor, dataVencimento);
             return converterParcelaEmLinha(parcela);
         }
 
@@ -879,12 +932,30 @@ public class ContaServiceImpl implements ContaService {
         if (Boolean.TRUE.equals(conta.getPago())) {
             throw new IllegalArgumentException("Não é possível editar uma conta já paga.");
         }
-        if (dados.getDescricao() != null) conta.setDescricao(dados.getDescricao());
-        if (dados.getValor() != null) conta.setValor(dados.getValor());
-        if (dados.getDataVencimento() != null) {
-            conta.setDataVencimento(dados.getDataVencimento());
-            conta.setMesReferencia(dados.getDataVencimento().getMonthValue());
-            conta.setAnoReferencia(dados.getDataVencimento().getYear());
+
+        Object descricaoObj = dados.get("descricao");
+        if (descricaoObj != null) conta.setDescricao(descricaoObj.toString());
+
+        Object valorObj = dados.get("valor");
+        if (valorObj != null) conta.setValor(Double.parseDouble(valorObj.toString()));
+
+        Object dataVencimentoObj = dados.get("dataVencimento");
+        if (dataVencimentoObj != null) {
+            LocalDate dataVencimento = LocalDate.parse(dataVencimentoObj.toString());
+            conta.setDataVencimento(dataVencimento);
+            conta.setMesReferencia(dataVencimento.getMonthValue());
+            conta.setAnoReferencia(dataVencimento.getYear());
+        }
+
+        if (dados.containsKey("categoriaFinanceiraId")) {
+            conta.setCategoriaFinanceira(resolverCategoriaFinanceira(dados.get("categoriaFinanceiraId"), empresaId));
+        }
+        if (dados.containsKey("fornecedorId")) {
+            conta.setFornecedor(resolverFornecedor(dados.get("fornecedorId"), empresaId));
+        }
+        Object origemTipoObj = dados.get("origemTipo");
+        if (origemTipoObj != null && !origemTipoObj.toString().trim().isEmpty()) {
+            conta.setOrigemTipo(origemTipoObj.toString().trim());
         }
         return contaRepository.save(conta);
     }
@@ -1314,6 +1385,48 @@ public class ContaServiceImpl implements ContaService {
         }
 
         return categoria;
+    }
+
+    private CategoriaFinanceira resolverOuCriarCategoriaFrete(Empresa empresa) {
+        final String nomeCategoria = "Frete";
+
+        CategoriaFinanceira categoria = categoriaFinanceiraRepository
+                .findByEmpresaIdAndNomeIgnoreCase(empresa.getId(), nomeCategoria)
+                .orElseGet(() -> {
+                    CategoriaFinanceira nova = new CategoriaFinanceira();
+                    nova.setEmpresa(empresa);
+                    nova.setNome(nomeCategoria);
+                    nova.setDescricao("Categoria padrão para lançamentos de frete");
+                    nova.setAtivo(true);
+                    return categoriaFinanceiraRepository.save(nova);
+                });
+
+        if (!Boolean.TRUE.equals(categoria.getAtivo())) {
+            categoria.setAtivo(true);
+            categoria = categoriaFinanceiraRepository.save(categoria);
+        }
+
+        return categoria;
+    }
+
+    private String extrairNumeroDocBoleto(Map<String, Object> dadosPagamento) {
+        Object docObj = dadosPagamento.get("boletoNumeroDocumento");
+        if (docObj == null) {
+            return "";
+        }
+        return docObj.toString().trim();
+    }
+
+    private int extrairDiasEntreParcelas(Map<String, Object> dadosPagamento, String formaPagamento) {
+        Object diasObj = dadosPagamento.get("diasEntreParcelas");
+        if (diasObj == null) {
+            return 30;
+        }
+        try {
+            return Integer.parseInt(diasObj.toString());
+        } catch (NumberFormatException e) {
+            return 30;
+        }
     }
 
     private CategoriaFinanceira resolverCategoriaFinanceira(Object categoriaIdObj, Long empresaId) {

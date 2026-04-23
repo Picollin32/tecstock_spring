@@ -480,6 +480,8 @@ public class MovimentacaoEstoqueServiceImpl implements MovimentacaoEstoqueServic
             contaService.deletarContasCompra(numeroVigente);
             String descNota = "Compra NF " + numeroVigente;
             String formaPagamento = pagamento.getOrDefault("formaPagamento", "AVISTA").toString();
+            pagamento.put("fornecedorId", fornecedorId);
+            pagamento.put("origemTipoBase", "COMPRA");
             if (!"AVISTA".equals(formaPagamento)) {
                 contaService.gerarContasParaCompra(pagamento, valorTotal, descNota);
             } else {

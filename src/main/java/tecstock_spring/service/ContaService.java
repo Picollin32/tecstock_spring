@@ -32,7 +32,7 @@ public interface ContaService {
 
     void deletar(Long id);
 
-    Conta editar(Long id, Conta dados);
+    Conta editar(Long id, Map<String, Object> dados);
 
     void removerContasDaOS(Long osId);
 
