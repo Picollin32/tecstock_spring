@@ -62,6 +62,7 @@ public class ContaServiceImpl implements ContaService {
 
         Empresa empresa = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+        CategoriaFinanceira categoriaOS = resolverOuCriarCategoriaOS(empresa);
 
         LocalDateTime encerramento = os.getDataHoraEncerramento() != null
                 ? os.getDataHoraEncerramento()
@@ -78,24 +79,26 @@ public class ContaServiceImpl implements ContaService {
         boolean isCredito = !isFiado && !isBoleto && os.getNumeroParcelas() != null && os.getNumeroParcelas() > 1;
 
         if (isFiado) {
-            gerarContasFiado(os, empresa, mesBase, anoBase, valorTotal, encerramento);
+            gerarContasFiado(os, empresa, mesBase, anoBase, valorTotal, encerramento, categoriaOS);
         } else if (isBoleto) {
-            gerarContasBoleto(os, empresa, valorTotal, encerramento);
+            gerarContasBoleto(os, empresa, valorTotal, encerramento, categoriaOS);
         } else if (isCredito) {
-            gerarContasCredito(os, empresa, mesBase, anoBase, valorTotal, encerramento);
+            gerarContasCredito(os, empresa, mesBase, anoBase, valorTotal, encerramento, categoriaOS);
         } else {
-            gerarContaAvista(os, empresa, mesBase, anoBase, valorTotal, encerramento);
+            gerarContaAvista(os, empresa, mesBase, anoBase, valorTotal, encerramento, categoriaOS);
         }
     }
 
     private void gerarContaAvista(OrdemServico os, Empresa empresa,
-                                   int mes, int ano, double valor, LocalDateTime encerramento) {
+                                   int mes, int ano, double valor, LocalDateTime encerramento,
+                                   CategoriaFinanceira categoriaOS) {
         String nomePagamento = os.getTipoPagamento() != null ? os.getTipoPagamento().getNome() : "Pagamento";
         String descricao = "OS #" + os.getNumeroOS() + " – " + os.getClienteNome()
                 + " (" + nomePagamento + ")";
 
         Conta conta = Conta.builder()
                 .empresa(empresa)
+            .categoriaFinanceira(categoriaOS)
                 .tipo("A_RECEBER")
                 .descricao(descricao)
                 .valor(valor)
@@ -115,7 +118,8 @@ public class ContaServiceImpl implements ContaService {
 
     private void gerarContasCredito(OrdemServico os, Empresa empresa,
                                      int mesBase, int anoBase, double valorTotal,
-                                     LocalDateTime encerramento) {
+                                     LocalDateTime encerramento,
+                                     CategoriaFinanceira categoriaOS) {
         int parcelas = os.getNumeroParcelas();
         double valorParcela = Math.round((valorTotal / parcelas) * 100.0) / 100.0;
         String nomePagamento = os.getTipoPagamento() != null ? os.getTipoPagamento().getNome() : "Crédito";
@@ -125,6 +129,7 @@ public class ContaServiceImpl implements ContaService {
 
         Conta contaPai = Conta.builder()
             .empresa(empresa)
+            .categoriaFinanceira(categoriaOS)
             .tipo("A_RECEBER")
             .descricao(descricao)
             .valor(roundCurrency(valorTotal))
@@ -173,7 +178,8 @@ public class ContaServiceImpl implements ContaService {
     }
 
     @SuppressWarnings("null")
-    private void gerarContasBoleto(OrdemServico os, Empresa empresa, double valorTotal, LocalDateTime encerramento) {
+    private void gerarContasBoleto(OrdemServico os, Empresa empresa, double valorTotal, LocalDateTime encerramento,
+                                   CategoriaFinanceira categoriaOS) {
         int parcelas = resolverQuantidadeParcelasBoleto(os);
         int diasEntreParcelas = resolverDiasEntreParcelas(os);
         String nomePagamento = os.getTipoPagamento() != null ? os.getTipoPagamento().getNome() : "Boleto";
@@ -191,6 +197,7 @@ public class ContaServiceImpl implements ContaService {
 
             Conta conta = Conta.builder()
                     .empresa(empresa)
+                    .categoriaFinanceira(categoriaOS)
                     .tipo("A_RECEBER")
                     .descricao(descricao)
                     .valor(roundCurrency(valorUnico))
@@ -226,6 +233,7 @@ public class ContaServiceImpl implements ContaService {
 
         Conta contaPai = Conta.builder()
                 .empresa(empresa)
+            .categoriaFinanceira(categoriaOS)
                 .tipo("A_RECEBER")
                 .descricao(descricao)
                 .valor(roundCurrency(valorTotal))
@@ -343,21 +351,21 @@ public class ContaServiceImpl implements ContaService {
 
     private void gerarContasFiado(OrdemServico os, Empresa empresa,
                                    int mesBase, int anoBase, double valorTotal,
-                                   LocalDateTime encerramento) {
+                       LocalDateTime encerramento,
+                       CategoriaFinanceira categoriaOS) {
         int diasPrazo = os.getPrazoFiadoDias();
 
         LocalDate dataEncerramento = encerramento.toLocalDate();
         LocalDate vencimentoFinal = dataEncerramento.plusDays(diasPrazo);
-        YearMonth inicio = YearMonth.from(dataEncerramento);
-        YearMonth fim = YearMonth.from(vencimentoFinal);
-
-        int totalMeses = (int) ChronoUnit.MONTHS.between(inicio, fim) + 1;
+        int totalMeses = (os.getNumeroParcelas() != null && os.getNumeroParcelas() > 0)
+            ? os.getNumeroParcelas()
+            : ((int) ChronoUnit.MONTHS.between(YearMonth.from(dataEncerramento), YearMonth.from(vencimentoFinal)) + 1);
         if (totalMeses < 1) totalMeses = 1;
 
         String grupoId = UUID.randomUUID().toString();
 
         for (int i = 0; i < totalMeses; i++) {
-            YearMonth referencia = inicio.plusMonths(i);
+            YearMonth referencia = YearMonth.from(dataEncerramento).plusMonths(i);
             int mes = referencia.getMonthValue();
             int ano = referencia.getYear();
 
@@ -366,6 +374,7 @@ public class ContaServiceImpl implements ContaService {
 
             Conta conta = Conta.builder()
                     .empresa(empresa)
+                    .categoriaFinanceira(categoriaOS)
                     .tipo("A_RECEBER")
                     .descricao(descricao)
                     .valor(valorTotal)
@@ -383,6 +392,28 @@ public class ContaServiceImpl implements ContaService {
         }
         logger.info("Contas de fiado geradas para OS {} – {} meses até {} (R$ {} cada) – grupoId: {}",
             os.getNumeroOS(), totalMeses, vencimentoFinal, valorTotal, grupoId);
+    }
+
+    private CategoriaFinanceira resolverOuCriarCategoriaOS(Empresa empresa) {
+        final String nomeCategoria = "OS";
+
+        CategoriaFinanceira categoria = categoriaFinanceiraRepository
+                .findByEmpresaIdAndNomeIgnoreCase(empresa.getId(), nomeCategoria)
+                .orElseGet(() -> {
+                    CategoriaFinanceira nova = new CategoriaFinanceira();
+                    nova.setEmpresa(empresa);
+                    nova.setNome(nomeCategoria);
+                    nova.setDescricao("Categoria padrão para contas de Ordem de Serviço");
+                    nova.setAtivo(true);
+                    return categoriaFinanceiraRepository.save(nova);
+                });
+
+        if (!Boolean.TRUE.equals(categoria.getAtivo())) {
+            categoria.setAtivo(true);
+            categoria = categoriaFinanceiraRepository.save(categoria);
+        }
+
+        return categoria;
     }
 
     @Override
@@ -509,10 +540,10 @@ public class ContaServiceImpl implements ContaService {
         Empresa empresa = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
 
-        String formaPagamento = dadosPagamento.getOrDefault("formaPagamento", "AVISTA").toString();
+        String formaPagamento = dadosPagamento.getOrDefault("formaPagamento", "AVISTA").toString().toUpperCase();
         String origemTipoBase = dadosPagamento.getOrDefault("origemTipoBase", "COMPRA").toString().toUpperCase();
         int diasEntreParcelas = extrairDiasEntreParcelas(dadosPagamento, formaPagamento);
-        boolean compraComPagamentoImediato = "COMPRA".equalsIgnoreCase(origemTipoBase) && diasEntreParcelas <= 0;
+        boolean pagamentoImediato = "AVISTA".equalsIgnoreCase(formaPagamento);
         String numeroDocBoleto = extrairNumeroDocBoleto(dadosPagamento);
 
         String descricaoContaBase = descricaoBase;
@@ -549,10 +580,10 @@ public class ContaServiceImpl implements ContaService {
                     .mesReferencia(hoje.getMonthValue())
                     .anoReferencia(hoje.getYear())
                     .dataVencimento(hoje)
-                    .pago(compraComPagamentoImediato)
-                    .dataPagamento(compraComPagamentoImediato ? hoje.atStartOfDay() : null)
+                    .pago(pagamentoImediato)
+                    .dataPagamento(pagamentoImediato ? hoje.atStartOfDay() : null)
                     .totalParcelas(totalParcelas)
-                    .origemTipo(origemTipoBase + "_PARCELADO")
+                    .origemTipo(origemTipoBase + "_" + formaPagamento)
                     .build();
 
             contaPai = contaRepository.save(contaPai);
@@ -587,8 +618,8 @@ public class ContaServiceImpl implements ContaService {
                         .totalParcelas(totalParcelas)
                         .dataVencimento(vencimento)
                         .valor(roundCurrency(valorParcela))
-                    .pago(compraComPagamentoImediato)
-                    .dataPagamento(compraComPagamentoImediato ? hoje.atStartOfDay() : null)
+                    .pago(pagamentoImediato)
+                    .dataPagamento(pagamentoImediato ? hoje.atStartOfDay() : null)
                         .build();
                 parcelas.add(parcela);
             }
@@ -617,8 +648,8 @@ public class ContaServiceImpl implements ContaService {
                         .mesReferencia(hoje.getMonthValue())
                         .anoReferencia(hoje.getYear())
                         .dataVencimento(hoje)
-                        .pago(compraComPagamentoImediato)
-                        .dataPagamento(compraComPagamentoImediato ? hoje.atStartOfDay() : null)
+                        .pago(false)
+                        .dataPagamento(null)
                         .totalParcelas(parcelas)
                         .origemTipo(origemTipoBase + "_CREDITO")
                         .build();
@@ -626,17 +657,15 @@ public class ContaServiceImpl implements ContaService {
 
                 List<ContaParcela> parcelasGeradas = new ArrayList<>();
                 for (int i = 0; i < parcelas; i++) {
-                    LocalDate venc = compraComPagamentoImediato
-                            ? hoje
-                            : (diasEntreParcelas > 0 ? hoje.plusDays((long) diasEntreParcelas * i) : hoje.plusMonths(i));
+                        LocalDate venc = diasEntreParcelas > 0 ? hoje.plusDays((long) diasEntreParcelas * i) : hoje.plusMonths(i);
                     ContaParcela parcela = ContaParcela.builder()
                             .conta(contaPai)
                             .parcelaNumero(i + 1)
                             .totalParcelas(parcelas)
                             .dataVencimento(venc)
                             .valor(roundCurrency(valorParcela))
-                            .pago(compraComPagamentoImediato)
-                            .dataPagamento(compraComPagamentoImediato ? hoje.atStartOfDay() : null)
+                            .pago(false)
+                            .dataPagamento(null)
                             .build();
                     parcelasGeradas.add(parcela);
                 }
@@ -644,11 +673,46 @@ public class ContaServiceImpl implements ContaService {
                 atualizarContaPaiAPartirParcelas(contaPai);
                 logger.info("Contas de crédito (compra) geradas: {} parcelas de R$ {}", parcelas, valorParcela);
             }
+            case "FIADO" -> {
+                int parcelas = Integer.parseInt(dadosPagamento.getOrDefault("numeroParcelas", "1").toString());
+                double valorParcela = Math.round((valorTotal / parcelas) * 100.0) / 100.0;
+                Conta contaPai = Conta.builder()
+                        .empresa(empresa)
+                        .categoriaFinanceira(categoriaFinanceira)
+                        .fornecedor(fornecedor)
+                        .tipo("A_PAGAR")
+                        .descricao(descricaoContaBase)
+                        .valor(roundCurrency(valorTotal))
+                        .mesReferencia(hoje.getMonthValue())
+                        .anoReferencia(hoje.getYear())
+                        .dataVencimento(hoje)
+                        .pago(false)
+                        .dataPagamento(null)
+                        .totalParcelas(parcelas)
+                        .origemTipo(origemTipoBase + "_FIADO")
+                        .build();
+                contaPai = contaRepository.save(contaPai);
+
+                List<ContaParcela> parcelasGeradas = new ArrayList<>();
+                for (int i = 0; i < parcelas; i++) {
+                    LocalDate venc = diasEntreParcelas > 0 ? hoje.plusDays((long) diasEntreParcelas * i) : hoje.plusMonths(i);
+                    ContaParcela parcela = ContaParcela.builder()
+                            .conta(contaPai)
+                            .parcelaNumero(i + 1)
+                            .totalParcelas(parcelas)
+                            .dataVencimento(venc)
+                            .valor(roundCurrency(valorParcela))
+                            .pago(false)
+                            .dataPagamento(null)
+                            .build();
+                    parcelasGeradas.add(parcela);
+                }
+                contaParcelaRepository.saveAll(parcelasGeradas);
+                atualizarContaPaiAPartirParcelas(contaPai);
+                logger.info("Contas de fiado (compra) geradas: {} parcelas de R$ {}", parcelas, valorParcela);
+            }
             case "BOLETO" -> {
                 LocalDate venc = extrairDataVencimentoBoleto(dadosPagamento, hoje.plusDays(Math.max(1, diasEntreParcelas)));
-                if (compraComPagamentoImediato) {
-                    venc = hoje;
-                }
                 Conta conta = Conta.builder()
                         .empresa(empresa)
                     .categoriaFinanceira(categoriaFinanceira)
@@ -659,15 +723,15 @@ public class ContaServiceImpl implements ContaService {
                         .mesReferencia(venc.getMonthValue())
                         .anoReferencia(venc.getYear())
                         .dataVencimento(venc)
-                        .pago(compraComPagamentoImediato)
-                        .dataPagamento(compraComPagamentoImediato ? hoje.atStartOfDay() : null)
+                        .pago(false)
+                        .dataPagamento(null)
                         .origemTipo(origemTipoBase + "_BOLETO")
                         .build();
                 contaRepository.save(conta);
                 logger.info("Conta boleto gerada: vencimento {}", venc);
             }
             default -> {
-                boolean manterPagoAutomatico = "COMPRA".equalsIgnoreCase(origemTipoBase) || diasEntreParcelas <= 0;
+                    boolean manterPagoAutomatico = pagamentoImediato;
 
                 Conta conta = Conta.builder()
                         .empresa(empresa)

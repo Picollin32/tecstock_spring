@@ -204,6 +204,17 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
             return;
         }
 
+        if (formaInformada != null && formaInformada == 4) {
+            if (tipoPagamento.getQuantidadeParcelas() < 1) {
+                tipoPagamento.setQuantidadeParcelas(1);
+            }
+            if (tipoPagamento.getDiasEntreParcelas() < 1) {
+                tipoPagamento.setDiasEntreParcelas(30);
+            }
+            tipoPagamento.setIdFormaPagamento(4);
+            return;
+        }
+
         if (tipoPagamento.getQuantidadeParcelas() < 2) {
             tipoPagamento.setQuantidadeParcelas(2);
         }
