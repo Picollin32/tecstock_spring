@@ -142,6 +142,21 @@ public class ContaController {
         }
     }
 
+    @DeleteMapping("/{id}/serie")
+    public ResponseEntity<?> deletarSerieAssinatura(@PathVariable Long id) {
+        logger.info("Deletando série da assinatura da conta {}", id);
+        try {
+            contaService.deletarSerieAssinatura(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            logger.warn("Exclusão de série negada para conta {}: {}", id, e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (RuntimeException e) {
+            logger.error("Erro ao deletar série da conta {}: {}", id, e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PostMapping("/a-pagar/frete")
     public ResponseEntity<?> adicionarFrete(@RequestBody Map<String, Object> body) {
         logger.info("Adicionando frete avulso");

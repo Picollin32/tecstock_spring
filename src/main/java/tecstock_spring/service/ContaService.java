@@ -57,4 +57,8 @@ public interface ContaService {
     ContaParcelaDTO editarParcela(Long parcelaId, ContaParcelaEdicaoDTO dados);
 
     void deletarParcela(Long parcelaId);
+
+    void deletarParcelaERestantes(Long parcelaId);
+
+    void deletarSerieAssinatura(Long contaId);
 }

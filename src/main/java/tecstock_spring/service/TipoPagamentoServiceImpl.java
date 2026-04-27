@@ -197,10 +197,12 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
         Integer formaInformada = tipoPagamento.getIdFormaPagamento();
         if (formaInformada != null && formaInformada == 3) {
             int meses = Math.max(1, Math.min(12, tipoPagamento.getQuantidadeParcelas()));
+            Integer diasInformados = tipoPagamento.getDiasEntreParcelas();
+            int diasEntreParcelas = diasInformados == null ? 30 : Math.max(1, diasInformados);
             tipoPagamento.setQuantidadeParcelas(meses);
-            tipoPagamento.setDiasEntreParcelas(30);
+            tipoPagamento.setDiasEntreParcelas(diasEntreParcelas);
             tipoPagamento.setIdFormaPagamento(3);
-            tipoPagamento.setNome(ajustarNomeBoleto(tipoPagamento.getNome(), meses));
+            tipoPagamento.setNome(ajustarNomeBoleto(tipoPagamento.getNome(), meses, diasEntreParcelas));
             return;
         }
 
@@ -215,6 +217,15 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
             return;
         }
 
+        if (formaInformada != null && formaInformada == 2) {
+            if (tipoPagamento.getQuantidadeParcelas() < 2) {
+                tipoPagamento.setQuantidadeParcelas(2);
+            }
+            tipoPagamento.setDiasEntreParcelas(30);
+            tipoPagamento.setIdFormaPagamento(2);
+            return;
+        }
+
         if (tipoPagamento.getQuantidadeParcelas() < 2) {
             tipoPagamento.setQuantidadeParcelas(2);
         }
@@ -224,15 +235,16 @@ public class TipoPagamentoServiceImpl implements TipoPagamentoService {
         tipoPagamento.setIdFormaPagamento(2);
     }
 
-    private String ajustarNomeBoleto(String nomeOriginal, int meses) {
+    private String ajustarNomeBoleto(String nomeOriginal, int meses, int diasEntreParcelas) {
         String nome = nomeOriginal == null ? "" : nomeOriginal.trim();
         String nomeBase = nome.replaceFirst("\\s*\\((\\d{1,3}(?:/\\d{1,3})*)\\)\\s*$", "");
+        int intervalo = diasEntreParcelas < 1 ? 30 : diasEntreParcelas;
         StringBuilder prazos = new StringBuilder();
         for (int i = 1; i <= meses; i++) {
             if (i > 1) {
                 prazos.append('/');
             }
-            prazos.append(i * 30);
+            prazos.append(i * intervalo);
         }
         return nomeBase + " (" + prazos + ")";
     }

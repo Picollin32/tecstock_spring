@@ -3,6 +3,7 @@ package tecstock_spring.service;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tecstock_spring.dto.ContaComParcelasDTO;
@@ -545,6 +546,24 @@ public class ContaServiceImpl implements ContaService {
         int diasEntreParcelas = extrairDiasEntreParcelas(dadosPagamento, formaPagamento);
         boolean pagamentoImediato = "AVISTA".equalsIgnoreCase(formaPagamento);
         String numeroDocBoleto = extrairNumeroDocBoleto(dadosPagamento);
+        boolean isAssinatura = extrairBoolean(dadosPagamento.get("isAssinatura")) || extrairBoolean(dadosPagamento.get("assinatura"));
+        String assinaturaFrequencia = extrairFrequenciaAssinatura(dadosPagamento.get("assinaturaFrequencia"));
+        LocalDate assinaturaDataInicio = extrairDataAssinatura(dadosPagamento.get("assinaturaDataInicio"));
+        LocalDate assinaturaDataFim = extrairDataAssinaturaOpcional(dadosPagamento.get("assinaturaDataFim"));
+
+        if (isAssinatura) {
+            if (assinaturaFrequencia == null) {
+                throw new IllegalArgumentException("Frequência da assinatura é obrigatória.");
+            }
+            if (assinaturaDataInicio == null) {
+                throw new IllegalArgumentException("Data de início da assinatura é obrigatória.");
+            }
+            if (assinaturaDataFim != null && assinaturaDataFim.isBefore(assinaturaDataInicio)) {
+                throw new IllegalArgumentException("Data de fim da assinatura não pode ser anterior à data de início.");
+            }
+            formaPagamento = "CREDITO";
+            pagamentoImediato = false;
+        }
 
         String descricaoContaBase = descricaoBase;
         if (!numeroDocBoleto.isBlank()) {
@@ -560,6 +579,70 @@ public class ContaServiceImpl implements ContaService {
         }
         Fornecedor fornecedor = resolverFornecedor(dadosPagamento.get("fornecedorId"), empresaId);
         LocalDate hoje = LocalDate.now();
+
+        if (isAssinatura) {
+            String grupoId = UUID.randomUUID().toString();
+
+            if (assinaturaDataFim != null) {
+                LocalDate recorrencia = assinaturaDataInicio;
+                int totalGerado = 0;
+
+                while (!recorrencia.isAfter(assinaturaDataFim)) {
+                    Conta contaAssinatura = Conta.builder()
+                            .empresa(empresa)
+                            .categoriaFinanceira(categoriaFinanceira)
+                            .fornecedor(fornecedor)
+                            .tipo("A_PAGAR")
+                            .descricao(descricaoContaBase)
+                            .valor(roundCurrency(valorTotal))
+                            .mesReferencia(recorrencia.getMonthValue())
+                            .anoReferencia(recorrencia.getYear())
+                            .dataVencimento(recorrencia)
+                            .pago(false)
+                            .dataPagamento(null)
+                            .origemTipo(origemTipoBase + "_ASSINATURA")
+                            .assinatura(true)
+                            .assinaturaFrequencia(assinaturaFrequencia)
+                            .assinaturaDataInicio(assinaturaDataInicio)
+                            .assinaturaDataFim(assinaturaDataFim)
+                            .fiadoGrupoId(grupoId)
+                            .build();
+
+                    contaRepository.save(contaAssinatura);
+                    totalGerado++;
+                    recorrencia = calcularProximaRecorrencia(recorrencia, assinaturaFrequencia);
+                }
+
+                logger.info("Assinatura com fim gerada: grupoId={}, frequencia={}, inicio={}, fim={}, totalLancamentos={}",
+                        grupoId, assinaturaFrequencia, assinaturaDataInicio, assinaturaDataFim, totalGerado);
+                return;
+            }
+
+            Conta contaAssinatura = Conta.builder()
+                    .empresa(empresa)
+                    .categoriaFinanceira(categoriaFinanceira)
+                    .fornecedor(fornecedor)
+                    .tipo("A_PAGAR")
+                    .descricao(descricaoContaBase)
+                    .valor(roundCurrency(valorTotal))
+                    .mesReferencia(assinaturaDataInicio.getMonthValue())
+                    .anoReferencia(assinaturaDataInicio.getYear())
+                    .dataVencimento(assinaturaDataInicio)
+                    .pago(false)
+                    .dataPagamento(null)
+                    .origemTipo(origemTipoBase + "_ASSINATURA")
+                    .assinatura(true)
+                    .assinaturaFrequencia(assinaturaFrequencia)
+                    .assinaturaDataInicio(assinaturaDataInicio)
+                    .assinaturaDataFim(null)
+                    .fiadoGrupoId(grupoId)
+                    .build();
+
+            contaRepository.save(contaAssinatura);
+            logger.info("Assinatura recorrente criada: grupoId={}, frequencia={}, inicio={}",
+                    grupoId, assinaturaFrequencia, assinaturaDataInicio);
+            return;
+        }
 
         Object parcelasDetalhadasObj = dadosPagamento.get("parcelasDetalhadas");
         if (parcelasDetalhadasObj instanceof List<?> parcelasDetalhadas && !parcelasDetalhadas.isEmpty()) {
@@ -657,7 +740,7 @@ public class ContaServiceImpl implements ContaService {
 
                 List<ContaParcela> parcelasGeradas = new ArrayList<>();
                 for (int i = 0; i < parcelas; i++) {
-                        LocalDate venc = diasEntreParcelas > 0 ? hoje.plusDays((long) diasEntreParcelas * i) : hoje.plusMonths(i);
+                    LocalDate venc = hoje.plusDays((long) diasEntreParcelas * i);
                     ContaParcela parcela = ContaParcela.builder()
                             .conta(contaPai)
                             .parcelaNumero(i + 1)
@@ -695,7 +778,7 @@ public class ContaServiceImpl implements ContaService {
 
                 List<ContaParcela> parcelasGeradas = new ArrayList<>();
                 for (int i = 0; i < parcelas; i++) {
-                    LocalDate venc = diasEntreParcelas > 0 ? hoje.plusDays((long) diasEntreParcelas * i) : hoje.plusMonths(i);
+                    LocalDate venc = hoje.plusDays((long) diasEntreParcelas * i);
                     ContaParcela parcela = ContaParcela.builder()
                             .conta(contaPai)
                             .parcelaNumero(i + 1)
@@ -752,6 +835,83 @@ public class ContaServiceImpl implements ContaService {
                         formaPagamento, origemTipoBase, valorTotal, manterPagoAutomatico);
             }
         }
+    }
+
+    @SuppressWarnings("null")
+    @Scheduled(cron = "${app.assinatura.recorrencia.cron:0 10 0 * * *}")
+    @Transactional
+    public void processarRecorrenciasAssinatura() {
+        LocalDate hoje = LocalDate.now();
+        List<Conta> assinaturasAtivas = contaRepository.findAssinaturasRecorrentesAtivas();
+        if (assinaturasAtivas.isEmpty()) {
+            return;
+        }
+
+        Map<String, Conta> ultimaPorGrupo = new HashMap<>();
+        for (Conta conta : assinaturasAtivas) {
+            String grupoId = conta.getFiadoGrupoId();
+            if (grupoId == null || grupoId.isBlank() || conta.getDataVencimento() == null) {
+                continue;
+            }
+
+            Conta atual = ultimaPorGrupo.get(grupoId);
+            if (atual == null || conta.getDataVencimento().isAfter(atual.getDataVencimento())) {
+                ultimaPorGrupo.put(grupoId, conta);
+            }
+        }
+
+        int totalGerado = 0;
+        for (Conta ultima : ultimaPorGrupo.values()) {
+            String grupoId = ultima.getFiadoGrupoId();
+            LocalDate proxima = calcularProximaRecorrencia(ultima.getDataVencimento(), ultima.getAssinaturaFrequencia());
+
+            while (!proxima.isAfter(hoje)) {
+                if (!contaRepository.existsByFiadoGrupoIdAndDataVencimentoAndTipo(grupoId, proxima, "A_PAGAR")) {
+                    Conta nova = Conta.builder()
+                            .empresa(ultima.getEmpresa())
+                            .categoriaFinanceira(ultima.getCategoriaFinanceira())
+                            .fornecedor(ultima.getFornecedor())
+                            .tipo("A_PAGAR")
+                            .descricao(ultima.getDescricao())
+                            .valor(roundCurrency(ultima.getValor() != null ? ultima.getValor() : 0.0))
+                            .mesReferencia(proxima.getMonthValue())
+                            .anoReferencia(proxima.getYear())
+                            .dataVencimento(proxima)
+                            .pago(false)
+                            .dataPagamento(null)
+                            .origemTipo(ultima.getOrigemTipo())
+                            .assinatura(true)
+                            .assinaturaFrequencia(ultima.getAssinaturaFrequencia())
+                            .assinaturaDataInicio(ultima.getAssinaturaDataInicio())
+                            .assinaturaDataFim(null)
+                            .fiadoGrupoId(grupoId)
+                            .build();
+
+                    contaRepository.save(nova);
+                    totalGerado++;
+                }
+                proxima = calcularProximaRecorrencia(proxima, ultima.getAssinaturaFrequencia());
+            }
+        }
+
+        if (totalGerado > 0) {
+            logger.info("Recorrência de assinaturas processada: {} lançamento(s) gerado(s)", totalGerado);
+        }
+    }
+
+    private LocalDate calcularProximaRecorrencia(LocalDate dataBase, String frequencia) {
+        if (dataBase == null) {
+            throw new IllegalArgumentException("Data base da recorrência não pode ser nula.");
+        }
+
+        String freq = frequencia != null ? frequencia.trim().toUpperCase() : "MENSAL";
+        return switch (freq) {
+            case "DIARIA" -> dataBase.plusDays(1);
+            case "SEMANAL" -> dataBase.plusWeeks(1);
+            case "ANUAL" -> dataBase.plusYears(1);
+            case "MENSAL" -> dataBase.plusMonths(1);
+            default -> throw new IllegalArgumentException("Frequência da assinatura inválida.");
+        };
     }
 
     @Override
@@ -946,6 +1106,39 @@ public class ContaServiceImpl implements ContaService {
             return;
         }
 
+        if (Boolean.TRUE.equals(conta.getAssinatura())
+                && conta.getFiadoGrupoId() != null
+                && conta.getAssinaturaDataFim() == null) {
+            List<Conta> grupoAssinatura = contaRepository.findByFiadoGrupoIdAndTipo(conta.getFiadoGrupoId(), "A_PAGAR");
+            LocalDate referenciaCancelamento = conta.getDataVencimento() != null ? conta.getDataVencimento() : LocalDate.now();
+            int futurasRemovidas = 0;
+
+            for (Conta item : grupoAssinatura) {
+                if (item.getId() == null || item.getDataVencimento() == null) {
+                    continue;
+                }
+                if (Objects.equals(item.getId(), conta.getId())) {
+                    continue;
+                }
+
+                if (item.getDataVencimento().isAfter(referenciaCancelamento)) {
+                    contaRepository.delete(item);
+                    futurasRemovidas++;
+                    continue;
+                }
+
+                item.setAssinatura(false);
+                item.setAssinaturaFrequencia(null);
+                item.setAssinaturaDataFim(referenciaCancelamento);
+                contaRepository.save(item);
+            }
+
+            contaRepository.deleteById(Objects.requireNonNull(id));
+            logger.info("Assinatura recorrente cancelada no grupo {}: conta atual removida e {} futura(s) excluída(s)",
+                    conta.getFiadoGrupoId(), futurasRemovidas);
+            return;
+        }
+
         contaRepository.deleteById(Objects.requireNonNull(id));
     }
 
@@ -953,6 +1146,80 @@ public class ContaServiceImpl implements ContaService {
     @Transactional
     public void deletarParcela(Long parcelaId) {
         deletarParcelaById(parcelaId);
+    }
+
+    @SuppressWarnings("null")
+    @Override
+    @Transactional
+    public void deletarParcelaERestantes(Long parcelaId) {
+        Long empresaId = requireEmpresaId();
+        ContaParcela parcela = contaParcelaRepository.findByIdAndContaEmpresaId(parcelaId, empresaId)
+                .orElseThrow(() -> new RuntimeException("Parcela não encontrada: " + parcelaId));
+
+        Conta contaPai = parcela.getConta();
+        List<ContaParcela> todasParcelas = contaParcelaRepository.findByConta_IdOrderByParcelaNumeroAsc(contaPai.getId());
+
+        boolean existeParcelaPaga = todasParcelas.stream().anyMatch(p -> Boolean.TRUE.equals(p.getPago()));
+        if (existeParcelaPaga) {
+            throw new IllegalArgumentException("Não é possível excluir todas as parcelas restantes porque já existe parcela paga.");
+        }
+
+        int numeroAtual = parcela.getParcelaNumero() != null ? parcela.getParcelaNumero() : 1;
+        List<ContaParcela> restantes = new ArrayList<>(todasParcelas.stream()
+            .filter(p -> (p.getParcelaNumero() != null ? p.getParcelaNumero() : 1) >= numeroAtual)
+            .toList());
+
+        if (restantes.isEmpty()) {
+            throw new RuntimeException("Nenhuma parcela restante encontrada para exclusão.");
+        }
+
+        contaParcelaRepository.deleteAll(restantes);
+
+        long quantidadeRestante = contaParcelaRepository.findByConta_IdOrderByParcelaNumeroAsc(contaPai.getId()).size();
+        if (quantidadeRestante <= 0) {
+            contaRepository.deleteById(contaPai.getId());
+            return;
+        }
+
+        atualizarContaPaiAPartirParcelas(contaPai);
+    }
+
+    @Override
+    @Transactional
+    public void deletarSerieAssinatura(Long contaId) {
+        Long empresaId = requireEmpresaId();
+        Conta conta = contaRepository.findById(Objects.requireNonNull(contaId))
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada: " + contaId));
+        validarEmpresa(conta, empresaId);
+
+        if (!Boolean.TRUE.equals(conta.getAssinatura()) || conta.getAssinaturaDataFim() == null) {
+            throw new IllegalArgumentException("A exclusão em série é permitida apenas para assinaturas com data fim.");
+        }
+
+        String grupoId = conta.getFiadoGrupoId();
+        if (grupoId == null || grupoId.isBlank()) {
+            contaRepository.delete(conta);
+            return;
+        }
+
+        List<Conta> grupo = contaRepository.findByFiadoGrupoIdAndTipo(grupoId, "A_PAGAR");
+        int removidas = 0;
+        for (Conta item : grupo) {
+            if (!Objects.equals(item.getEmpresa().getId(), empresaId)) {
+                continue;
+            }
+            if (Boolean.TRUE.equals(item.getAssinatura())) {
+                contaRepository.delete(item);
+                removidas++;
+            }
+        }
+
+        if (removidas == 0) {
+            contaRepository.delete(conta);
+            removidas = 1;
+        }
+
+        logger.info("Série de assinatura removida: contaId={}, grupoId={}, removidas={}", contaId, grupoId, removidas);
     }
 
     @SuppressWarnings("null")
@@ -1017,11 +1284,109 @@ public class ContaServiceImpl implements ContaService {
         if (dados.containsKey("fornecedorId")) {
             conta.setFornecedor(resolverFornecedor(dados.get("fornecedorId"), empresaId));
         }
+        if (dados.containsKey("assinatura")) {
+            boolean assinatura = extrairBoolean(dados.get("assinatura"));
+            conta.setAssinatura(assinatura);
+
+            if (assinatura) {
+                String frequencia = extrairFrequenciaAssinatura(dados.get("assinaturaFrequencia"));
+                LocalDate dataInicio = extrairDataAssinatura(dados.get("assinaturaDataInicio"));
+                LocalDate dataFim = extrairDataAssinaturaOpcional(dados.get("assinaturaDataFim"));
+                if (frequencia == null) {
+                    throw new IllegalArgumentException("Frequência da assinatura é obrigatória.");
+                }
+                if (dataInicio == null) {
+                    throw new IllegalArgumentException("Data de início da assinatura é obrigatória.");
+                }
+                if (dataFim != null && dataFim.isBefore(dataInicio)) {
+                    throw new IllegalArgumentException("Data de fim da assinatura não pode ser anterior à data de início.");
+                }
+                conta.setAssinaturaFrequencia(frequencia);
+                conta.setAssinaturaDataInicio(dataInicio);
+                conta.setAssinaturaDataFim(dataFim);
+            } else {
+                conta.setAssinaturaFrequencia(null);
+                conta.setAssinaturaDataInicio(null);
+                conta.setAssinaturaDataFim(null);
+            }
+        }
         Object origemTipoObj = dados.get("origemTipo");
         if (origemTipoObj != null && !origemTipoObj.toString().trim().isEmpty()) {
             conta.setOrigemTipo(origemTipoObj.toString().trim());
         }
-        return contaRepository.save(conta);
+
+        Conta salva = contaRepository.save(conta);
+
+        if (Boolean.TRUE.equals(salva.getAssinatura()) && salva.getAssinaturaDataFim() != null) {
+            sincronizarAssinaturaComDataFim(salva);
+        }
+
+        return salva;
+    }
+
+    @SuppressWarnings("null")
+    @Transactional
+    protected void sincronizarAssinaturaComDataFim(Conta contaBase) {
+        LocalDate inicio = contaBase.getAssinaturaDataInicio() != null
+                ? contaBase.getAssinaturaDataInicio()
+                : contaBase.getDataVencimento();
+        LocalDate fim = contaBase.getAssinaturaDataFim();
+        if (inicio == null || fim == null) {
+            return;
+        }
+
+        String grupoId = contaBase.getFiadoGrupoId();
+        if (grupoId == null || grupoId.isBlank()) {
+            grupoId = UUID.randomUUID().toString();
+            contaBase.setFiadoGrupoId(grupoId);
+            contaRepository.save(contaBase);
+        }
+
+        List<Conta> grupo = contaRepository.findByFiadoGrupoIdAndTipo(grupoId, "A_PAGAR");
+        if (!grupo.stream().anyMatch(c -> Objects.equals(c.getId(), contaBase.getId()))) {
+            grupo.add(contaBase);
+        }
+
+        for (Conta conta : new ArrayList<>(grupo)) {
+            if (conta.getDataVencimento() != null && conta.getDataVencimento().isAfter(fim)) {
+                contaRepository.delete(conta);
+                grupo.remove(conta);
+            }
+        }
+
+        java.util.Set<LocalDate> existentes = new java.util.HashSet<>();
+        for (Conta conta : grupo) {
+            if (conta.getDataVencimento() != null) {
+                existentes.add(conta.getDataVencimento());
+            }
+        }
+
+        LocalDate recorrencia = inicio;
+        while (!recorrencia.isAfter(fim)) {
+            if (!existentes.contains(recorrencia)) {
+                Conta nova = Conta.builder()
+                        .empresa(contaBase.getEmpresa())
+                        .categoriaFinanceira(contaBase.getCategoriaFinanceira())
+                        .fornecedor(contaBase.getFornecedor())
+                        .tipo("A_PAGAR")
+                        .descricao(contaBase.getDescricao())
+                        .valor(roundCurrency(contaBase.getValor() != null ? contaBase.getValor() : 0.0))
+                        .mesReferencia(recorrencia.getMonthValue())
+                        .anoReferencia(recorrencia.getYear())
+                        .dataVencimento(recorrencia)
+                        .pago(false)
+                        .dataPagamento(null)
+                        .origemTipo(contaBase.getOrigemTipo())
+                        .assinatura(true)
+                        .assinaturaFrequencia(contaBase.getAssinaturaFrequencia())
+                        .assinaturaDataInicio(inicio)
+                        .assinaturaDataFim(fim)
+                        .fiadoGrupoId(grupoId)
+                        .build();
+                contaRepository.save(nova);
+            }
+            recorrencia = calcularProximaRecorrencia(recorrencia, contaBase.getAssinaturaFrequencia());
+        }
     }
 
     @Override
@@ -1482,12 +1847,16 @@ public class ContaServiceImpl implements ContaService {
     }
 
     private int extrairDiasEntreParcelas(Map<String, Object> dadosPagamento, String formaPagamento) {
+        if ("CREDITO".equalsIgnoreCase(formaPagamento)) {
+            return 30;
+        }
+
         Object diasObj = dadosPagamento.get("diasEntreParcelas");
         if (diasObj == null) {
             return 30;
         }
         try {
-            return Integer.parseInt(diasObj.toString());
+            return Math.max(0, Integer.parseInt(diasObj.toString()));
         } catch (NumberFormatException e) {
             return 30;
         }
@@ -1522,6 +1891,56 @@ public class ContaServiceImpl implements ContaService {
 
         return fornecedorRepository.findByIdAndEmpresaId(fornecedorId, empresaId)
                 .orElseThrow(() -> new IllegalArgumentException("Fornecedor não encontrado."));
+    }
+
+    private boolean extrairBoolean(Object valor) {
+        if (valor == null) {
+            return false;
+        }
+        if (valor instanceof Boolean b) {
+            return b;
+        }
+        return "true".equalsIgnoreCase(valor.toString().trim());
+    }
+
+    private String extrairFrequenciaAssinatura(Object frequenciaObj) {
+        if (frequenciaObj == null) {
+            return null;
+        }
+        String frequencia = frequenciaObj.toString().trim().toUpperCase();
+        if (frequencia.isEmpty()) {
+            return null;
+        }
+        return switch (frequencia) {
+            case "DIARIA", "SEMANAL", "MENSAL", "ANUAL" -> frequencia;
+            default -> throw new IllegalArgumentException("Frequência da assinatura inválida.");
+        };
+    }
+
+    private LocalDate extrairDataAssinatura(Object dataObj) {
+        if (dataObj == null) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(dataObj.toString());
+        } catch (RuntimeException e) {
+            throw new IllegalArgumentException("Data da assinatura inválida.");
+        }
+    }
+
+    private LocalDate extrairDataAssinaturaOpcional(Object dataObj) {
+        if (dataObj == null) {
+            return null;
+        }
+        String dataTexto = dataObj.toString().trim();
+        if (dataTexto.isEmpty()) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(dataTexto);
+        } catch (RuntimeException e) {
+            throw new IllegalArgumentException("Data final da assinatura inválida.");
+        }
     }
 
     private LocalDate extrairDataVencimentoBoleto(Map<String, Object> dadosPagamento, LocalDate valorPadrao) {

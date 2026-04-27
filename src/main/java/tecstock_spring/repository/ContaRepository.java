@@ -42,6 +42,13 @@ public interface ContaRepository extends JpaRepository<Conta, Long> {
     @Query("SELECT c FROM Conta c WHERE c.empresa.id = :empresaId AND c.descricao LIKE CONCAT('Compra NF ', :numeroNota, ' %') AND c.tipo = 'A_PAGAR'")
     List<Conta> findContasCompraByNumeroNota(@Param("empresaId") Long empresaId, @Param("numeroNota") String numeroNota);
 
+        @Query("SELECT c FROM Conta c WHERE c.assinatura = true AND c.tipo = 'A_PAGAR' AND c.assinaturaDataFim IS NULL")
+        List<Conta> findAssinaturasRecorrentesAtivas();
+
+        boolean existsByFiadoGrupoIdAndDataVencimentoAndTipo(String fiadoGrupoId, LocalDate dataVencimento, String tipo);
+
+        List<Conta> findByFiadoGrupoIdAndTipo(String fiadoGrupoId, String tipo);
+
         @Query("SELECT COUNT(c) > 0 FROM Conta c WHERE c.empresa.id = :empresaId AND c.categoriaFinanceira.id = :categoriaId")
         boolean existsByEmpresaIdAndCategoriaFinanceiraId(@Param("empresaId") Long empresaId, @Param("categoriaId") Long categoriaId);
 }

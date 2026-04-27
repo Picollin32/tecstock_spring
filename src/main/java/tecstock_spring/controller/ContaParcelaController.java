@@ -100,4 +100,23 @@ public class ContaParcelaController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @DeleteMapping("/api/parcelas/{idParcela}/restantes")
+    public ResponseEntity<?> deletarParcelaERestantes(@PathVariable Long idParcela) {
+        logger.info("Deletando parcela {} e restantes", idParcela);
+        try {
+            contaService.deletarParcelaERestantes(idParcela);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            logger.warn("Exclusão de restantes negada para parcela {}: {}", idParcela, e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (RuntimeException e) {
+            logger.error("Erro ao deletar parcela {} e restantes: {}", idParcela, e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Throwable t) {
+            logger.error("Falha inesperada ao deletar parcela {} e restantes", idParcela, t);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("message", "Falha inesperada ao remover parcelas restantes. Reinicie o backend e tente novamente."));
+        }
+    }
 }

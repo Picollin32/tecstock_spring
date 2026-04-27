@@ -89,6 +89,19 @@ public class Conta {
     @Column(name = "desconto")
     private Double desconto;
 
+    @Column(name = "assinatura")
+    @Builder.Default
+    private Boolean assinatura = false;
+
+    @Column(name = "assinatura_frequencia", length = 20)
+    private String assinaturaFrequencia;
+
+    @Column(name = "assinatura_data_inicio")
+    private LocalDate assinaturaDataInicio;
+
+    @Column(name = "assinatura_data_fim")
+    private LocalDate assinaturaDataFim;
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "categoria_financeira_id")
@@ -117,6 +130,9 @@ public class Conta {
         }
         if (this.pago == null) {
             this.pago = false;
+        }
+        if (this.assinatura == null) {
+            this.assinatura = false;
         }
     }
 
