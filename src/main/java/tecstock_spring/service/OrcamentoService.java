@@ -36,4 +36,6 @@ public interface OrcamentoService {
     Page<Orcamento> buscarPaginado(String query, String tipo, Pageable pageable);
     
     List<Orcamento> listarUltimosParaInicio(int limit);
+
+    List<Orcamento> listarAbertos();
 }

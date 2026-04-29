@@ -5,6 +5,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tecstock_spring.dto.RelatorioAgendamentosDTO;
+import tecstock_spring.dto.RelatorioClientesDTO;
 import tecstock_spring.dto.RelatorioComissaoDTO;
 import tecstock_spring.dto.RelatorioConsultoresDTO;
 import tecstock_spring.dto.RelatorioEstoqueDTO;
@@ -12,6 +13,7 @@ import tecstock_spring.dto.RelatorioFiadoDTO;
 import tecstock_spring.dto.RelatorioFinanceiroDTO;
 import tecstock_spring.dto.RelatorioGarantiasDTO;
 import tecstock_spring.dto.RelatorioServicosDTO;
+import tecstock_spring.dto.RelatorioVeiculosDTO;
 import tecstock_spring.service.RelatorioService;
 
 import java.time.LocalDate;
@@ -93,6 +95,24 @@ public class RelatorioController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
         
         RelatorioConsultoresDTO relatorio = relatorioService.gerarRelatorioConsultores(dataInicio, dataFim);
+        return ResponseEntity.ok(relatorio);
+    }
+
+    @GetMapping("/clientes")
+    public ResponseEntity<RelatorioClientesDTO> gerarRelatorioClientes(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+
+        RelatorioClientesDTO relatorio = relatorioService.gerarRelatorioClientes(dataInicio, dataFim);
+        return ResponseEntity.ok(relatorio);
+    }
+
+    @GetMapping("/veiculos")
+    public ResponseEntity<RelatorioVeiculosDTO> gerarRelatorioVeiculos(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+
+        RelatorioVeiculosDTO relatorio = relatorioService.gerarRelatorioVeiculos(dataInicio, dataFim);
         return ResponseEntity.ok(relatorio);
     }
 }

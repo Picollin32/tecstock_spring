@@ -21,6 +21,9 @@ public class RelatorioGarantiasDTO {
     private Integer totalGarantias;
     private Integer garantiasEmAberto;
     private Integer garantiasEncerradas;
+    private Integer garantiasAtivas;
+    private Integer garantiasReclamadas;
+    private Integer garantiasExpiradas;
     private List<GarantiaItemDTO> garantias;
     
     @Data
@@ -45,5 +48,8 @@ public class RelatorioGarantiasDTO {
         private String consultorNome;
         private Boolean emAberto;
         private String statusDescricao;
+        private String statusGarantia;
+        private String retornoMotivo;
+        private String retornoServicoNome;
     }
 }

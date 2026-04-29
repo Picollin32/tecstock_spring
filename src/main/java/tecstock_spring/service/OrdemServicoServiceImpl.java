@@ -12,6 +12,7 @@ import tecstock_spring.exception.OrdemServicoNotFoundException;
 import tecstock_spring.model.Empresa;
 import tecstock_spring.model.OrdemServico;
 import tecstock_spring.repository.EmpresaRepository;
+import tecstock_spring.repository.GarantiaRetornoRepository;
 import tecstock_spring.repository.OrdemServicoRepository;
 import tecstock_spring.repository.PecaRepository;
 import tecstock_spring.repository.PecaOrdemServicoRepository;
@@ -19,6 +20,7 @@ import tecstock_spring.util.TenantContext;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class OrdemServicoServiceImpl implements OrdemServicoService {
@@ -34,6 +36,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final EmpresaRepository empresaRepository;
     private final OrcamentoService orcamentoService;
     private final ContaService contaService;
+    private final GarantiaRetornoRepository garantiaRetornoRepository;
     private static final Logger logger = LoggerFactory.getLogger(OrdemServicoServiceImpl.class);
 
     public OrdemServicoServiceImpl(
@@ -47,7 +50,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             ChecklistService checklistService,
             EmpresaRepository empresaRepository,
             @Lazy OrcamentoService orcamentoService,
-            @Lazy ContaService contaService) {
+            @Lazy ContaService contaService,
+            GarantiaRetornoRepository garantiaRetornoRepository) {
         this.repository = repository;
         this.pecaRepository = pecaRepository;
         this.pecaOrdemServicoRepository = pecaOrdemServicoRepository;
@@ -59,6 +63,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         this.empresaRepository = empresaRepository;
         this.orcamentoService = orcamentoService;
         this.contaService = contaService;
+        this.garantiaRetornoRepository = garantiaRetornoRepository;
     }
 
     @Override
@@ -133,34 +138,46 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                 .orElseThrow(() -> new OrdemServicoNotFoundException("Ordem de Serviço não encontrada com número: " + numeroOS));
     }
 
+    private void popularTemGarantiaReclamada(List<OrdemServico> lista, Long empresaId) {
+        if (lista == null || lista.isEmpty()) return;
+        Set<Long> osIdsComRetorno = garantiaRetornoRepository.findOrdemServicoIdsWithRetornoByEmpresaId(empresaId);
+        lista.forEach(os -> os.setTemGarantiaReclamada(osIdsComRetorno.contains(os.getId())));
+    }
+
     @Override
     public List<OrdemServico> listarTodos() {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {
             throw new IllegalStateException("ID da empresa não encontrado no contexto");
         }
-        
         List<OrdemServico> ordensServico = repository.findByEmpresaId(empresaId);
-        logger.info(ordensServico.size() + " ordens de serviço encontradas (ordenadas por numeroOS crescente).");
+        logger.info(ordensServico.size() + " ordens de servi\u00e7o encontradas (ordenadas por numeroOS crescente).");
+        popularTemGarantiaReclamada(ordensServico, empresaId);
         return ordensServico;
     }
     
     @Override
     public List<OrdemServico> listarPorCliente(String clienteCpf) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
-        return repository.findByClienteCpfAndEmpresaIdOrderByDataHoraDesc(clienteCpf, empresaId);
+        List<OrdemServico> lista = repository.findByClienteCpfAndEmpresaIdOrderByDataHoraDesc(clienteCpf, empresaId);
+        popularTemGarantiaReclamada(lista, empresaId);
+        return lista;
     }
     
     @Override
     public List<OrdemServico> listarPorVeiculo(String veiculoPlaca) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
-        return repository.findByVeiculoPlacaAndEmpresaIdOrderByDataHoraDesc(veiculoPlaca, empresaId);
+        List<OrdemServico> lista = repository.findByVeiculoPlacaAndEmpresaIdOrderByDataHoraDesc(veiculoPlaca, empresaId);
+        popularTemGarantiaReclamada(lista, empresaId);
+        return lista;
     }
     
     @Override
     public List<OrdemServico> listarPorStatus(String status) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
-        return repository.findByStatusAndEmpresaIdOrderByDataHoraDesc(status, empresaId);
+        List<OrdemServico> lista = repository.findByStatusAndEmpresaIdOrderByDataHoraDesc(status, empresaId);
+        popularTemGarantiaReclamada(lista, empresaId);
+        return lista;
     }
     
     @Override
@@ -322,6 +339,10 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         if ("Encerrada".equalsIgnoreCase(novoStatus)) {
             ordemServico.setDataHoraEncerramento(LocalDateTime.now());
             logger.info("Registrando data/hora de encerramento: " + LocalDateTime.now());
+            if (!Boolean.TRUE.equals(ordemServico.getGarantiaLancada())) {
+                ordemServico.setGarantiaLancada(true);
+                ordemServico.setDataHoraLancamentoGarantia(LocalDateTime.now());
+            }
         }
         
         logger.info("Atualizando apenas status da OS ID: " + id + " para: " + novoStatus);
@@ -353,6 +374,10 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
         ordemServico.setStatus("Encerrada");
         ordemServico.setDataHoraEncerramento(LocalDateTime.now());
+        if (!Boolean.TRUE.equals(ordemServico.getGarantiaLancada())) {
+            ordemServico.setGarantiaLancada(true);
+            ordemServico.setDataHoraLancamentoGarantia(LocalDateTime.now());
+        }
         logger.info("Status da OS alterado para 'Encerrada'");
         logger.info("Data/hora de encerramento registrada: " + LocalDateTime.now());
         logger.info("Iniciando registro dos serviços realizados na OS: " + ordemServico.getNumeroOS());
@@ -679,20 +704,28 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         }
         
         if (query == null || query.trim().isEmpty()) {
-            return repository.findByEmpresaIdOrderByCreatedAtDesc(empresaId, pageable);
+            Page<OrdemServico> pagina = repository.findByEmpresaIdOrderByCreatedAtDesc(empresaId, pageable);
+            popularTemGarantiaReclamada(pagina.getContent(), empresaId);
+            return pagina;
         }
 
         String tipoBusca = tipo == null ? "numero" : tipo.trim().toLowerCase();
         String termo = query.trim();
+        Page<OrdemServico> pagina;
         switch (tipoBusca) {
             case "cliente":
-                return repository.searchByClienteNomeAndEmpresaId(termo, empresaId, pageable);
+                pagina = repository.searchByClienteNomeAndEmpresaId(termo, empresaId, pageable);
+                break;
             case "placa":
-                return repository.searchByVeiculoPlacaAndEmpresaId(termo, empresaId, pageable);
+                pagina = repository.searchByVeiculoPlacaAndEmpresaId(termo, empresaId, pageable);
+                break;
             case "numero":
             default:
-                return repository.searchByNumeroOSAndEmpresaId(termo, empresaId, pageable);
+                pagina = repository.searchByNumeroOSAndEmpresaId(termo, empresaId, pageable);
+                break;
         }
+        popularTemGarantiaReclamada(pagina.getContent(), empresaId);
+        return pagina;
     }
     
     @Override
@@ -703,7 +736,9 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         }
         
         Pageable pageable = PageRequest.of(0, limit);
-        return repository.findTopByEmpresaIdOrderByCreatedAtDesc(empresaId, pageable);
+        List<OrdemServico> lista = repository.findTopByEmpresaIdOrderByCreatedAtDesc(empresaId, pageable);
+        popularTemGarantiaReclamada(lista, empresaId);
+        return lista;
     }
 }
 

@@ -172,10 +172,10 @@ public class OrdemServicoController {
             logger.info("CONTROLLER: Recebida solicitação para reabrir OS com ID: " + id);
             OrdemServico os = service.buscarPorId(id);
             
-            if (!"Encerrada".equals(os.getStatus())) {
+            if (!"Encerrada".equals(os.getStatus()) && !"Reclamada".equals(os.getStatus())) {
                 logger.warn("CONTROLLER: Tentativa de reabrir OS que não está encerrada. Status atual: " + os.getStatus());
                 return ResponseEntity.badRequest()
-                    .body("Apenas ordens de serviço encerradas podem ser reabertas. Status atual: " + os.getStatus());
+                    .body("Apenas ordens de serviço encerradas ou reclamadas podem ser reabertas. Status atual: " + os.getStatus());
             }
 
             logger.info("Dados da OS antes da reabertura:");

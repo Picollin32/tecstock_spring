@@ -76,6 +76,15 @@ public class OrcamentoServiceImpl implements OrcamentoService {
     }
 
     @Override
+    public List<Orcamento> listarAbertos() {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("ID da empresa não encontrado no contexto");
+        }
+        return repository.findByTransformadoEmOSFalseAndEmpresaIdOrderByCreatedAtDesc(empresaId);
+    }
+
+    @Override
     public List<Orcamento> listarTodos() {
         Long empresaId = TenantContext.getCurrentEmpresaId();
         if (empresaId == null) {

@@ -65,6 +65,12 @@ public class OrcamentoController {
                 .collect(java.util.stream.Collectors.toList());
     }
 
+    @GetMapping("/api/orcamentos/abertos")
+    public List<Orcamento> listarAbertos() {
+        logger.info("Listando orçamentos em aberto (não transformados em OS).");
+        return service.listarAbertos();
+    }
+
     @GetMapping("/api/orcamentos/listarTodos")
     public List<Orcamento> listarTodos() {
         logger.info("Listando todos os orçamentos no controller.");

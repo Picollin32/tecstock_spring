@@ -1,6 +1,7 @@
 package tecstock_spring.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -124,6 +125,13 @@ public class OrdemServico {
     @Builder.Default
     private Integer garantiaMeses = 3;
 
+    @Column(name = "garantia_lancada")
+    @Builder.Default
+    private Boolean garantiaLancada = false;
+
+    @Column(name = "data_hora_lancamento_garantia")
+    private LocalDateTime dataHoraLancamentoGarantia;
+
     @Column(name = "prazo_fiado_dias")
     private Integer prazoFiadoDias;
 
@@ -152,6 +160,11 @@ public class OrdemServico {
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Builder.Default
+    @Transient
+    @JsonProperty("temGarantiaReclamada")
+    private Boolean temGarantiaReclamada = false;
     
     @PrePersist
     protected void onCreate() {

@@ -72,4 +72,41 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
            "LOWER(os.veiculoPlaca) LIKE LOWER(CONCAT(:query, '%')))")
     Page<OrdemServico> searchByQueryAndEmpresaId(@Param("query") String query, @Param("empresaId") Long empresaId, Pageable pageable);
 
+    @Query("SELECT DISTINCT os FROM OrdemServico os " +
+            "LEFT JOIN os.servicosRealizados s " +
+            "LEFT JOIN os.mecanico m " +
+            "LEFT JOIN os.consultor c " +
+            "WHERE os.empresa.id = :empresaId " +
+            "AND os.garantiaLancada = true " +
+            "AND (" +
+            ":query = '' OR (" +
+            "(:field = 'OS' AND os.numeroOS LIKE CONCAT(:query, '%')) OR " +
+            "(:field = 'CLIENTE' AND LOWER(os.clienteNome) LIKE LOWER(CONCAT('%', :query, '%'))) OR " +
+            "(:field = 'VEICULO' AND LOWER(os.veiculoNome) LIKE LOWER(CONCAT('%', :query, '%'))) OR " +
+            "(:field = 'PLACA' AND LOWER(os.veiculoPlaca) LIKE LOWER(CONCAT('%', :query, '%'))) OR " +
+            "(:field = 'SERVICO' AND LOWER(s.nome) LIKE LOWER(CONCAT('%', :query, '%'))) OR " +
+            "(:field = 'MECANICO' AND LOWER(m.nome) LIKE LOWER(CONCAT('%', :query, '%'))) OR " +
+            "(:field = 'CONSULTOR' AND LOWER(c.nome) LIKE LOWER(CONCAT('%', :query, '%'))) OR " +
+            "(:field = 'MOTIVO' AND EXISTS (" +
+            "SELECT 1 FROM GarantiaRetorno gr WHERE gr.ordemServico.id = os.id " +
+            "AND LOWER(gr.motivo) LIKE LOWER(CONCAT('%', :query, '%'))" +
+            ")) OR " +
+            "(:field = 'TODOS' AND (" +
+            "os.numeroOS LIKE CONCAT(:query, '%') OR " +
+            "LOWER(os.clienteNome) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(os.veiculoNome) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(os.veiculoPlaca) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(s.nome) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(m.nome) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(c.nome) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "EXISTS (SELECT 1 FROM GarantiaRetorno gr WHERE gr.ordemServico.id = os.id " +
+            "AND LOWER(gr.motivo) LIKE LOWER(CONCAT('%', :query, '%')))" +
+            "))" +
+            ")" +
+            ")")
+    List<OrdemServico> findGarantiasByQuery(
+            @Param("empresaId") Long empresaId,
+            @Param("query") String query,
+            @Param("field") String field);
+
 }

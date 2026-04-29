@@ -23,7 +23,6 @@ public class RelatorioServicosDTO {
     private Integer totalOrdensServico;
     private Integer ordensFinalizadas;
     private Integer ordensEmAndamento;
-    private Integer ordensCanceladas;
     private BigDecimal descontoServicos;
     private BigDecimal valorMedioPorOrdem;
     private Double tempoMedioExecucao;

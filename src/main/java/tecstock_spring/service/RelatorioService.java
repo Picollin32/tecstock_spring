@@ -9,8 +9,10 @@ import tecstock_spring.dto.ConsultorMetricasDTO;
 import tecstock_spring.dto.RelatorioEstoqueDTO;
 import tecstock_spring.dto.RelatorioFiadoDTO;
 import tecstock_spring.dto.RelatorioFinanceiroDTO;
+import tecstock_spring.dto.RelatorioClientesDTO;
 import tecstock_spring.dto.RelatorioGarantiasDTO;
 import tecstock_spring.dto.RelatorioServicosDTO;
+import tecstock_spring.dto.RelatorioVeiculosDTO;
 import tecstock_spring.model.*;
 import tecstock_spring.repository.*;
 import tecstock_spring.util.TenantContext;
@@ -49,6 +51,9 @@ public class RelatorioService {
 
     @Autowired
     private ChecklistRepository checklistRepository;
+
+        @Autowired
+        private GarantiaRetornoRepository garantiaRetornoRepository;
 
     public RelatorioAgendamentosDTO gerarRelatorioAgendamentos(LocalDate dataInicio, LocalDate dataFim) {
         Long empresaId = TenantContext.getCurrentEmpresaId();
@@ -118,8 +123,7 @@ public class RelatorioService {
         List<OrdemServico> ordens = ordemServicoRepository.findByEmpresaId(empresaId).stream()
                 .filter(os -> os.getDataHora() != null && 
                         !os.getDataHora().toLocalDate().isBefore(dataInicio) && 
-                        !os.getDataHora().toLocalDate().isAfter(dataFim) &&
-                        !"Cancelada".equalsIgnoreCase(os.getStatus()))
+                        !os.getDataHora().toLocalDate().isAfter(dataFim))
                 .collect(Collectors.toList());
 
         int totalOrdens = ordens.size();
@@ -129,7 +133,6 @@ public class RelatorioService {
         int emAndamento = (int) ordens.stream()
                 .filter(os -> "Aberta".equalsIgnoreCase(os.getStatus()))
                 .count();
-        int canceladas = 0;
 
         List<String> numerosOSEncerradas = ordens.stream()
                 .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()))
@@ -192,8 +195,8 @@ public class RelatorioService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        BigDecimal valorMedio = totalOrdens > 0 
-                ? valorServicosRealizados.divide(BigDecimal.valueOf(totalOrdens), 2, RoundingMode.HALF_UP)
+        BigDecimal valorMedio = finalizadas > 0 
+                ? valorServicosRealizados.divide(BigDecimal.valueOf(finalizadas), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
         List<OrdemServico> ordensFinalizadas = ordens.stream()
@@ -213,7 +216,7 @@ public class RelatorioService {
         return new RelatorioServicosDTO(
                 dataInicio, dataFim, 
                 valorServicosRealizados, totalServicos, servicosMaisRealizados,
-                totalOrdens, finalizadas, emAndamento, canceladas,
+                totalOrdens, finalizadas, emAndamento,
                 descontoServicos, valorMedio, tempoMedio
         );
     }
@@ -329,27 +332,16 @@ public class RelatorioService {
             throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
         }
 
-        List<MovimentacaoEstoque> saidas = movimentacaoEstoqueRepository.findByEmpresaId(empresaId).stream()
-                .filter(m -> m.getTipoMovimentacao() == MovimentacaoEstoque.TipoMovimentacao.SAIDA &&
-                        m.getDataSaida() != null &&
-                        !m.getDataSaida().toLocalDate().isBefore(dataInicio) && 
-                        !m.getDataSaida().toLocalDate().isAfter(dataFim))
-                .collect(Collectors.toList());
-
-        BigDecimal receitaPecas = saidas.stream()
-                .map(m -> {
-                    BigDecimal valor = m.getPrecoFinal() != null ? BigDecimal.valueOf(m.getPrecoFinal()) : BigDecimal.ZERO;
-                    int qtd = m.getQuantidade();
-                    return valor.multiply(BigDecimal.valueOf(qtd));
-                })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         List<OrdemServico> ordensFinalizadas = ordemServicoRepository.findByEmpresaId(empresaId).stream()
                 .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) && 
                         os.getDataHoraEncerramento() != null &&
                         !os.getDataHoraEncerramento().toLocalDate().isBefore(dataInicio) && 
                         !os.getDataHoraEncerramento().toLocalDate().isAfter(dataFim))
                 .collect(Collectors.toList());
+
+        BigDecimal receitaPecas = ordensFinalizadas.stream()
+                .map(os -> os.getPrecoTotalPecas() != null ? BigDecimal.valueOf(os.getPrecoTotalPecas()) : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         List<String> numerosOSEncerradas = ordensFinalizadas.stream()
                 .map(OrdemServico::getNumeroOS)
@@ -392,11 +384,7 @@ public class RelatorioService {
 
         BigDecimal descontosTotal = descontosPecas.add(descontosServicos);
         BigDecimal receitaTotal = receitaPecas.add(receitaServicos);
-        BigDecimal lucroEstimado = receitaPecas
-                .add(receitaServicos)
-                .subtract(despesasEstoque)
-                .subtract(descontosPecas)
-                .subtract(descontosServicos);
+        BigDecimal lucroEstimado = receitaTotal.subtract(descontosTotal).subtract(despesasEstoque);
 
         Map<String, BigDecimal> receitaPorTipoPagamento = new HashMap<>();
         Map<String, Integer> quantidadePorTipoPagamento = new HashMap<>();
@@ -414,7 +402,7 @@ public class RelatorioService {
         }
 
         BigDecimal ticketMedio = !ordensFinalizadas.isEmpty() 
-                ? receitaTotal.divide(BigDecimal.valueOf(ordensFinalizadas.size()), 2, RoundingMode.HALF_UP)
+                ? receitaTotal.subtract(descontosTotal).divide(BigDecimal.valueOf(ordensFinalizadas.size()), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
         return new RelatorioFinanceiroDTO(
@@ -517,44 +505,77 @@ public class RelatorioService {
             throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
         }
 
-        List<OrdemServico> ordensEncerradas = ordemServicoRepository.findByEmpresaId(empresaId).stream()
-                .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) &&
-                        os.getDataHoraEncerramento() != null)
+        List<OrdemServico> ordensGarantia = ordemServicoRepository.findByEmpresaId(empresaId).stream()
+                .filter(os -> Boolean.TRUE.equals(os.getGarantiaLancada()) &&
+                        os.getDataHoraLancamentoGarantia() != null)
                 .collect(Collectors.toList());
 
         List<RelatorioGarantiasDTO.GarantiaItemDTO> garantias = new ArrayList<>();
         int garantiasEmAberto = 0;
         int garantiasEncerradas = 0;
+        int garantiasAtivas = 0;
+        int garantiasReclamadas = 0;
+        int garantiasExpiradas = 0;
 
         LocalDate dataAtual = LocalDate.now();
 
-        for (OrdemServico os : ordensEncerradas) {
-            LocalDate dataInicioGarantia = os.getDataHoraEncerramento().toLocalDate();
-            LocalDate dataFimGarantia = dataInicioGarantia.plusMonths(os.getGarantiaMeses());
+        Map<Long, GarantiaRetorno> retornoPorOS = new HashMap<>();
+        if (!ordensGarantia.isEmpty()) {
+            List<Long> ordemIds = ordensGarantia.stream()
+                    .map(OrdemServico::getId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+            if (!ordemIds.isEmpty()) {
+                List<GarantiaRetorno> retornos = garantiaRetornoRepository
+                        .findByOrdemServicoIdInAndEmpresaIdOrderByCreatedAtDesc(ordemIds, empresaId);
+                for (GarantiaRetorno retorno : retornos) {
+                    Long osId = retorno.getOrdemServico().getId();
+                    if (!retornoPorOS.containsKey(osId)) {
+                        retornoPorOS.put(osId, retorno);
+                    }
+                }
+            }
+        }
+
+        for (OrdemServico os : ordensGarantia) {
+            LocalDate dataInicioGarantia = os.getDataHoraLancamentoGarantia().toLocalDate();
+            int garantiaMeses = os.getGarantiaMeses() != null ? os.getGarantiaMeses() : 0;
+            LocalDate dataFimGarantia = dataInicioGarantia.plusDays(garantiaMeses * 30L);
 
             boolean garantiaCoberta = !dataFimGarantia.isBefore(dataInicio) && !dataInicioGarantia.isAfter(dataFim);
 
             if (garantiaCoberta) {
-
-                boolean emAberto = !dataFimGarantia.isBefore(dataAtual);
-                String statusDescricao = emAberto ? "Em Aberto" : "Encerrada";
-
-                if (emAberto) {
-                    garantiasEmAberto++;
+                boolean hasRetorno = retornoPorOS.containsKey(os.getId());
+                boolean expirada = dataFimGarantia.isBefore(dataAtual);
+                String statusGarantia;
+                if (hasRetorno || "Reclamada".equalsIgnoreCase(os.getStatus())) {
+                    statusGarantia = "Reclamada";
+                    garantiasReclamadas++;
+                } else if (expirada) {
+                    statusGarantia = "Expirada";
+                    garantiasExpiradas++;
                 } else {
-                    garantiasEncerradas++;
+                    statusGarantia = "Ativa";
+                    garantiasAtivas++;
                 }
+
+                boolean emAberto = "Ativa".equalsIgnoreCase(statusGarantia);
 
                 String mecanicoNome = os.getMecanico() != null ? os.getMecanico().getNome() : null;
                 String consultorNome = os.getConsultor() != null ? os.getConsultor().getNome() : null;
+                GarantiaRetorno retorno = retornoPorOS.get(os.getId());
+
+                LocalDateTime dataReferencia = os.getDataHoraEncerramento() != null
+                        ? os.getDataHoraEncerramento()
+                        : os.getDataHoraLancamentoGarantia();
 
                 RelatorioGarantiasDTO.GarantiaItemDTO item = RelatorioGarantiasDTO.GarantiaItemDTO.builder()
                         .id(os.getId())
                         .numeroOS(os.getNumeroOS())
-                        .dataEncerramento(os.getDataHoraEncerramento())
+                        .dataEncerramento(dataReferencia)
                         .dataInicioGarantia(dataInicioGarantia)
                         .dataFimGarantia(dataFimGarantia)
-                        .garantiaMeses(os.getGarantiaMeses())
+                        .garantiaMeses(garantiaMeses)
                         .clienteNome(os.getClienteNome())
                         .clienteCpf(os.getClienteCpf())
                         .clienteTelefone(os.getClienteTelefone())
@@ -565,12 +586,18 @@ public class RelatorioService {
                         .mecanicoNome(mecanicoNome)
                         .consultorNome(consultorNome)
                         .emAberto(emAberto)
-                        .statusDescricao(statusDescricao)
+                        .statusDescricao(statusGarantia)
+                        .statusGarantia(statusGarantia)
+                        .retornoMotivo(retorno != null ? retorno.getMotivo() : null)
+                        .retornoServicoNome(retorno != null ? retorno.getServico().getNome() : null)
                         .build();
 
                 garantias.add(item);
             }
         }
+
+        garantiasEmAberto = garantiasAtivas;
+        garantiasEncerradas = garantiasExpiradas;
 
         garantias.sort((a, b) -> b.getDataEncerramento().compareTo(a.getDataEncerramento()));
 
@@ -580,6 +607,9 @@ public class RelatorioService {
                 .totalGarantias(garantias.size())
                 .garantiasEmAberto(garantiasEmAberto)
                 .garantiasEncerradas(garantiasEncerradas)
+                .garantiasAtivas(garantiasAtivas)
+                .garantiasReclamadas(garantiasReclamadas)
+                .garantiasExpiradas(garantiasExpiradas)
                 .garantias(garantias)
                 .build();
     }
@@ -828,5 +858,162 @@ public class RelatorioService {
                 Math.round(valorMedioGeral * 100.0) / 100.0,
                 taxaConversaoGeral
         );
+    }
+
+    public RelatorioClientesDTO gerarRelatorioClientes(LocalDate dataInicio, LocalDate dataFim) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+
+        List<OrdemServico> ordens = ordemServicoRepository.findByEmpresaId(empresaId).stream()
+                .filter(os -> os.getDataHora() != null &&
+                        !os.getDataHora().toLocalDate().isBefore(dataInicio) &&
+                        !os.getDataHora().toLocalDate().isAfter(dataFim) &&
+                        !"-1".equalsIgnoreCase(os.getClienteCpf()) &&
+                        os.getClienteCpf() != null && !os.getClienteCpf().isBlank())
+                .collect(Collectors.toList());
+
+        Map<String, List<OrdemServico>> porCpf = ordens.stream()
+                .collect(Collectors.groupingBy(os -> os.getClienteCpf().replaceAll("[^0-9]", "")));
+
+        List<RelatorioClientesDTO.ClienteItemDTO> clientes = new ArrayList<>();
+
+        for (Map.Entry<String, List<OrdemServico>> entry : porCpf.entrySet()) {
+            List<OrdemServico> ordensCliente = entry.getValue();
+
+            String clienteNome = ordensCliente.stream()
+                    .max(Comparator.comparing(os -> os.getDataHora()))
+                    .map(OrdemServico::getClienteNome)
+                    .orElse("");
+
+            String clienteTelefone = ordensCliente.stream()
+                    .filter(os -> os.getClienteTelefone() != null)
+                    .max(Comparator.comparing(os -> os.getDataHora()))
+                    .map(OrdemServico::getClienteTelefone)
+                    .orElse(null);
+
+            int totalOS = ordensCliente.size();
+            int totalOSEncerradas = (int) ordensCliente.stream()
+                    .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()))
+                    .count();
+
+            BigDecimal valorTotal = ordensCliente.stream()
+                    .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) && os.getPrecoTotal() != null)
+                    .map(os -> BigDecimal.valueOf(os.getPrecoTotal()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            BigDecimal ticketMedio = totalOSEncerradas > 0
+                    ? valorTotal.divide(BigDecimal.valueOf(totalOSEncerradas), 2, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
+
+            LocalDate primeiraVisita = ordensCliente.stream()
+                    .map(os -> os.getDataHora().toLocalDate())
+                    .min(Comparator.naturalOrder())
+                    .orElse(null);
+
+            LocalDate ultimaVisita = ordensCliente.stream()
+                    .map(os -> os.getDataHora().toLocalDate())
+                    .max(Comparator.naturalOrder())
+                    .orElse(null);
+
+            List<String> placas = ordensCliente.stream()
+                    .map(OrdemServico::getVeiculoPlaca)
+                    .filter(p -> p != null && !p.isBlank())
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            clientes.add(RelatorioClientesDTO.ClienteItemDTO.builder()
+                    .clienteNome(clienteNome)
+                    .clienteCpf(entry.getKey())
+                    .clienteTelefone(clienteTelefone)
+                    .totalOS(totalOS)
+                    .totalOSEncerradas(totalOSEncerradas)
+                    .valorTotal(valorTotal)
+                    .ticketMedio(ticketMedio)
+                    .primeiraVisita(primeiraVisita)
+                    .ultimaVisita(ultimaVisita)
+                    .placasVeiculos(placas)
+                    .build());
+        }
+
+        clientes.sort((a, b) -> b.getTotalOS().compareTo(a.getTotalOS()));
+
+        return RelatorioClientesDTO.builder()
+                .dataInicio(dataInicio)
+                .dataFim(dataFim)
+                .totalClientes(clientes.size())
+                .clientes(clientes)
+                .build();
+    }
+
+    public RelatorioVeiculosDTO gerarRelatorioVeiculos(LocalDate dataInicio, LocalDate dataFim) {
+        Long empresaId = TenantContext.getCurrentEmpresaId();
+        if (empresaId == null) {
+            throw new IllegalStateException("Empresa não encontrada no contexto do usuário");
+        }
+
+        List<OrdemServico> ordens = ordemServicoRepository.findByEmpresaId(empresaId).stream()
+                .filter(os -> os.getDataHora() != null &&
+                        !os.getDataHora().toLocalDate().isBefore(dataInicio) &&
+                        !os.getDataHora().toLocalDate().isAfter(dataFim) &&
+                        os.getVeiculoPlaca() != null && !os.getVeiculoPlaca().isBlank())
+                .collect(Collectors.toList());
+
+        Map<String, List<OrdemServico>> porPlaca = ordens.stream()
+                .collect(Collectors.groupingBy(os -> os.getVeiculoPlaca().toUpperCase().replaceAll("\\s+", "")));
+
+        List<RelatorioVeiculosDTO.VeiculoItemDTO> veiculos = new ArrayList<>();
+
+        for (Map.Entry<String, List<OrdemServico>> entry : porPlaca.entrySet()) {
+            List<OrdemServico> ordensVeiculo = entry.getValue();
+
+            OrdemServico maisRecente = ordensVeiculo.stream()
+                    .max(Comparator.comparing(os -> os.getDataHora()))
+                    .orElse(ordensVeiculo.get(0));
+
+            int totalOS = ordensVeiculo.size();
+            int totalOSEncerradas = (int) ordensVeiculo.stream()
+                    .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()))
+                    .count();
+
+            BigDecimal valorTotal = ordensVeiculo.stream()
+                    .filter(os -> "Encerrada".equalsIgnoreCase(os.getStatus()) && os.getPrecoTotal() != null)
+                    .map(os -> BigDecimal.valueOf(os.getPrecoTotal()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            LocalDate primeiraVisita = ordensVeiculo.stream()
+                    .map(os -> os.getDataHora().toLocalDate())
+                    .min(Comparator.naturalOrder())
+                    .orElse(null);
+
+            LocalDate ultimaVisita = ordensVeiculo.stream()
+                    .map(os -> os.getDataHora().toLocalDate())
+                    .max(Comparator.naturalOrder())
+                    .orElse(null);
+
+            veiculos.add(RelatorioVeiculosDTO.VeiculoItemDTO.builder()
+                    .veiculoPlaca(maisRecente.getVeiculoPlaca())
+                    .veiculoNome(maisRecente.getVeiculoNome())
+                    .veiculoMarca(maisRecente.getVeiculoMarca())
+                    .veiculoAno(maisRecente.getVeiculoAno())
+                    .proprietarioNome(maisRecente.getClienteNome())
+                    .proprietarioCpf(maisRecente.getClienteCpf())
+                    .totalOS(totalOS)
+                    .totalOSEncerradas(totalOSEncerradas)
+                    .valorTotal(valorTotal)
+                    .primeiraVisita(primeiraVisita)
+                    .ultimaVisita(ultimaVisita)
+                    .build());
+        }
+
+        veiculos.sort((a, b) -> b.getTotalOS().compareTo(a.getTotalOS()));
+
+        return RelatorioVeiculosDTO.builder()
+                .dataInicio(dataInicio)
+                .dataFim(dataFim)
+                .totalVeiculos(veiculos.size())
+                .veiculos(veiculos)
+                .build();
     }
 }
