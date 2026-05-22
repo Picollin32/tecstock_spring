@@ -49,6 +49,9 @@ public class Usuario {
     @NotNull(message = "Nível de acesso é obrigatório")
     @Column(nullable = false)
     private Integer nivelAcesso;
+
+    @Column(nullable = false)
+    private Boolean ativo;
     
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "consultor_id", nullable = true)
@@ -66,6 +69,10 @@ public class Usuario {
     
     @PrePersist
     protected void onCreate() {
+        if (ativo == null) {
+            ativo = true;
+        }
+
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }

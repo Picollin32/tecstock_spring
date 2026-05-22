@@ -561,7 +561,6 @@ public class ContaServiceImpl implements ContaService {
             if (assinaturaDataFim != null && assinaturaDataFim.isBefore(assinaturaDataInicio)) {
                 throw new IllegalArgumentException("Data de fim da assinatura não pode ser anterior à data de início.");
             }
-            formaPagamento = "CREDITO";
             pagamentoImediato = false;
         }
 

@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 public class UsuarioResponseDTO {
     private Long id;
     private String nomeUsuario;
+    private Boolean ativo;
     private Integer nivelAcesso;
     private Funcionario consultor;
     private Empresa empresa;

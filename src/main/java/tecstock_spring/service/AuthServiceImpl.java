@@ -43,6 +43,11 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Credenciais inválidas");
         }
 
+        if (Boolean.FALSE.equals(usuario.getAtivo())) {
+            logger.warn("Tentativa de login com usuário desativado: {}", username);
+            throw new RuntimeException("Usuário desativado. Contate o administrador da empresa.");
+        }
+
         if (!passwordEncoder.matches(loginRequest.getSenha(), usuario.getSenha())) {
             rateLimitService.recordFailedAttempt(username, clientIp);
             int remainingAttempts = rateLimitService.getRemainingAttempts(username, clientIp);

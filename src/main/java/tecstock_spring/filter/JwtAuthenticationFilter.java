@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tecstock_spring.repository.UsuarioRepository;
 import tecstock_spring.util.JwtUtil;
 
 import java.io.IOException;
@@ -24,6 +25,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final UsuarioRepository usuarioRepository;
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     @Override
@@ -48,6 +50,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 final Long userId = jwtUtil.extractUserId(jwt);
                 final Long consultorId = jwtUtil.extractConsultorId(jwt);
                 final Long empresaId = jwtUtil.extractEmpresaId(jwt);
+
+                final var usuario = usuarioRepository.findByNomeUsuario(username);
+                if (usuario == null || Boolean.FALSE.equals(usuario.getAtivo())) {
+                    logger.warn("Token rejeitado para usuário desativado ou inexistente: {}", username);
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
 
                 String role;
                 if (nivelAcesso == 0) {

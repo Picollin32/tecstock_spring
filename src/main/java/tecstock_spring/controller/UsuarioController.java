@@ -93,6 +93,7 @@ public class UsuarioController {
         return UsuarioResponseDTO.builder()
                 .id(usuario.getId())
                 .nomeUsuario(usuario.getNomeUsuario())
+                .ativo(usuario.getAtivo())
                 .nivelAcesso(usuario.getNivelAcesso())
                 .consultor(usuario.getConsultor())
                 .empresa(usuario.getEmpresa())

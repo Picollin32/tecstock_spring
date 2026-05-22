@@ -69,6 +69,10 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (usuario.getNivelAcesso() == null) {
             throw new RuntimeException("Nível de acesso não informado");
         }
+
+        if (usuario.getAtivo() == null) {
+            usuario.setAtivo(true);
+        }
         
         if (usuario.getNivelAcesso() != 1 && usuario.getNivelAcesso() != 2) {
             throw new RuntimeException("Nível de acesso inválido. Use 1 (Admin) ou 2 (Consultor)");
@@ -210,6 +214,10 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (novoUsuario.getSenha() != null && !novoUsuario.getSenha().isEmpty()) {
             String senhaCriptografada = passwordEncoder.encode(novoUsuario.getSenha());
             usuarioExistente.setSenha(senhaCriptografada);
+        }
+
+        if (novoUsuario.getAtivo() != null) {
+            usuarioExistente.setAtivo(novoUsuario.getAtivo());
         }
 
         usuarioExistente.setNomeUsuario(novoUsuario.getNomeUsuario());
